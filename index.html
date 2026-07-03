@@ -6,6 +6,10 @@
     <title>HSSE POINT — Pemetaan CCTV & Access Reader</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter (tipografi modern & profesional) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- PDF.js CDN for PDF Rendering -->
@@ -13,21 +17,54 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
+    <!-- Konfigurasi Tailwind: font Inter sebagai basis -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
     <style>
-        /* Custom scrollbar */
+        /* ===== Basis tipografi (modern & profesional) ===== */
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.011em;
+        }
+        h1, h2, h3, h4 { letter-spacing: -0.02em; }
+
+        /* ===== Custom scrollbar (ramping & modern) ===== */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 10px;
+            height: 10px;
         }
         ::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
             background: #475569;
-            border-radius: 3px;
+            border-radius: 8px;
+            border: 3px solid transparent;
+            background-clip: content-box;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
+            background-clip: content-box;
+        }
+        body.light-theme ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            background-clip: content-box;
+        }
+        body.light-theme ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+            background-clip: content-box;
         }
         /* Grid pattern background for canvas container */
         .workspace-grid {
@@ -98,26 +135,52 @@
             }
         }
 
+        /* ===== Peningkatan UI modern (berlaku di kedua tema) ===== */
+        /* Elemen primary indigo -> gradien halus + bayangan berwarna */
+        .bg-indigo-600 {
+            background-image: linear-gradient(135deg, #6d6af5 0%, #4f46e5 100%);
+        }
+        button.bg-indigo-600 {
+            box-shadow: 0 6px 16px -7px rgba(79, 70, 229, 0.55);
+            transition: filter .16s ease, box-shadow .16s ease, transform .1s ease;
+        }
+        button.bg-indigo-600:hover {
+            filter: brightness(1.08);
+            box-shadow: 0 10px 24px -8px rgba(79, 70, 229, 0.62);
+        }
+        button.bg-indigo-600:active {
+            transform: translateY(1px);
+            filter: brightness(0.97);
+        }
+        /* Cincin fokus indigo lembut untuk semua input & kontrol form */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+        }
+        /* Easing tombol lebih halus */
+        button { transition-timing-function: cubic-bezier(.4, 0, .2, 1); }
+
         /* LIGHT THEME OVERRIDES */
         body.light-theme {
-            background-color: #f8fafc;
+            background-color: #eef1f6;
+            background-image: radial-gradient(1100px 520px at 50% -8%, #ffffff 0%, #eef1f6 62%);
             color: #0f172a;
         }
         body.light-theme header {
             background-color: #ffffff;
-            border-color: #cbd5e1;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            border-color: #e5e9f0;
+            box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 20px -12px rgb(15 23 42 / 0.12);
         }
         body.light-theme header h1 {
-            color: #1e293b;
+            color: #0f172a;
         }
         body.light-theme header p {
             color: #64748b;
         }
         body.light-theme aside {
             background-color: #ffffff;
-            border-color: #cbd5e1;
-            box-shadow: 4px 0 10px -3px rgb(0 0 0 / 0.05);
+            border-color: #e5e9f0;
+            box-shadow: 0 1px 3px rgb(15 23 42 / 0.04);
         }
         body.light-theme .workspace-grid {
             background-color: #f1f5f9;
@@ -136,8 +199,8 @@
         }
         body.light-theme #blueprint-wrapper {
             background-color: #ffffff;
-            border-color: #cbd5e1;
-            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.1);
+            border-color: #e5e9f0;
+            box-shadow: 0 30px 60px -20px rgb(15 23 42 / 0.22), 0 8px 20px -12px rgb(15 23 42 / 0.1);
         }
         body.light-theme .bg-slate-900 {
             background-color: #ffffff;
@@ -146,8 +209,8 @@
             background-color: #f8fafc;
         }
         body.light-theme .bg-slate-950\/50 {
-            background-color: #f1f5f9;
-            border-color: #cbd5e1;
+            background-color: #f8fafc;
+            border-color: #e5e9f0;
         }
         body.light-theme .bg-slate-800 {
             background-color: #f1f5f9;
@@ -157,10 +220,44 @@
             background-color: #f8fafc;
         }
         body.light-theme .border-slate-800 {
-            border-color: #e2e8f0;
+            border-color: #eceff4;
         }
         body.light-theme .border-slate-700 {
+            border-color: #dfe4ec;
+        }
+        /* Hover state gelap -> setara terang agar tidak berkedip gelap di light mode */
+        body.light-theme .hover\:bg-slate-800:hover,
+        body.light-theme .hover\:bg-slate-800\/60:hover,
+        body.light-theme .hover\:bg-slate-800\/40:hover {
+            background-color: #f1f5f9;
+        }
+        body.light-theme .hover\:bg-slate-700:hover {
+            background-color: #e2e8f0;
+        }
+        body.light-theme .hover\:bg-slate-900:hover,
+        body.light-theme .hover\:bg-slate-900\/50:hover {
+            background-color: #f8fafc;
+        }
+        /* Teks hover putih -> jadi gelap di light mode */
+        body.light-theme .hover\:text-white:hover {
+            color: #0f172a;
+        }
+        body.light-theme .hover\:border-slate-750:hover {
             border-color: #cbd5e1;
+        }
+        /* Varian transparansi statis -> permukaan terang */
+        body.light-theme .bg-slate-800\/60 {
+            background-color: #f1f5f9;
+        }
+        body.light-theme .bg-slate-950\/20,
+        body.light-theme .bg-slate-950\/60 {
+            background-color: #f8fafc;
+        }
+        body.light-theme .border-slate-800\/80 {
+            border-color: #e5e9f0;
+        }
+        body.light-theme .border-slate-700\/50 {
+            border-color: #e5e9f0;
         }
         body.light-theme .text-slate-400 {
             color: #475569;
@@ -187,10 +284,15 @@
         }
         body.light-theme #device-list .bg-slate-950\/50 {
             background-color: #ffffff;
-            border-color: #e2e8f0;
+            border-color: #e5e9f0;
+            box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 6px 14px -10px rgb(15 23 42 / 0.12);
+        }
+        body.light-theme #device-list .bg-slate-950\/50:hover {
+            border-color: #c7cfdb;
+            box-shadow: 0 2px 4px rgb(15 23 42 / 0.05), 0 10px 20px -10px rgb(15 23 42 / 0.16);
         }
         body.light-theme #device-list .border-slate-800\/80 {
-            border-color: #e2e8f0;
+            border-color: #e5e9f0;
         }
         body.light-theme #device-list-empty {
             background-color: #f8fafc;
@@ -207,9 +309,11 @@
         body.light-theme #guide-alert strong {
             color: #3730a3;
         }
+        body.light-theme #modal-location > .bg-slate-900,
         body.light-theme #modal-selector .bg-slate-900 {
             background-color: #ffffff;
-            border-color: #e2e8f0;
+            border-color: #e5e9f0;
+            box-shadow: 0 40px 80px -24px rgb(15 23 42 / 0.35), 0 12px 28px -14px rgb(15 23 42 / 0.18);
         }
         body.light-theme #modal-selector h3 {
             color: #0f172a;
@@ -315,7 +419,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col no-select overflow-hidden">
+<body class="light-theme bg-slate-950 text-slate-100 font-sans h-screen flex flex-col no-select overflow-hidden">
 
     <!-- Header / Navbar (Terkunci / Fixed di bagian atas) -->
     <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10 shadow-md shrink-0">
@@ -363,8 +467,8 @@
 
             <!-- Theme Toggle Button (posisi paling kanan) -->
             <button id="btn-theme-toggle" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition" title="Ganti Tema">
-                <i class="fa-solid fa-sun text-amber-500 hidden" id="theme-icon-sun"></i>
-                <i class="fa-solid fa-moon text-indigo-400" id="theme-icon-moon"></i>
+                <i class="fa-solid fa-sun text-amber-500" id="theme-icon-sun"></i>
+                <i class="fa-solid fa-moon text-indigo-400 hidden" id="theme-icon-moon"></i>
             </button>
         </div>
     </header>
@@ -822,7 +926,7 @@
             pendingMarkerCoords: { x: 0, y: 0 },
             activeFilter: 'all', // 'all', 'cctv', 'acs'
             idCounter: 1,
-            theme: 'dark', // 'dark' or 'light'
+            theme: 'light', // 'dark' or 'light' (default: light)
             mobileView: 'list' // 'list' | 'detail' (navigasi khusus mobile)
         };
 
@@ -2550,22 +2654,34 @@
             }
         };
 
-        /* Theme Toggle System */
+        /* Theme Toggle System (default: light, tersimpan di localStorage) */
+        const THEME_KEY = 'hssepoint-theme';
+
+        // Terapkan tema ke DOM tanpa notifikasi (dipakai saat inisialisasi & toggle)
+        const applyTheme = (theme) => {
+            state.theme = theme === 'dark' ? 'dark' : 'light';
+            if (state.theme === 'light') {
+                document.body.classList.add('light-theme');
+                dom.themeIconSun.classList.remove('hidden');
+                dom.themeIconMoon.classList.add('hidden');
+            } else {
+                document.body.classList.remove('light-theme');
+                dom.themeIconSun.classList.add('hidden');
+                dom.themeIconMoon.classList.remove('hidden');
+            }
+        };
+
         const setupThemeToggle = () => {
+            // Pulihkan preferensi tersimpan; default ke light bila belum ada.
+            let saved = 'light';
+            try { saved = localStorage.getItem(THEME_KEY) || 'light'; } catch (e) {}
+            applyTheme(saved);
+
             dom.btnThemeToggle.addEventListener('click', () => {
-                if (state.theme === 'dark') {
-                    state.theme = 'light';
-                    document.body.classList.add('light-theme');
-                    dom.themeIconSun.classList.remove('hidden');
-                    dom.themeIconMoon.classList.add('hidden');
-                    showNotification("Mode Terang Aktif");
-                } else {
-                    state.theme = 'dark';
-                    document.body.classList.remove('light-theme');
-                    dom.themeIconSun.classList.add('hidden');
-                    dom.themeIconMoon.classList.remove('hidden');
-                    showNotification("Mode Gelap Aktif");
-                }
+                const next = state.theme === 'dark' ? 'light' : 'dark';
+                applyTheme(next);
+                try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+                showNotification(next === 'light' ? "Mode Terang Aktif" : "Mode Gelap Aktif");
                 renderMarkers();
             });
         };
