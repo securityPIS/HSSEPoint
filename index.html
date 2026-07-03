@@ -1,0 +1,2744 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSSE POINT — Pemetaan CCTV & Access Reader</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js CDN for PDF Rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Grid pattern background for canvas container */
+        .workspace-grid {
+            background-color: #0f172a;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        /* Custom FOV styling */
+        .fov-cone {
+            transform-origin: bottom center;
+            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+        }
+        /* Prevent selection during drag operations */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* Pulse animations for status (hanya opacity, agar transform bebas dipakai
+           untuk mengatur panjang/jangkauan FOV pada masing-masing kamera) */
+        @keyframes pulse-cyan {
+            0%, 100% { opacity: 0.45; }
+            50% { opacity: 0.65; }
+        }
+        .pulse-fov {
+            animation: pulse-cyan 3s infinite ease-in-out;
+        }
+        /* Toolbar kontrol melayang pada titik terpilih */
+        .marker-toolbar button {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            color: #cbd5e1;
+            transition: background-color .12s, color .12s;
+        }
+        .marker-toolbar button:hover {
+            background-color: #334155;
+            color: #ffffff;
+        }
+        .marker-toolbar button:active {
+            transform: scale(0.92);
+        }
+
+        /* Transition utility for theme switching */
+        body, header, aside, main, input, select, button, #editor-panel {
+            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        /* Style drop-zone saat file ditarik di atasnya */
+        #drop-zone.drop-zone-active {
+            border-color: #6366f1 !important;
+            background-color: rgba(99, 102, 241, 0.08) !important;
+        }
+
+        /* Navigasi mobile: daftar lantai -> detail perangkat sebagai halaman penuh */
+        @media (max-width: 767px) {
+            #left-sidebar.mobile-hide {
+                display: none !important;
+            }
+            #right-sidebar.mobile-detail {
+                position: fixed;
+                inset: 0;
+                width: 100% !important;
+                max-width: 100%;
+                z-index: 45;
+            }
+        }
+
+        /* LIGHT THEME OVERRIDES */
+        body.light-theme {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        body.light-theme header {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        }
+        body.light-theme header h1 {
+            color: #1e293b;
+        }
+        body.light-theme header p {
+            color: #64748b;
+        }
+        body.light-theme aside {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 4px 0 10px -3px rgb(0 0 0 / 0.05);
+        }
+        body.light-theme .workspace-grid {
+            background-color: #f1f5f9;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        }
+        body.light-theme #blueprint-placeholder h3 {
+            color: #1e293b;
+        }
+        body.light-theme #blueprint-placeholder p {
+            color: #64748b;
+        }
+        body.light-theme #blueprint-placeholder .bg-slate-800 {
+            background-color: #e2e8f0;
+            border-color: #cbd5e1;
+            color: #94a3b8;
+        }
+        body.light-theme #blueprint-wrapper {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.1);
+        }
+        body.light-theme .bg-slate-900 {
+            background-color: #ffffff;
+        }
+        body.light-theme .bg-slate-950 {
+            background-color: #f8fafc;
+        }
+        body.light-theme .bg-slate-950\/50 {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        body.light-theme .bg-slate-800 {
+            background-color: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+        body.light-theme .bg-slate-800\/40 {
+            background-color: #f8fafc;
+        }
+        body.light-theme .border-slate-800 {
+            border-color: #e2e8f0;
+        }
+        body.light-theme .border-slate-700 {
+            border-color: #cbd5e1;
+        }
+        body.light-theme .text-slate-400 {
+            color: #475569;
+        }
+        body.light-theme .text-slate-300 {
+            color: #334155;
+        }
+        body.light-theme .text-slate-200 {
+            color: #1e293b;
+        }
+        body.light-theme .text-slate-100 {
+            color: #0f172a;
+        }
+        body.light-theme input[type="text"] {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+        body.light-theme input[type="text"]:focus {
+            border-color: #6366f1;
+        }
+        body.light-theme input[type="range"] {
+            background-color: #e2e8f0;
+        }
+        body.light-theme #device-list .bg-slate-950\/50 {
+            background-color: #ffffff;
+            border-color: #e2e8f0;
+        }
+        body.light-theme #device-list .border-slate-800\/80 {
+            border-color: #e2e8f0;
+        }
+        body.light-theme #device-list-empty {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        body.light-theme #device-list-empty p {
+            color: #64748b;
+        }
+        body.light-theme #guide-alert {
+            background-color: #eef2ff;
+            border-color: #c7d2fe;
+        }
+        body.light-theme #guide-alert p,
+        body.light-theme #guide-alert strong {
+            color: #3730a3;
+        }
+        body.light-theme #modal-selector .bg-slate-900 {
+            background-color: #ffffff;
+            border-color: #e2e8f0;
+        }
+        body.light-theme #modal-selector h3 {
+            color: #0f172a;
+        }
+        body.light-theme #modal-selector p {
+            color: #475569;
+        }
+        body.light-theme #btn-cond-existing,
+        body.light-theme #btn-cond-new {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+        body.light-theme #btn-cond-existing.border-yellow-500 {
+            color: #d97706;
+            border-color: #fbbf24;
+            background-color: #fef3c7;
+        }
+        body.light-theme #btn-cond-new.border-cyan-500 {
+            color: #0891b2;
+            border-color: #22d3ee;
+            background-color: #ecfeff;
+        }
+        body.light-theme #editor-panel {
+            background-color: #f1f5f9;
+        }
+        body.light-theme #editor-panel h3 {
+            color: #334155;
+        }
+        body.light-theme #photo-upload-placeholder {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+        }
+        body.light-theme #photo-upload-placeholder span {
+            color: #475569;
+        }
+        body.light-theme #photo-preview-container {
+            background-color: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+        body.light-theme #btn-theme-toggle {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+        body.light-theme #btn-theme-toggle:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+        /* 1 & 2. PERBAIKAN LIGHT MODE UNTUK HUD ZOOM & KOTAK SERET BERKAS */
+        body.light-theme #zoom-hud {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+        body.light-theme #zoom-hud button {
+            color: #475569;
+        }
+        body.light-theme #zoom-hud button:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        body.light-theme #zoom-hud div.bg-slate-800 {
+            background-color: #cbd5e1;
+        }
+        body.light-theme #zoom-hud div#label-zoom-percent {
+            color: #475569;
+        }
+
+        body.light-theme #drop-zone {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+        }
+        body.light-theme #drop-zone:hover {
+            background-color: #f8fafc;
+            border-color: #6366f1;
+        }
+        body.light-theme #drop-zone p {
+            color: #1e293b;
+        }
+        body.light-theme #drop-zone .text-indigo-400 {
+            color: #4f46e5;
+        }
+        body.light-theme #drop-zone .text-slate-500 {
+            color: #64748b;
+        }
+        body.light-theme #drop-zone.drop-zone-active {
+            border-color: #4f46e5 !important;
+            background-color: rgba(79, 70, 229, 0.05) !important;
+        }
+        body.light-theme #upload-status {
+            background-color: rgba(236, 254, 255, 0.96);
+            box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.35);
+        }
+        body.light-theme #upload-status button:hover {
+            background-color: rgba(8, 145, 178, 0.1);
+        }
+        body.light-theme .device-status-badge {
+            background-color: #ecfeff;
+            border-color: #22d3ee;
+            color: #0e7490;
+            box-shadow: 0 1px 4px rgb(8 145 178 / 0.16);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col no-select overflow-hidden">
+
+    <!-- Header / Navbar (Terkunci / Fixed di bagian atas) -->
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10 shadow-md shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20 flex items-center justify-center">
+                <i class="fa-solid fa-map-location-dot text-xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    HSSE POINT
+                    <span class="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-medium">v1.6</span>
+                </h1>
+                <p class="text-xs text-slate-400">Penitikan CCTV & Access Control Reader pada Denah</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Mini Stats -->
+        <div class="hidden lg:flex items-center gap-6 text-sm bg-slate-950/50 px-4 py-2 rounded-xl border border-slate-800/80">
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-cyan-400 rounded-full"></div>
+                <span class="text-slate-400">CCTV:</span>
+                <span id="stat-cctv-count" class="font-bold text-white">0</span>
+            </div>
+            <div class="h-4 w-px bg-slate-800"></div>
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-emerald-400 rounded-full"></div>
+                <span class="text-slate-400">Access Reader:</span>
+                <span id="stat-acs-count" class="font-bold text-white">0</span>
+            </div>
+            <div class="h-4 w-px bg-slate-800"></div>
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-indigo-400 rounded-full"></div>
+                <span class="text-slate-400">Total Perangkat:</span>
+                <span id="stat-total-count" class="font-bold text-white">0</span>
+            </div>
+        </div>
+
+        <!-- Global Action Buttons -->
+        <div class="flex items-center gap-3">
+            <!-- Indikator simpan otomatis (menggantikan SAVE / SAVE AS / Recent Document) -->
+            <div id="autosave-indicator" class="hidden md:flex items-center gap-1.5 text-[11px] text-slate-500" title="Semua perubahan tersimpan otomatis di perangkat ini">
+                <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                <span id="autosave-text">Tersimpan otomatis</span>
+            </div>
+
+            <!-- Theme Toggle Button (posisi paling kanan) -->
+            <button id="btn-theme-toggle" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition" title="Ganti Tema">
+                <i class="fa-solid fa-sun text-amber-500 hidden" id="theme-icon-sun"></i>
+                <i class="fa-solid fa-moon text-indigo-400" id="theme-icon-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container Layout (Mengunci layar agar tidak terjadi scroll global) -->
+    <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden relative">
+        
+        <!-- Sidebar Kiri: Daftar Lokasi (Perusahaan > Gedung > Lantai) -->
+        <aside id="left-sidebar" class="order-1 w-full md:w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex flex-col h-full min-h-0 shrink-0 shadow-lg z-20 transition-all duration-200">
+
+            <!-- Konten penuh panel lokasi -->
+            <div id="left-full" class="flex flex-col h-full min-h-0">
+                <!-- Header panel -->
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+                    <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-indigo-400"></i> Daftar Lokasi
+                    </h2>
+                    <button id="btn-collapse-left" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Ciutkan panel lokasi">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </button>
+                </div>
+
+                <!-- Tombol Tambah Lokasi -->
+                <div class="p-4 border-b border-slate-800 shrink-0">
+                    <button id="btn-add-location" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Tambah Lokasi
+                    </button>
+                </div>
+
+                <!-- Pohon Lokasi (Perusahaan > Gedung > Lantai) -->
+                <div class="flex-1 overflow-y-auto p-3 min-h-0">
+                    <div id="location-empty" class="flex flex-col items-center justify-center text-center p-6 mt-6 border border-dashed border-slate-800 rounded-xl bg-slate-950/20">
+                        <i class="fa-solid fa-map-location-dot text-2xl text-slate-700 mb-2"></i>
+                        <p class="text-xs font-semibold text-slate-400">Belum ada lokasi</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Klik "Tambah Lokasi" untuk membuat lokasi &amp; denah pertama Anda.</p>
+                    </div>
+                    <div id="location-tree" class="space-y-1 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Strip ketika panel diciutkan -->
+            <div id="left-collapsed" class="hidden flex-col items-center py-3 gap-3 h-full">
+                <button id="btn-expand-left" class="p-2 hover:bg-slate-800 rounded-lg text-slate-300 hover:text-white transition" title="Buka panel lokasi">
+                    <i class="fa-solid fa-angles-right"></i>
+                </button>
+                <button id="btn-add-location-collapsed" class="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition" title="Tambah Lokasi">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <div class="text-[10px] text-slate-500 font-semibold tracking-widest select-none" style="writing-mode: vertical-rl;">LOKASI</div>
+            </div>
+        </aside>
+
+        <!-- Sidebar Kanan: Detail Perangkat (order-3 agar tampil setelah <main>) -->
+        <aside id="right-sidebar" class="order-3 w-12 bg-slate-900 border-l border-slate-800 flex flex-col h-full min-h-0 shrink-0 shadow-lg z-20 transition-all duration-200">
+
+            <!-- Strip ketika panel diciutkan (default tampil) -->
+            <div id="right-collapsed" class="flex flex-col items-center py-3 gap-3 h-full">
+                <button id="btn-expand-right" class="p-2 hover:bg-slate-800 rounded-lg text-slate-300 hover:text-white transition" title="Buka panel perangkat">
+                    <i class="fa-solid fa-angles-left"></i>
+                </button>
+                <div class="text-[10px] text-slate-500 font-semibold tracking-widest select-none" style="writing-mode: vertical-rl;">PERANGKAT</div>
+                <span id="right-collapsed-count" class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded-full font-bold">0</span>
+            </div>
+
+            <!-- Konten penuh panel perangkat -->
+            <div id="right-full" class="hidden flex-col h-full min-h-0 overflow-y-auto">
+                <!-- Header panel -->
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <!-- Tombol kembali ke daftar lokasi (khusus mobile) -->
+                        <button id="btn-mobile-back" class="md:hidden p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition shrink-0" title="Kembali ke daftar lokasi">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2 truncate">
+                            <i class="fa-solid fa-microchip text-indigo-400"></i> Detail Perangkat
+                        </h2>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <!-- Unduh Gambar (dipindah dari top bar ke sidebar kanan) -->
+                        <button id="btn-export-image" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-[11px] font-semibold rounded-lg transition shadow-lg shadow-indigo-600/20 flex items-center gap-1.5" title="Unduh gambar denah + titik">
+                            <i class="fa-solid fa-download"></i> Unduh
+                        </button>
+                        <button id="btn-collapse-right" class="hidden md:block p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Ciutkan panel perangkat">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info lokasi aktif (perusahaan / gedung / lantai / area) -->
+                <div id="active-location-banner" class="hidden px-4 py-3 border-b border-slate-800 bg-slate-800/40 shrink-0"></div>
+
+                <!-- Petunjuk saat belum ada lokasi aktif -->
+                <div id="no-location-hint" class="p-6 text-center">
+                    <i class="fa-solid fa-arrow-left text-slate-700 text-xl mb-2"></i>
+                    <p class="text-xs font-semibold text-slate-400">Belum ada lokasi dipilih</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Pilih atau tambah lokasi di panel kiri untuk mulai menandai perangkat.</p>
+                </div>
+
+            <!-- Editor Detail Perangkat -->
+            <div id="editor-panel" class="hidden p-5 border-b border-slate-800 bg-slate-800/40 shrink-0">
+                <div class="flex items-center justify-between mb-4">
+                    <button id="btn-close-editor" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5" title="Kembali ke daftar titik">
+                        <i class="fa-solid fa-arrow-left"></i> Daftar Titik
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Preview Icon & ID -->
+                    <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div id="editor-device-icon" class="w-10 h-10 rounded-lg flex items-center justify-center text-lg text-white">
+                            <i class="fa-solid fa-video"></i>
+                        </div>
+                        <div>
+                            <span id="editor-device-type-badge" class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400">CCTV</span>
+                            <h4 id="editor-device-id" class="text-xs font-mono text-slate-400 mt-0.5">DEV-001</h4>
+                        </div>
+                        <button id="btn-delete-device" class="ml-auto bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 p-2 rounded-lg transition duration-150" title="Hapus Titik">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+
+                    <!-- Input: Nama Titik -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nama Titik</label>
+                        <input type="text" id="input-dev-name" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: CCTV Area Lobby">
+                    </div>
+
+                    <!-- Input: Jenis Perangkat -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Jenis/Model Perangkat</label>
+                        <input type="text" id="input-dev-model" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: IP Dome 4MP / RFID Reader">
+                    </div>
+
+                    <!-- Input: Kondisi Perangkat -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Kondisi Proyek</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-cond-existing" class="py-2 px-3 text-xs font-semibold rounded-lg border flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-history"></i> Existing
+                            </button>
+                            <button id="btn-cond-new" class="py-2 px-3 text-xs font-semibold rounded-lg border flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-plus-circle"></i> New (Rencana)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Input: Ukuran Objek -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Ukuran Objek</label>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-scale-dec" class="py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-300 flex-1 flex items-center justify-center gap-1.5 transition" title="Perkecil Objek">
+                                <i class="fa-solid fa-magnifying-glass-minus"></i> Perkecil
+                            </button>
+                            <button id="btn-scale-inc" class="py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-300 flex-1 flex items-center justify-center gap-1.5 transition" title="Perbesar Objek">
+                                <i class="fa-solid fa-magnifying-glass-plus"></i> Perbesar
+                            </button>
+                            <span id="label-scale-val" class="text-xs font-mono text-slate-400 w-12 text-center select-none">1.0x</span>
+                        </div>
+                    </div>
+
+                    <!-- Unggah Foto Lokasi / Aktual -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Foto Lokasi / Aktual</label>
+                        <div class="relative">
+                            <div id="photo-preview-container" class="hidden relative border border-slate-800 rounded-xl overflow-hidden aspect-video bg-slate-950 flex items-center justify-center mb-2">
+                                <img id="photo-preview-img" src="" alt="Foto Lokasi" class="max-h-full max-w-full object-contain">
+                                <button id="btn-remove-photo" class="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-md transition" title="Hapus Foto">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                            <div id="photo-upload-placeholder" class="border border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950 p-4 rounded-xl cursor-pointer text-center flex flex-col items-center justify-center transition hover:bg-slate-900/50">
+                                <input type="file" id="input-dev-photo" accept="image/*" class="hidden" />
+                                <i class="fa-solid fa-camera text-slate-500 text-xl mb-1.5"></i>
+                                <span class="text-xs font-semibold text-slate-300">Unggah Foto Aktual</span>
+                                <span class="text-[9px] text-slate-500 mt-1">Mendukung format PNG/JPG</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Petunjuk: kontrol diatur langsung di objek pada denah -->
+                    <div class="pt-2 border-t border-slate-800/80">
+                        <div class="flex items-start gap-2.5 bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                            <i class="fa-solid fa-arrow-pointer text-indigo-400 mt-0.5 shrink-0"></i>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">
+                                Atur <strong class="text-slate-300">putar</strong>, <strong class="text-slate-300">jangkauan</strong>, dan <strong class="text-slate-300">ukuran</strong> langsung lewat tombol yang muncul pada titik di denah saat dipilih.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placed Devices List Section (Tumbuh mengisi sisa tinggi sidebar) -->
+            <div id="device-list-section" class="flex-1 flex flex-col p-5 min-h-[300px]">
+                <div class="flex items-center justify-between mb-3 shrink-0">
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Daftar Titik Terpasang (<span id="placed-count">0</span>)</h2>
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-filter-all" class="text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded font-medium">Semua <span id="count-all" class="opacity-80">0</span></button>
+                        <button id="btn-filter-cctv" class="text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium">CCTV <span id="count-cctv" class="opacity-80">0</span></button>
+                        <button id="btn-filter-acs" class="text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium">ACS <span id="count-acs" class="opacity-80">0</span></button>
+                    </div>
+                </div>
+
+                <!-- Empty List Placeholder -->
+                <div id="device-list-empty" class="flex-1 flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-800 rounded-xl bg-slate-950/20">
+                    <i class="fa-solid fa-map-pin text-2xl text-slate-700 mb-2"></i>
+                    <p class="text-xs font-semibold text-slate-400">Belum ada titik pemetaan</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Silakan klik area denah lantai untuk menambahkan perangkat</p>
+                </div>
+
+                <!-- Active Device List wrapper -->
+                <div id="device-list" class="hidden flex-1 space-y-2 overflow-y-auto">
+                    <!-- Loaded dynamically in JS -->
+                </div>
+            </div>
+            </div><!-- /#right-full -->
+        </aside>
+
+        <!-- Main Workspace (Right) - Denah Viewer (Tidak terpengaruh scrollbar sidebar) -->
+        <!-- 3. DEFAULT KURSOR MENJADI PANAH ('cursor-default') -->
+        <main class="order-2 flex-1 flex flex-col min-h-0 relative bg-slate-950 overflow-hidden">
+            
+            <!-- Tool Control Overlay HUD -->
+            <!-- 1. KOTAK ZOOM DIBERI ID AGAR SINKRON WARNANYA DI MODE LIGHT -->
+            <div id="zoom-hud" class="absolute top-4 left-4 z-10 flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-1.5 rounded-xl shadow-xl">
+                <button id="btn-zoom-in" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition" title="Perbesar (Zoom In)">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                </button>
+                <button id="btn-zoom-out" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition" title="Perkecil (Zoom Out)">
+                    <i class="fa-solid fa-minus text-sm"></i>
+                </button>
+                <button id="btn-zoom-reset" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition" title="Reset Tampilan">
+                    <i class="fa-solid fa-expand text-sm"></i>
+                </button>
+                <div class="h-6 w-px bg-slate-800 mx-1"></div>
+                <div class="text-[11px] font-mono font-medium text-slate-400 px-2 select-none" id="label-zoom-percent">100%</div>
+            </div>
+
+            <!-- Clear & Helper HUD -->
+            <div class="absolute top-4 right-4 z-10 flex items-center gap-1.5">
+                <button id="btn-clear-canvas" class="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 text-xs font-semibold rounded-xl transition border border-rose-500/20 flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-trash-arrow-up"></i> Bersihkan Semua
+                </button>
+            </div>
+
+            <!-- Dynamic Workspace Wrapper -->
+            <div id="workspace-container" class="flex-1 overflow-hidden relative cursor-default workspace-grid flex items-center justify-center">
+                
+                <!-- Pan & Zoom Layer -->
+                <div id="transform-layer" class="origin-center transition-transform duration-75 select-none relative" style="transform: translate(0px, 0px) scale(1);">
+                    
+                    <!-- Floor Plan Background element wrapper -->
+                    <div id="blueprint-wrapper" class="relative max-w-full max-h-full shadow-2xl border border-slate-700/50 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
+                        
+                        <!-- Main Floor Plan Image (Rendered here, standard dynamic preview) -->
+                        <img id="blueprint-img" src="" alt="Floor Plan" class="max-w-none block select-none pointer-events-none" style="display: none;" />
+                        
+                        <!-- PDF rendering Canvas -->
+                        <canvas id="pdf-render-canvas" class="hidden"></canvas>
+
+                        <!-- Empty Placeholder inside Workspace -->
+                        <div id="blueprint-placeholder" class="p-10 text-center max-w-sm flex flex-col items-center">
+                            <div class="w-16 h-16 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center text-slate-500 mb-4 shadow-inner">
+                                <i class="fa-solid fa-map text-3xl"></i>
+                            </div>
+                            <h3 class="text-sm font-semibold text-slate-300">Belum Ada Denah</h3>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                                Tambah lokasi lewat panel kiri (satu lantai = satu denah) dan lampirkan denah (.png, .jpg, .pdf)
+                                pada formulir lokasi. Pilih lantai di panel kiri untuk membuka denahnya.
+                            </p>
+                        </div>
+
+                        <!-- Markers Layer Overlay -->
+                        <div id="markers-overlay" class="absolute inset-0 z-10 hidden" style="width: 100%; height: 100%;">
+                            <!-- Placed pins live here -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace Status / Bottom Instructions -->
+            <div class="bg-slate-900 border-t border-slate-800 px-6 py-2 flex justify-between items-center text-[10px] text-slate-500 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-mouse"></i> Klik Kanan + Geser: Navigasi Map</span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-mouse-pointer"></i> Klik Kiri Titik: Edit Detail / Taruh Titik Baru</span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-arrows-alt"></i> Klik Kiri + Geser Marker: Ubah Posisi</span>
+                </div>
+                <div>
+                    <span id="canvas-size-info" class="font-mono">Resolusi: 0 x 0 px</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form Tambah / Ubah Lokasi -->
+    <div id="modal-location" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl relative flex flex-col max-h-[92vh]">
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
+                <div>
+                    <h3 id="modal-location-title" class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-location-dot text-indigo-400"></i> Tambah Lokasi</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Satu lokasi mewakili satu lantai dengan satu denah.</p>
+                </div>
+                <button id="btn-close-location" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Body Form (scrollable) -->
+            <form id="form-location" class="p-5 overflow-y-auto flex-1 space-y-4">
+                <!-- 1. Nama Perusahaan -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nama Perusahaan <span class="text-rose-400">*</span></label>
+                    <select id="loc-perusahaan" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                        <option value="">-- Pilih Perusahaan --</option>
+                        <option value="PT PERTAMINA">PT PERTAMINA</option>
+                        <option value="PT PERTAMINA PATRA NIAGA">PT PERTAMINA PATRA NIAGA</option>
+                        <option value="PT PERTAMINA INTERNATIONAL SHIPPING">PT PERTAMINA INTERNATIONAL SHIPPING</option>
+                        <option value="__other__">Lainnya (tulis sendiri)</option>
+                    </select>
+                    <input type="text" id="loc-perusahaan-other" class="hidden w-full mt-2 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Tulis nama perusahaan...">
+                </div>
+
+                <!-- 2. Nama Gedung -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nama Gedung <span class="text-rose-400">*</span></label>
+                    <input type="text" id="loc-gedung" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: Gedung Utama / Menara A">
+                </div>
+
+                <!-- 3. Alamat -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Alamat</label>
+                    <textarea id="loc-alamat" rows="2" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition resize-none" placeholder="Alamat lengkap lokasi (opsional)"></textarea>
+                </div>
+
+                <!-- 4. GPS -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">GPS (Latitude, Longitude)</label>
+                    <input type="text" id="loc-gps" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: -6.200000, 106.816666">
+                </div>
+
+                <!-- 5. Area & 6. Lantai -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Area <span class="text-rose-400">*</span></label>
+                        <select id="loc-area" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                            <option value="">-- Pilih --</option>
+                            <option value="office">Office</option>
+                            <option value="outdoor">Outdoor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Lantai <span class="text-rose-400">*</span></label>
+                        <input type="text" id="loc-lantai" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: 1 / GF / Basement">
+                    </div>
+                </div>
+
+                <!-- 7. Denah (PNG/PDF) -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Denah Lantai (PNG / PDF)</label>
+                    <div id="loc-denah-drop" class="border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950 hover:bg-slate-900/50 p-4 rounded-xl cursor-pointer transition text-center flex flex-col items-center justify-center relative">
+                        <input type="file" id="loc-denah-file" accept="image/*,.pdf" class="hidden" />
+                        <div class="text-indigo-400 mb-1.5"><i class="fa-solid fa-cloud-arrow-up text-2xl"></i></div>
+                        <p class="text-xs font-semibold text-slate-200">Klik / seret berkas denah</p>
+                        <p class="text-[10px] text-slate-500 mt-1">1 lantai = 1 denah • PNG, JPG, atau PDF</p>
+                    </div>
+                    <!-- Info denah terpilih -->
+                    <div id="loc-denah-info" class="hidden mt-2 flex items-center gap-3 bg-slate-950 border border-slate-800 rounded-lg p-2.5">
+                        <div class="bg-indigo-500/20 p-2 rounded-lg text-indigo-400"><i id="loc-denah-icon" class="fa-solid fa-file-image"></i></div>
+                        <div class="overflow-hidden flex-1">
+                            <p id="loc-denah-name" class="text-xs font-bold text-slate-200 truncate">denah.png</p>
+                            <p id="loc-denah-size" class="text-[10px] text-slate-400">—</p>
+                        </div>
+                        <button type="button" id="loc-denah-remove" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-rose-400 transition" title="Hapus denah">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Footer aksi -->
+            <div class="p-5 border-t border-slate-800 flex justify-end gap-2 shrink-0">
+                <button id="btn-cancel-location" class="text-xs text-slate-400 hover:text-slate-200 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition">Batal</button>
+                <button id="btn-submit-location" class="text-xs text-white font-semibold py-2 px-5 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Lokasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pilihan Jenis Titik Baru -->
+    <div id="modal-selector" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
+            <h3 class="text-sm font-bold text-white mb-1">Tambah Perangkat Baru</h3>
+            <p class="text-xs text-slate-400 mb-5">Pilih jenis perangkat yang ingin dititik di lokasi ini.</p>
+            
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                <!-- CCTV Option Button -->
+                <button id="modal-select-cctv" class="flex flex-col items-center justify-center p-4 rounded-xl border border-cyan-500/20 hover:border-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-300 transition group">
+                    <div class="w-12 h-12 rounded-lg bg-cyan-400/10 flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
+                        <i class="fa-solid fa-video"></i>
+                    </div>
+                    <span class="text-xs font-bold">CCTV</span>
+                    <span class="text-[9px] text-slate-500 mt-0.5 text-center leading-none">Kamera & Area Pandang</span>
+                </button>
+                
+                <!-- Access Reader Option Button -->
+                <button id="modal-select-acs" class="flex flex-col items-center justify-center p-4 rounded-xl border border-emerald-500/20 hover:border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition group">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-400/10 flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <span class="text-xs font-bold">Access Reader</span>
+                    <span class="text-[9px] text-slate-500 mt-0.5 text-center leading-none">Kartu / Biometrik</span>
+                </button>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="modal-cancel" class="text-xs text-slate-400 hover:text-slate-200 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification/Toast Overlay -->
+    <div id="toast-container" class="fixed bottom-12 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        <!-- Dynmically generated notifications -->
+    </div>
+
+    <!-- Main Logic Script -->
+    <script>
+        // Core state architecture
+        const state = {
+            // Kumpulan lokasi (setiap lokasi = 1 lantai + 1 denah + perangkatnya sendiri)
+            locations: [],
+            activeLocationId: null,
+            editingLocationId: null,      // id lokasi yang sedang diubah lewat form (null = tambah baru)
+            pendingDenah: null,           // {src,name,type,size} denah terpilih di form
+            collapsedGroups: {},          // key grup pohon lokasi -> true bila diciutkan
+            leftCollapsed: false,         // panel kiri: default terbuka
+            rightCollapsed: true,         // panel kanan: default diciutkan
+
+            // Working-set lokasi aktif (dipakai oleh renderer denah & marker yang sudah ada)
+            markers: [],
+            selectedMarkerId: null,
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            isPanning: false,
+            startPanX: 0,
+            startPanY: 0,
+            bgImageSrc: null,
+            imageWidth: 0,
+            imageHeight: 0,
+            pendingMarkerCoords: { x: 0, y: 0 },
+            activeFilter: 'all', // 'all', 'cctv', 'acs'
+            idCounter: 1,
+            theme: 'dark', // 'dark' or 'light'
+            mobileView: 'list' // 'list' | 'detail' (navigasi khusus mobile)
+        };
+
+        // Cache DOM elements
+        const dom = {
+            // Panel Lokasi (kiri) + toggle collapse
+            leftSidebar: document.getElementById('left-sidebar'),
+            leftFull: document.getElementById('left-full'),
+            leftCollapsed: document.getElementById('left-collapsed'),
+            btnCollapseLeft: document.getElementById('btn-collapse-left'),
+            btnExpandLeft: document.getElementById('btn-expand-left'),
+            btnAddLocation: document.getElementById('btn-add-location'),
+            btnAddLocationCollapsed: document.getElementById('btn-add-location-collapsed'),
+            locationEmpty: document.getElementById('location-empty'),
+            locationTree: document.getElementById('location-tree'),
+
+            // Panel Perangkat (kanan) + toggle collapse
+            rightSidebar: document.getElementById('right-sidebar'),
+            rightFull: document.getElementById('right-full'),
+            rightCollapsedStrip: document.getElementById('right-collapsed'),
+            btnCollapseRight: document.getElementById('btn-collapse-right'),
+            btnExpandRight: document.getElementById('btn-expand-right'),
+            rightCollapsedCount: document.getElementById('right-collapsed-count'),
+            activeLocationBanner: document.getElementById('active-location-banner'),
+            noLocationHint: document.getElementById('no-location-hint'),
+
+            // Modal Form Lokasi
+            modalLocation: document.getElementById('modal-location'),
+            modalLocationTitle: document.getElementById('modal-location-title'),
+            formLocation: document.getElementById('form-location'),
+            btnCloseLocation: document.getElementById('btn-close-location'),
+            btnCancelLocation: document.getElementById('btn-cancel-location'),
+            btnSubmitLocation: document.getElementById('btn-submit-location'),
+            locPerusahaan: document.getElementById('loc-perusahaan'),
+            locPerusahaanOther: document.getElementById('loc-perusahaan-other'),
+            locGedung: document.getElementById('loc-gedung'),
+            locAlamat: document.getElementById('loc-alamat'),
+            locGps: document.getElementById('loc-gps'),
+            locArea: document.getElementById('loc-area'),
+            locLantai: document.getElementById('loc-lantai'),
+            locDenahDrop: document.getElementById('loc-denah-drop'),
+            locDenahFile: document.getElementById('loc-denah-file'),
+            locDenahInfo: document.getElementById('loc-denah-info'),
+            locDenahIcon: document.getElementById('loc-denah-icon'),
+            locDenahName: document.getElementById('loc-denah-name'),
+            locDenahSize: document.getElementById('loc-denah-size'),
+            locDenahRemove: document.getElementById('loc-denah-remove'),
+
+            blueprintImg: document.getElementById('blueprint-img'),
+            pdfCanvas: document.getElementById('pdf-render-canvas'),
+            blueprintPlaceholder: document.getElementById('blueprint-placeholder'),
+            markersOverlay: document.getElementById('markers-overlay'),
+            blueprintWrapper: document.getElementById('blueprint-wrapper'),
+            transformLayer: document.getElementById('transform-layer'),
+            workspaceContainer: document.getElementById('workspace-container'),
+            canvasSizeInfo: document.getElementById('canvas-size-info'),
+            
+            // HUD & zoom controls
+            btnZoomIn: document.getElementById('btn-zoom-in'),
+            btnZoomOut: document.getElementById('btn-zoom-out'),
+            btnZoomReset: document.getElementById('btn-zoom-reset'),
+            labelZoomPercent: document.getElementById('label-zoom-percent'),
+            btnClearCanvas: document.getElementById('btn-clear-canvas'),
+
+            // Modals
+            modalSelector: document.getElementById('modal-selector'),
+            btnSelectCCTV: document.getElementById('modal-select-cctv'),
+            btnSelectACS: document.getElementById('modal-select-acs'),
+            btnModalCancel: document.getElementById('modal-cancel'),
+
+            // Editor Panel
+            editorPanel: document.getElementById('editor-panel'),
+            editorDeviceIcon: document.getElementById('editor-device-icon'),
+            editorDeviceTypeBadge: document.getElementById('editor-device-type-badge'),
+            editorDeviceId: document.getElementById('editor-device-id'),
+            btnDeleteDevice: document.getElementById('btn-delete-device'),
+            inputDevName: document.getElementById('input-dev-name'),
+            inputDevModel: document.getElementById('input-dev-model'),
+            btnCondExisting: document.getElementById('btn-cond-existing'),
+            btnCondNew: document.getElementById('btn-cond-new'),
+            btnCloseEditor: document.getElementById('btn-close-editor'),
+
+            // Input tambahan (Foto)
+            inputDevPhoto: document.getElementById('input-dev-photo'),
+            photoPreviewContainer: document.getElementById('photo-preview-container'),
+            photoPreviewImg: document.getElementById('photo-preview-img'),
+            photoUploadPlaceholder: document.getElementById('photo-upload-placeholder'),
+            btnRemovePhoto: document.getElementById('btn-remove-photo'),
+            btnScaleDec: document.getElementById('btn-scale-dec'),
+            btnScaleInc: document.getElementById('btn-scale-inc'),
+            labelScaleVal: document.getElementById('label-scale-val'),
+
+            // Theme Toggle
+            btnThemeToggle: document.getElementById('btn-theme-toggle'),
+            themeIconSun: document.getElementById('theme-icon-sun'),
+            themeIconMoon: document.getElementById('theme-icon-moon'),
+
+            // Indikator simpan otomatis
+            autosaveText: document.getElementById('autosave-text'),
+
+            // Navigasi mobile (kembali ke daftar lokasi)
+            btnMobileBack: document.getElementById('btn-mobile-back'),
+
+            // Device Lists
+            deviceListEmpty: document.getElementById('device-list-empty'),
+            deviceList: document.getElementById('device-list'),
+            deviceListSection: document.getElementById('device-list-section'),
+            placedCount: document.getElementById('placed-count'),
+            btnFilterAll: document.getElementById('btn-filter-all'),
+            btnFilterCctv: document.getElementById('btn-filter-cctv'),
+            btnFilterAcs: document.getElementById('btn-filter-acs'),
+            countAll: document.getElementById('count-all'),
+            countCctv: document.getElementById('count-cctv'),
+            countAcs: document.getElementById('count-acs'),
+
+            // Mini Stats
+            statCctv: document.getElementById('stat-cctv-count'),
+            statAcs: document.getElementById('stat-acs-count'),
+            statTotal: document.getElementById('stat-total-count'),
+
+            // Export Actions
+            btnExportImage: document.getElementById('btn-export-image')
+        };
+
+        // Render halaman 1 PDF ke canvas lalu kembalikan data URL PNG.
+        const pdfToDataURL = async (pdfData) => {
+            const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 1.5 }); // Scale up agar tajam
+            const canvas = dom.pdfCanvas;
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: context, viewport }).promise;
+            return canvas.toDataURL('image/png');
+        };
+
+        // Proses berkas denah (gambar/PDF) -> {src,name,type,size}; resolve null bila gagal/invalid.
+        const processDenahFile = (file) => new Promise((resolve) => {
+            if (!file) { resolve(null); return; }
+            const size = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
+            if (file.type === "application/pdf") {
+                showNotification("Membuka PDF...");
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const src = await pdfToDataURL(new Uint8Array(e.target.result));
+                        resolve({ src, name: file.name, type: 'pdf', size });
+                    } catch (err) {
+                        console.error(err);
+                        showNotification("Gagal memproses file PDF.", "error");
+                        resolve(null);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve({ src: e.target.result, name: file.name, type: 'image', size });
+                reader.readAsDataURL(file);
+            } else {
+                showNotification("Format berkas tidak didukung! Gunakan PDF atau Gambar.", "error");
+                resolve(null);
+            }
+        });
+
+        // Apply background image update on viewport canvas
+        const updateBlueprintImage = (src, name = "Custom_Blueprint", size = "N/A") => {
+            state.bgImageSrc = src;
+            dom.blueprintImg.src = src;
+            dom.blueprintImg.style.display = 'block';
+            dom.blueprintPlaceholder.style.display = 'none';
+            dom.markersOverlay.classList.remove('hidden');
+
+            // Wait until image loads to gather true resolution
+            dom.blueprintImg.onload = function() {
+                state.imageWidth = this.naturalWidth;
+                state.imageHeight = this.naturalHeight;
+                dom.canvasSizeInfo.textContent = `Resolusi: ${state.imageWidth} x ${state.imageHeight} px`;
+                commitActiveLocation();
+                resetView();
+                renderMarkers();
+            };
+        };
+
+        // Tampilkan workspace kosong (lokasi aktif belum punya denah, atau belum ada lokasi).
+        const showEmptyWorkspace = () => {
+            dom.blueprintImg.src = "";
+            dom.blueprintImg.style.display = 'none';
+            dom.blueprintPlaceholder.style.display = 'flex';
+            dom.markersOverlay.classList.add('hidden');
+            state.bgImageSrc = null;
+            state.imageWidth = 0;
+            state.imageHeight = 0;
+            dom.canvasSizeInfo.textContent = `Resolusi: 0 x 0 px`;
+        };
+
+        /* =========================================================
+           MANAJEMEN LOKASI (Perusahaan > Gedung > Lantai)
+           Setiap lokasi = 1 lantai + 1 denah + daftar perangkatnya.
+        ========================================================= */
+        const AREA_LABEL = { office: 'Office', outdoor: 'Outdoor' };
+        const PERUSAHAAN_PRESETS = ['PT PERTAMINA', 'PT PERTAMINA PATRA NIAGA', 'PT PERTAMINA INTERNATIONAL SHIPPING'];
+
+        const genLocId = () => `loc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const getActiveLocation = () => state.locations.find(l => l.id === state.activeLocationId) || null;
+
+        // Tulis working-set (markers/denah/idCounter) kembali ke objek lokasi aktif.
+        const commitActiveLocation = () => {
+            const loc = getActiveLocation();
+            if (!loc) return;
+            loc.markers = state.markers;
+            loc.denahSrc = state.bgImageSrc;
+            loc.imageWidth = state.imageWidth;
+            loc.imageHeight = state.imageHeight;
+            loc.idCounter = state.idCounter;
+        };
+
+        // Muat sebuah lokasi ke working-set + workspace.
+        const loadLocationIntoWorkspace = (loc) => {
+            state.markers = loc.markers || (loc.markers = []);
+            state.idCounter = loc.idCounter || 1;
+            state.selectedMarkerId = null;
+            showDeviceListView();
+
+            if (loc.denahSrc) {
+                updateBlueprintImage(loc.denahSrc, loc.denahName || 'denah', 'N/A');
+            } else {
+                showEmptyWorkspace();
+                resetView();
+            }
+            renderMarkers();
+            renderActiveLocationBanner();
+        };
+
+        // Pilih lokasi -> jadikan aktif dan tampilkan denah + perangkatnya.
+        // fromUser=true bila dipicu klik lantai di sidebar (agar di mobile langsung
+        // membuka halaman detail perangkat).
+        const selectLocation = (id, fromUser = false) => {
+            commitActiveLocation();
+            state.activeLocationId = id;
+            const loc = getActiveLocation();
+            if (!loc) return;
+            loadLocationIntoWorkspace(loc);
+            if (dom.noLocationHint) dom.noLocationHint.classList.add('hidden');
+            if (state.rightCollapsed) setRightCollapsed(false);
+            if (fromUser && isMobile()) enterMobileDetail();
+            renderLocationTree();
+            scheduleAutoSave();
+        };
+
+        // Info lokasi aktif pada panel kanan.
+        const renderActiveLocationBanner = () => {
+            const loc = getActiveLocation();
+            if (!loc) {
+                dom.activeLocationBanner.classList.add('hidden');
+                return;
+            }
+            dom.activeLocationBanner.classList.remove('hidden');
+            const areaLabel = AREA_LABEL[loc.area] || loc.area || '-';
+            const areaClass = loc.area === 'outdoor'
+                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                : 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+            dom.activeLocationBanner.innerHTML = `
+                <div class="overflow-hidden">
+                    <p class="text-[10px] uppercase tracking-wider text-indigo-400 font-bold truncate">${escapeHTML(loc.perusahaan)}</p>
+                    <h4 class="text-sm font-bold text-slate-100 truncate">${escapeHTML(loc.gedung)} • Lantai ${escapeHTML(loc.lantai)}</h4>
+                    <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${areaClass}">${areaLabel}</span>
+                        ${loc.gps ? `<span class="text-[9px] text-slate-400 flex items-center gap-1"><i class="fa-solid fa-location-crosshairs"></i> ${escapeHTML(loc.gps)}</span>` : ''}
+                    </div>
+                    ${loc.alamat ? `<p class="text-[10px] text-slate-500 mt-1 leading-snug">${escapeHTML(loc.alamat)}</p>` : ''}
+                </div>
+            `;
+        };
+
+        // Render pohon lokasi berkelompok: Perusahaan > Gedung > Lantai.
+        const renderLocationTree = () => {
+            if (state.locations.length === 0) {
+                dom.locationTree.classList.add('hidden');
+                dom.locationEmpty.classList.remove('hidden');
+                dom.locationTree.innerHTML = '';
+                return;
+            }
+            dom.locationEmpty.classList.add('hidden');
+            dom.locationTree.classList.remove('hidden');
+            dom.locationTree.innerHTML = '';
+
+            const byPerusahaan = {};
+            state.locations.forEach(loc => {
+                const p = loc.perusahaan || '(Tanpa Perusahaan)';
+                const g = loc.gedung || '(Tanpa Gedung)';
+                (byPerusahaan[p] = byPerusahaan[p] || {});
+                (byPerusahaan[p][g] = byPerusahaan[p][g] || []).push(loc);
+            });
+
+            Object.keys(byPerusahaan).forEach(perusahaan => {
+                const pKey = `p:${perusahaan}`;
+                const pCollapsed = !!state.collapsedGroups[pKey];
+                const pWrap = document.createElement('div');
+                pWrap.className = 'rounded-lg overflow-hidden';
+
+                const pHeader = document.createElement('button');
+                pHeader.className = 'w-full flex items-center gap-2 px-2 py-2 text-left hover:bg-slate-800/60 rounded-lg transition';
+                pHeader.innerHTML = `
+                    <i class="fa-solid fa-chevron-${pCollapsed ? 'right' : 'down'} text-[10px] text-slate-500 w-3 text-center"></i>
+                    <i class="fa-solid fa-building text-indigo-400 text-xs"></i>
+                    <span class="text-xs font-bold text-slate-200 truncate flex-1">${escapeHTML(perusahaan)}</span>
+                `;
+                pHeader.addEventListener('click', () => {
+                    state.collapsedGroups[pKey] = !pCollapsed;
+                    renderLocationTree();
+                });
+                pWrap.appendChild(pHeader);
+
+                if (!pCollapsed) {
+                    Object.keys(byPerusahaan[perusahaan]).forEach(gedung => {
+                        const gKey = `g:${perusahaan}::${gedung}`;
+                        const gCollapsed = !!state.collapsedGroups[gKey];
+                        const gWrap = document.createElement('div');
+                        gWrap.className = 'ml-3 border-l border-slate-800 pl-1 space-y-0.5';
+
+                        const gHeader = document.createElement('button');
+                        gHeader.className = 'w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-slate-800/60 rounded-lg transition';
+                        gHeader.innerHTML = `
+                            <i class="fa-solid fa-chevron-${gCollapsed ? 'right' : 'down'} text-[9px] text-slate-500 w-3 text-center"></i>
+                            <i class="fa-solid fa-city text-slate-400 text-[11px]"></i>
+                            <span class="text-[11px] font-semibold text-slate-300 truncate flex-1">${escapeHTML(gedung)}</span>
+                            <span class="text-[9px] text-slate-500 font-mono">${byPerusahaan[perusahaan][gedung].length}</span>
+                        `;
+                        gHeader.addEventListener('click', () => {
+                            state.collapsedGroups[gKey] = !gCollapsed;
+                            renderLocationTree();
+                        });
+                        gWrap.appendChild(gHeader);
+
+                        if (!gCollapsed) {
+                            byPerusahaan[perusahaan][gedung].forEach(loc => {
+                                const isActive = loc.id === state.activeLocationId;
+                                const devCount = (loc.markers || []).length;
+                                const leaf = document.createElement('div');
+                                leaf.className = `ml-4 group flex items-center gap-2 pl-2 pr-1 py-1.5 rounded-lg cursor-pointer transition ${isActive ? 'bg-indigo-600/15 border border-indigo-500/40' : 'hover:bg-slate-800/60 border border-transparent'}`;
+                                leaf.innerHTML = `
+                                    <i class="fa-solid fa-layer-group text-[11px] ${isActive ? 'text-indigo-300' : 'text-slate-500'}"></i>
+                                    <div class="flex-1 overflow-hidden">
+                                        <p class="text-[11px] font-semibold ${isActive ? 'text-white' : 'text-slate-300'} truncate">Lantai ${escapeHTML(loc.lantai)}</p>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-[8px] uppercase font-bold ${loc.area === 'outdoor' ? 'text-amber-400' : 'text-sky-400'}">${AREA_LABEL[loc.area] || loc.area || ''}</span>
+                                            <span class="text-[8px] text-slate-500 flex items-center gap-0.5"><i class="fa-solid fa-microchip"></i> ${devCount}</span>
+                                            ${loc.denahSrc
+                                                ? '<i class="fa-solid fa-image text-[8px] text-indigo-400" title="Ada denah"></i>'
+                                                : '<i class="fa-solid fa-triangle-exclamation text-[8px] text-slate-600" title="Belum ada denah"></i>'}
+                                        </div>
+                                    </div>
+                                    <button class="loc-edit opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition" title="Ubah lokasi"><i class="fa-solid fa-pen text-[9px]"></i></button>
+                                    <button class="loc-del opacity-0 group-hover:opacity-100 p-1 hover:bg-rose-500/10 rounded text-slate-400 hover:text-rose-400 transition" title="Hapus lokasi"><i class="fa-solid fa-trash-can text-[9px]"></i></button>
+                                `;
+                                leaf.addEventListener('click', (e) => {
+                                    if (e.target.closest('.loc-edit') || e.target.closest('.loc-del')) return;
+                                    selectLocation(loc.id, true);
+                                });
+                                leaf.querySelector('.loc-edit').addEventListener('click', (e) => { e.stopPropagation(); openLocationModal(loc.id); });
+                                leaf.querySelector('.loc-del').addEventListener('click', (e) => { e.stopPropagation(); deleteLocation(loc.id); });
+                                gWrap.appendChild(leaf);
+                            });
+                        }
+                        pWrap.appendChild(gWrap);
+                    });
+                }
+                dom.locationTree.appendChild(pWrap);
+            });
+        };
+
+        // Hapus lokasi beserta perangkatnya.
+        const deleteLocation = (id) => {
+            const loc = state.locations.find(l => l.id === id);
+            if (!loc) return;
+            if (!confirm(`Hapus lokasi "${loc.perusahaan} - ${loc.gedung} - Lantai ${loc.lantai}" beserta semua titik perangkatnya?`)) return;
+
+            const wasActive = state.activeLocationId === id;
+            state.locations = state.locations.filter(l => l.id !== id);
+
+            if (wasActive) {
+                state.activeLocationId = null;
+                if (state.locations.length > 0) {
+                    selectLocation(state.locations[0].id);
+                } else {
+                    state.markers = [];
+                    state.selectedMarkerId = null;
+                    dom.editorPanel.classList.add('hidden');
+                    showEmptyWorkspace();
+                    resetView();
+                    renderMarkers();
+                    renderActiveLocationBanner();
+                    if (dom.noLocationHint) dom.noLocationHint.classList.remove('hidden');
+                }
+            }
+            renderLocationTree();
+            scheduleAutoSave();
+            showNotification("Lokasi telah dihapus.", "warning");
+        };
+
+        /* ---------- Form Tambah / Ubah Lokasi ---------- */
+        const showDenahInfo = (denah) => {
+            dom.locDenahIcon.className = denah.type === 'pdf' ? 'fa-solid fa-file-pdf' : 'fa-solid fa-file-image';
+            dom.locDenahName.textContent = denah.name;
+            dom.locDenahSize.textContent = denah.size || '';
+            dom.locDenahInfo.classList.remove('hidden');
+            dom.locDenahDrop.classList.add('hidden');
+        };
+
+        const clearDenahInfo = () => {
+            state.pendingDenah = null;
+            dom.locDenahInfo.classList.add('hidden');
+            dom.locDenahDrop.classList.remove('hidden');
+            dom.locDenahFile.value = '';
+        };
+
+        const resetLocationForm = () => {
+            dom.formLocation.reset();
+            dom.locPerusahaanOther.classList.add('hidden');
+            dom.locPerusahaanOther.value = '';
+            clearDenahInfo();
+        };
+
+        const openLocationModal = (editId = null) => {
+            resetLocationForm();
+            state.editingLocationId = editId;
+
+            if (editId) {
+                const loc = state.locations.find(l => l.id === editId);
+                if (!loc) return;
+                dom.modalLocationTitle.innerHTML = '<i class="fa-solid fa-pen text-indigo-400"></i> Ubah Lokasi';
+                dom.btnSubmitLocation.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan';
+
+                if (PERUSAHAAN_PRESETS.includes(loc.perusahaan)) {
+                    dom.locPerusahaan.value = loc.perusahaan;
+                } else {
+                    dom.locPerusahaan.value = '__other__';
+                    dom.locPerusahaanOther.classList.remove('hidden');
+                    dom.locPerusahaanOther.value = loc.perusahaan || '';
+                }
+                dom.locGedung.value = loc.gedung || '';
+                dom.locAlamat.value = loc.alamat || '';
+                dom.locGps.value = loc.gps || '';
+                dom.locArea.value = loc.area || '';
+                dom.locLantai.value = loc.lantai || '';
+                if (loc.denahSrc) {
+                    state.pendingDenah = { src: loc.denahSrc, name: loc.denahName || 'denah', type: loc.denahType || 'image', size: 'Tersimpan' };
+                    showDenahInfo(state.pendingDenah);
+                }
+            } else {
+                dom.modalLocationTitle.innerHTML = '<i class="fa-solid fa-location-dot text-indigo-400"></i> Tambah Lokasi';
+                dom.btnSubmitLocation.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Lokasi';
+            }
+            dom.modalLocation.classList.remove('hidden');
+        };
+
+        const closeLocationModal = () => {
+            dom.modalLocation.classList.add('hidden');
+            state.editingLocationId = null;
+        };
+
+        const submitLocationForm = () => {
+            let perusahaan = dom.locPerusahaan.value;
+            if (perusahaan === '__other__') perusahaan = dom.locPerusahaanOther.value.trim();
+            const gedung = dom.locGedung.value.trim();
+            const area = dom.locArea.value;
+            const lantai = dom.locLantai.value.trim();
+
+            if (!perusahaan) { showNotification("Nama Perusahaan wajib diisi.", "error"); return; }
+            if (!gedung) { showNotification("Nama Gedung wajib diisi.", "error"); return; }
+            if (!area) { showNotification("Area wajib dipilih.", "error"); return; }
+            if (!lantai) { showNotification("Lantai wajib diisi.", "error"); return; }
+
+            const data = {
+                perusahaan,
+                gedung,
+                alamat: dom.locAlamat.value.trim(),
+                gps: dom.locGps.value.trim(),
+                area,
+                lantai,
+                denahSrc: state.pendingDenah ? state.pendingDenah.src : null,
+                denahName: state.pendingDenah ? state.pendingDenah.name : null,
+                denahType: state.pendingDenah ? state.pendingDenah.type : null
+            };
+
+            if (state.editingLocationId) {
+                const loc = state.locations.find(l => l.id === state.editingLocationId);
+                if (loc) {
+                    Object.assign(loc, data);
+                    renderLocationTree();
+                    if (state.activeLocationId === loc.id) loadLocationIntoWorkspace(loc);
+                    showNotification("Lokasi berhasil diperbarui.");
+                }
+            } else {
+                const loc = { id: genLocId(), ...data, markers: [], idCounter: 1, imageWidth: 0, imageHeight: 0 };
+                state.locations.push(loc);
+                renderLocationTree();
+                selectLocation(loc.id);
+                showNotification("Lokasi baru berhasil ditambahkan.");
+            }
+            scheduleAutoSave();
+            closeLocationModal();
+        };
+
+        /* ---------- Collapse / Expand Sidebar ---------- */
+        const setLeftCollapsed = (collapsed) => {
+            state.leftCollapsed = collapsed;
+            if (collapsed) {
+                dom.leftSidebar.classList.remove('w-full', 'md:w-80', 'lg:w-96');
+                dom.leftSidebar.classList.add('w-12');
+                dom.leftFull.classList.add('hidden');
+                dom.leftCollapsed.classList.remove('hidden');
+                dom.leftCollapsed.classList.add('flex');
+            } else {
+                dom.leftSidebar.classList.add('w-full', 'md:w-80', 'lg:w-96');
+                dom.leftSidebar.classList.remove('w-12');
+                dom.leftFull.classList.remove('hidden');
+                dom.leftCollapsed.classList.add('hidden');
+                dom.leftCollapsed.classList.remove('flex');
+            }
+        };
+
+        const setRightCollapsed = (collapsed) => {
+            state.rightCollapsed = collapsed;
+            if (collapsed) {
+                dom.rightSidebar.classList.remove('w-full', 'md:w-80', 'lg:w-96');
+                dom.rightSidebar.classList.add('w-12');
+                dom.rightFull.classList.add('hidden');
+                dom.rightFull.classList.remove('flex');
+                dom.rightCollapsedStrip.classList.remove('hidden');
+                dom.rightCollapsedStrip.classList.add('flex');
+            } else {
+                dom.rightSidebar.classList.add('w-full', 'md:w-80', 'lg:w-96');
+                dom.rightSidebar.classList.remove('w-12');
+                dom.rightFull.classList.remove('hidden');
+                dom.rightFull.classList.add('flex');
+                dom.rightCollapsedStrip.classList.add('hidden');
+                dom.rightCollapsedStrip.classList.remove('flex');
+            }
+        };
+
+        /* ---------- Navigasi Detail vs Daftar Titik (panel kanan) ---------- */
+        // Tampilkan detail satu perangkat (sembunyikan daftar titik).
+        const showDeviceDetailView = () => {
+            dom.editorPanel.classList.remove('hidden');
+            if (dom.deviceListSection) dom.deviceListSection.classList.add('hidden');
+        };
+
+        // Kembali ke daftar titik (sembunyikan detail perangkat).
+        const showDeviceListView = () => {
+            dom.editorPanel.classList.add('hidden');
+            if (dom.deviceListSection) dom.deviceListSection.classList.remove('hidden');
+        };
+
+        /* ---------- Navigasi Mobile (daftar lokasi <-> detail perangkat) ---------- */
+        const isMobile = () => window.innerWidth < 768;
+
+        // Mobile: buka panel kanan sebagai halaman penuh & sembunyikan daftar lokasi.
+        const enterMobileDetail = () => {
+            dom.leftSidebar.classList.add('mobile-hide');
+            dom.rightSidebar.classList.add('mobile-detail');
+            setRightCollapsed(false);
+            state.mobileView = 'detail';
+        };
+
+        // Mobile: kembali ke daftar lokasi.
+        const exitMobileDetail = () => {
+            deselectMarker();
+            dom.rightSidebar.classList.remove('mobile-detail');
+            dom.leftSidebar.classList.remove('mobile-hide');
+            setRightCollapsed(true);
+            state.mobileView = 'list';
+        };
+
+        /* Zoom and Pan Controls */
+        const updateTransform = () => {
+            dom.transformLayer.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+            dom.labelZoomPercent.textContent = `${Math.round(state.zoom * 100)}%`;
+        };
+
+        const zoomIn = () => {
+            if (state.zoom < 6) {
+                state.zoom = Math.round((state.zoom + 0.15) * 100) / 100;
+                updateTransform();
+            }
+        };
+
+        const zoomOut = () => {
+            if (state.zoom > 0.25) {
+                state.zoom = Math.round((state.zoom - 0.15) * 100) / 100;
+                updateTransform();
+            }
+        };
+
+        const resetView = () => {
+            state.zoom = 1;
+            state.panX = 0;
+            state.panY = 0;
+            updateTransform();
+        };
+
+        // 3. NAVIGASI BARU: KLIK KANAN DRAG & PAN + KURSOR 'grabbing' SAAT MENYERET
+        dom.workspaceContainer.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // Matikan menu klik kanan browser standar khusus di area workspace denah
+        });
+
+        dom.workspaceContainer.addEventListener('mousedown', (e) => {
+            // e.button === 2 artinya Klik Kanan mouse, dan pastikan kita tidak sedang mengklik tombol marker
+            if (e.button === 2 && !e.target.closest('.device-marker')) {
+                state.isPanning = true;
+                state.startPanX = e.clientX - state.panX;
+                state.startPanY = e.clientY - state.panY;
+                dom.workspaceContainer.classList.remove('cursor-default');
+                dom.workspaceContainer.classList.add('cursor-grabbing');
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (state.isPanning) {
+                state.panX = e.clientX - state.startPanX;
+                state.panY = e.clientY - state.startPanY;
+                updateTransform();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (state.isPanning) {
+                state.isPanning = false;
+                dom.workspaceContainer.classList.remove('cursor-grabbing');
+                dom.workspaceContainer.classList.add('cursor-default');
+            }
+        });
+
+        // Dukungan Sentuhan (Mobile/Tablet) tetap dipertahankan dengan sentuhan satu jari
+        dom.workspaceContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1 && !e.target.closest('.device-marker')) {
+                state.isPanning = true;
+                state.startPanX = e.touches[0].clientX - state.panX;
+                state.startPanY = e.touches[0].clientY - state.panY;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (state.isPanning && e.touches.length === 1) {
+                state.panX = e.touches[0].clientX - state.startPanX;
+                state.panY = e.touches[0].clientY - state.startPanY;
+                updateTransform();
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            state.isPanning = false;
+        });
+
+        // Scroll Wheel Zoom
+        dom.workspaceContainer.addEventListener('wheel', (e) => {
+            if (!state.bgImageSrc) return;
+            e.preventDefault();
+            
+            const zoomFactor = e.deltaY < 0 ? 1.05 : 0.95;
+            const newZoom = state.zoom * zoomFactor;
+
+            if (newZoom >= 0.25 && newZoom <= 6) {
+                state.zoom = Math.round(newZoom * 100) / 100;
+                updateTransform();
+            }
+        }, { passive: false });
+
+
+        /* Placing Pin Logic */
+        dom.markersOverlay.addEventListener('click', (e) => {
+            // Guard: Abaikan jika yang diklik adalah marker, bukan background overlay
+            if (e.target.closest('.device-marker')) return;
+
+            // Klik kiri murni (e.button === 0) digunakan untuk menitik
+            if (e.button !== 0) return;
+
+            // Guard: harus ada lokasi aktif dengan denah sebelum menaruh titik
+            if (!state.activeLocationId) {
+                showNotification("Pilih atau tambah lokasi terlebih dahulu.", "warning");
+                return;
+            }
+
+            const rect = dom.markersOverlay.getBoundingClientRect();
+            const posX = ((e.clientX - rect.left) / rect.width) * 100;
+            const posY = ((e.clientY - rect.top) / rect.height) * 100;
+
+            state.pendingMarkerCoords = { x: posX, y: posY };
+            openSelectorModal();
+        });
+
+        const openSelectorModal = () => {
+            dom.modalSelector.classList.remove('hidden');
+        };
+
+        const closeSelectorModal = () => {
+            dom.modalSelector.classList.add('hidden');
+        };
+
+        // Choose Device & Generate Pin Info
+        const selectDeviceType = (type) => {
+            const newId = `${type === 'cctv' ? 'CTV' : 'ACS'}-${String(state.idCounter++).padStart(3, '0')}`;
+            const defaultName = type === 'cctv' ? `CCTV Titik ${state.idCounter - 1}` : `Access Reader ${state.idCounter - 1}`;
+            
+            const newMarker = {
+                id: newId,
+                type: type, // 'cctv' or 'acs'
+                x: state.pendingMarkerCoords.x,
+                y: state.pendingMarkerCoords.y,
+                name: defaultName,
+                model: type === 'cctv' ? 'IP Dome 4MP' : 'Mifare Proximity Reader',
+                condition: 'new', // 'new' or 'existing'
+                rotation: 45, // default angle
+                fovSpread: 90, // default FOV degree (lebar sudut)
+                fovRange: 1.0, // default panjang/jangkauan cone
+                scale: 1.0, // default scale factor
+                photo: null // default foto lokasi
+            };
+
+            state.markers.push(newMarker);
+            closeSelectorModal();
+            selectMarker(newId);
+            showNotification(`${type === 'cctv' ? 'CCTV' : 'Access Reader'} berhasil dipasang.`);
+        };
+
+        /* Custom marker render loop */
+        const renderMarkers = () => {
+            const selectedId = state.selectedMarkerId;
+
+            // Bersihkan Overlay Container
+            dom.markersOverlay.innerHTML = '';
+
+            // Saring marker berdasarkan kategori aktif
+            const filteredMarkers = state.markers.filter(m => {
+                if (state.activeFilter === 'all') return true;
+                return m.type === state.activeFilter;
+            });
+
+            filteredMarkers.forEach(m => {
+                const markerEl = document.createElement('div');
+                const isSelected = m.id === selectedId;
+                markerEl.className = `device-marker absolute cursor-pointer no-select transition-shadow duration-150 ${isSelected ? 'z-30' : 'z-20'}`;
+                
+                // Atur ukuran base & skala
+                const baseSize = 20; 
+                const actualScale = m.scale || 1.0;
+                const calculatedSize = baseSize * actualScale;
+                
+                markerEl.style.width = `${calculatedSize}px`;
+                markerEl.style.height = `${calculatedSize}px`;
+                markerEl.style.left = `${m.x}%`;
+                markerEl.style.top = `${m.y}%`;
+                markerEl.setAttribute('data-id', m.id);
+
+                // Tambahkan markup HTML marker berdasarkan jenis alat
+                if (m.type === 'cctv') {
+                    const colorClass = m.condition === 'new' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(234, 179, 8, 0.35)'; // Cyan atau Kuning
+                    const strokeColor = m.condition === 'new' ? '#22d3ee' : '#eab308';
+                    const fovRange = m.fovRange || 1.0; // panjang/jangkauan cone (1.0 = standar)
+
+                    markerEl.innerHTML = `
+                        <!-- Rotatable CCTV Camera dengan FOV Cone -->
+                        <div class="relative flex items-center justify-center w-full h-full select-none" style="transform: scale(${actualScale}); transform-origin: center;">
+
+                            <!-- Rotatable Elements Wrapper -->
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none marker-rotate-target" style="transform: rotate(${m.rotation}deg)">
+                                <!-- Dynamic FOV Cone Vector (scale = panjang jangkauan) -->
+                                <svg class="absolute pulse-fov" width="80" height="80" style="bottom: 50%; transform: scale(${fovRange}); transform-origin: bottom center;" viewBox="0 0 100 100">
+                                    <path d="${calculateFOVSector(50, 100, 75, 270 - m.fovSpread/2, 270 + m.fovSpread/2)}" fill="${colorClass}" stroke="${strokeColor}" stroke-width="1" />
+                                </svg>
+                                
+                                <!-- Camera Arrow Direction Guide -->
+                                <div class="absolute -top-1 w-1.5 h-1.5 bg-indigo-500 rounded-full border border-white z-10"></div>
+
+                                <!-- Small drag-to-rotate circle handle inside FOV range -->
+                                ${isSelected ? `<div class="absolute pointer-events-auto w-3.5 h-3.5 rounded-full bg-white border border-indigo-600 hover:bg-indigo-100 cursor-grab active:cursor-grabbing z-30 shadow-md rotate-handle" style="bottom: calc(50% + ${30 * fovRange}px); left: 50%; transform: translateX(-50%);" title="Putar Kamera"></div>` : ''}
+                            </div>
+                            
+                            <!-- Camera Icon Circle -->
+                            <div class="device-icon-container w-full h-full rounded-full ${m.condition === 'new' ? 'bg-cyan-500 border-2 border-slate-900 shadow-cyan-500/50' : 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                                <i class="fa-solid fa-video text-slate-950 text-[10px]"></i>
+                            </div>
+
+                            <!-- Small Badge for status -->
+                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20">
+                                ${m.condition === 'new' ? 'NEW' : 'EXST'}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Access Control Reader Markup
+                    markerEl.innerHTML = `
+                        <div class="relative flex items-center justify-center w-full h-full select-none" style="transform: scale(${actualScale}); transform-origin: center;">
+                            
+                            <!-- Pulse wave overlay for Reader -->
+                            <div class="absolute inset-0 rounded-xl bg-emerald-500/20 animate-ping z-0"></div>
+
+                            <!-- ACS Reader Icon Box -->
+                            <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-emerald-500 border-2 border-slate-900 shadow-emerald-500/50' : 'bg-amber-500 border-2 border-slate-900 shadow-amber-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                                <i class="fa-solid fa-id-card text-slate-950 text-[10px]"></i>
+                            </div>
+
+                            <!-- Small Badge for status -->
+                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20">
+                                ${m.condition === 'new' ? 'NEW' : 'EXST'}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Efek border aktif jika marker dipilih
+                if (m.id === selectedId) {
+                    const selector = markerEl.querySelector('.device-icon-container');
+                    if (selector) selector.classList.add('ring-4', 'ring-indigo-400', 'ring-offset-2', 'ring-offset-slate-900');
+                }
+
+                dom.markersOverlay.appendChild(markerEl);
+
+                // Tautkan interaksi mouse & sentuhan pada elemen marker
+                setupMarkerInteractions(markerEl, m);
+            });
+
+            // Sinkronisasi data statis sidebar & counter
+            updateDevicePanelList();
+            updateCounterStats();
+
+            // Simpan working-set kembali ke lokasi aktif agar tidak hilang saat berpindah lokasi
+            commitActiveLocation();
+
+            // Segarkan jumlah perangkat per lantai pada pohon lokasi
+            if (state.locations.length > 0) renderLocationTree();
+
+            // Simpan otomatis setiap ada perubahan titik/denah
+            scheduleAutoSave();
+        };
+
+        // Menggambar busur sudut pandang (FOV) CCTV secara proporsional
+        const calculateFOVSector = (cx, cy, r, startAngle, endAngle) => {
+            const startRadians = (startAngle * Math.PI) / 180.0;
+            const endRadians = (endAngle * Math.PI) / 180.0;
+            
+            const startX = cx + r * Math.cos(startRadians);
+            const startY = cy + r * Math.sin(startRadians);
+            const endX = cx + r * Math.cos(endRadians);
+            const endY = cy + r * Math.sin(endRadians);
+
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+            return [
+                "M", cx, cy,
+                "L", startX, startY,
+                "A", r, r, 0, largeArcFlag, 1, endX, endY,
+                "Z"
+            ].join(" ");
+        };
+
+        // Helper untuk membatasi nilai numerik
+        const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+        /* Marker Draggable & Rotatable mouse behavior events */
+        const setupMarkerInteractions = (markerEl, markerData) => {
+            let isDragging = false;
+            let isRotating = false;
+            let dragStartX = 0;
+            let dragStartY = 0;
+
+            const rotateHandle = markerEl.querySelector('.rotate-handle');
+
+            // 1. Klik kiri biasa untuk menyeleksi marker
+            markerEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!isDragging && !isRotating) {
+                    if (state.selectedMarkerId !== markerData.id) {
+                        selectMarker(markerData.id);
+                    }
+                }
+            });
+
+            // 2. Drag & Drop Marker menggunakan Klik Kiri biasa
+            markerEl.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.rotate-handle') || e.target.closest('.marker-toolbar')) return;
+                if (e.button !== 0) return; // Hanya ijinkan klik kiri untuk menggeser posisi pin
+                
+                e.stopPropagation();
+                isDragging = true;
+                
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                
+                if (state.selectedMarkerId !== markerData.id) {
+                    selectMarker(markerData.id);
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const rect = dom.markersOverlay.getBoundingClientRect();
+                    
+                    const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+                    const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+                    markerData.x = Math.max(0.5, Math.min(99.5, xPercent));
+                    markerData.y = Math.max(0.5, Math.min(99.5, yPercent));
+
+                    markerEl.style.left = `${markerData.x}%`;
+                    markerEl.style.top = `${markerData.y}%`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    renderMarkers();
+                }
+            });
+
+            // Touch Dragging (Mobile)
+            markerEl.addEventListener('touchstart', (e) => {
+                if (e.target.closest('.rotate-handle') || e.target.closest('.marker-toolbar')) return;
+                e.stopPropagation();
+                isDragging = true;
+                if (state.selectedMarkerId !== markerData.id) {
+                    selectMarker(markerData.id);
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (isDragging && e.touches.length === 1) {
+                    const rect = dom.markersOverlay.getBoundingClientRect();
+                    const xPercent = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
+                    const yPercent = ((e.touches[0].clientY - rect.top) / rect.height) * 100;
+
+                    markerData.x = Math.max(0.5, Math.min(99.5, xPercent));
+                    markerData.y = Math.max(0.5, Math.min(99.5, yPercent));
+
+                    markerEl.style.left = `${markerData.x}%`;
+                    markerEl.style.top = `${markerData.y}%`;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    renderMarkers();
+                }
+            });
+
+            // 3. Rotasi Kamera CCTV
+            if (rotateHandle) {
+                const handleRotationMove = (clientX, clientY) => {
+                    const rect = markerEl.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    // 1. Calculate Rotation Angle
+                    let angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+                    angle = (angle + 90) % 360;
+                    if (angle < 0) angle += 360;
+
+                    markerData.rotation = Math.round(angle);
+
+                    // 2. Calculate FOV Range based on distance
+                    const dx = clientX - centerX;
+                    const dy = clientY - centerY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const baseRadius = 60; // radius of SVG cone in pixels at scale=1, fovRange=1
+                    const actualScale = markerData.scale || 1.0;
+                    const screenBaseRadius = baseRadius * actualScale * (state.zoom || 1.0);
+                    const newFovRange = Math.max(0.1, Math.round((distance / screenBaseRadius) * 100) / 100);
+                    
+                    markerData.fovRange = newFovRange;
+
+                    // Update DOM elements dynamically
+                    const target = markerEl.querySelector('.marker-rotate-target');
+                    if (target) {
+                        target.style.transform = `rotate(${markerData.rotation}deg)`;
+                    }
+
+                    const fovSvg = markerEl.querySelector('.pulse-fov');
+                    if (fovSvg) {
+                        fovSvg.style.transform = `scale(${newFovRange})`;
+                    }
+
+                    const handle = markerEl.querySelector('.rotate-handle');
+                    if (handle) {
+                        handle.style.bottom = `calc(50% + ${30 * newFovRange}px)`;
+                    }
+                };
+
+                rotateHandle.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0) return;
+                    e.stopPropagation();
+                    isRotating = true;
+                    if (state.selectedMarkerId !== markerData.id) {
+                        selectMarker(markerData.id);
+                    }
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (isRotating) {
+                        handleRotationMove(e.clientX, e.clientY);
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isRotating) {
+                        isRotating = false;
+                        renderMarkers();
+                    }
+                });
+
+                // Touch rotation
+                rotateHandle.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    isRotating = true;
+                    if (state.selectedMarkerId !== markerData.id) {
+                        selectMarker(markerData.id);
+                    }
+                }, { passive: true });
+
+                document.addEventListener('touchmove', (e) => {
+                    if (isRotating && e.touches.length === 1) {
+                        handleRotationMove(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, { passive: true });
+
+                document.addEventListener('touchend', () => {
+                    if (isRotating) {
+                        isRotating = false;
+                        renderMarkers();
+                    }
+                });
+            }
+        };
+
+        /* Selected Marker Detail Panel Controller */
+        const selectMarker = (id) => {
+            state.selectedMarkerId = id;
+            const marker = state.markers.find(m => m.id === id);
+
+            if (marker) {
+                // Buka panel kanan otomatis agar detail perangkat langsung terlihat
+                if (state.rightCollapsed) setRightCollapsed(false);
+                if (dom.noLocationHint) dom.noLocationHint.classList.add('hidden');
+                // Klik titik = tampilkan detailnya, sembunyikan daftar titik
+                showDeviceDetailView();
+                dom.editorDeviceId.textContent = marker.id;
+                dom.inputDevName.value = marker.name;
+                dom.inputDevModel.value = marker.model;
+                dom.labelScaleVal.textContent = `${(marker.scale || 1.0).toFixed(1)}x`;
+
+                updateConditionBadges(marker.condition);
+
+                if (marker.photo) {
+                    showPhotoPreview(marker.photo);
+                } else {
+                    hidePhotoPreview();
+                }
+
+                if (marker.type === 'cctv') {
+                    dom.editorDeviceTypeBadge.textContent = "CCTV";
+                    dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400";
+                    dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-cyan-400";
+                    dom.editorDeviceIcon.innerHTML = `<i class="fa-solid fa-video"></i>`;
+                } else {
+                    dom.editorDeviceTypeBadge.textContent = "ACCESS READER";
+                    dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-400/10 text-emerald-400";
+                    dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-emerald-400";
+                    dom.editorDeviceIcon.innerHTML = `<i class="fa-solid fa-id-card"></i>`;
+                }
+            }
+
+            renderMarkers();
+        };
+
+        const deselectMarker = () => {
+            state.selectedMarkerId = null;
+            showDeviceListView();
+            renderMarkers();
+        };
+
+        const updateConditionBadges = (condition) => {
+            if (condition === 'existing') {
+                dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-yellow-500/10 border-2 border-yellow-500 text-yellow-500 flex items-center justify-center gap-1.5 transition";
+                dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-400 flex items-center justify-center gap-1.5 transition";
+            } else {
+                dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-400 flex items-center justify-center gap-1.5 transition";
+                dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-cyan-500/10 border-2 border-cyan-500 text-cyan-400 flex items-center justify-center gap-1.5 transition";
+            }
+        };
+
+        // Form fields change listeners
+        dom.inputDevName.addEventListener('input', (e) => {
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                const marker = state.markers.find(m => m.id === activeId);
+                if (marker) {
+                    marker.name = e.target.value;
+                    updateDevicePanelList();
+                    scheduleAutoSave();
+                }
+            }
+        });
+
+        dom.inputDevModel.addEventListener('input', (e) => {
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                const marker = state.markers.find(m => m.id === activeId);
+                if (marker) {
+                    marker.model = e.target.value;
+                    updateDevicePanelList();
+                    scheduleAutoSave();
+                }
+            }
+        });
+
+        dom.btnCondExisting.addEventListener('click', () => {
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                const marker = state.markers.find(m => m.id === activeId);
+                if (marker) {
+                    marker.condition = 'existing';
+                    updateConditionBadges('existing');
+                    renderMarkers();
+                }
+            }
+        });
+
+        dom.btnCondNew.addEventListener('click', () => {
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                const marker = state.markers.find(m => m.id === activeId);
+                if (marker) {
+                    marker.condition = 'new';
+                    updateConditionBadges('new');
+                    renderMarkers();
+                }
+            }
+        });
+
+        // Event listener untuk unggah foto
+        dom.photoUploadPlaceholder.addEventListener('click', () => {
+            dom.inputDevPhoto.click();
+        });
+
+        dom.inputDevPhoto.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        const activeId = state.selectedMarkerId;
+                        if (activeId) {
+                            const marker = state.markers.find(m => m.id === activeId);
+                            if (marker) {
+                                marker.photo = evt.target.result;
+                                showPhotoPreview(marker.photo);
+                                scheduleAutoSave();
+                                showNotification("Foto lokasi berhasil diunggah.");
+                            }
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    showNotification("Format berkas harus berupa gambar!", "error");
+                }
+            }
+        });
+
+        dom.btnRemovePhoto.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                const marker = state.markers.find(m => m.id === activeId);
+                if (marker) {
+                    marker.photo = null;
+                    hidePhotoPreview();
+                    scheduleAutoSave();
+                    showNotification("Foto lokasi berhasil dihapus.", "warning");
+                }
+            }
+        });
+
+        const showPhotoPreview = (src) => {
+            dom.photoPreviewImg.src = src;
+            dom.photoPreviewContainer.classList.remove('hidden');
+            dom.photoUploadPlaceholder.classList.add('hidden');
+        };
+
+        const hidePhotoPreview = () => {
+            dom.photoPreviewImg.src = '';
+            dom.photoPreviewContainer.classList.add('hidden');
+            dom.photoUploadPlaceholder.classList.remove('hidden');
+            dom.inputDevPhoto.value = '';
+        };
+
+        // Delete Device Action
+        dom.btnDeleteDevice.addEventListener('click', () => {
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                state.markers = state.markers.filter(m => m.id !== activeId);
+                deselectMarker();
+                showNotification("Titik perangkat telah dihapus.", "warning");
+            }
+        });
+
+        dom.btnCloseEditor.addEventListener('click', deselectMarker);
+
+        /* Sidebar Device List Rendering & Search Filter */
+        const updateDevicePanelList = () => {
+            dom.deviceList.innerHTML = '';
+
+            const filteredMarkers = state.markers.filter(m => {
+                if (state.activeFilter === 'all') return true;
+                return m.type === state.activeFilter;
+            });
+
+            if (filteredMarkers.length === 0) {
+                dom.deviceList.classList.add('hidden');
+                dom.deviceListEmpty.classList.remove('hidden');
+                return;
+            }
+
+            dom.deviceListEmpty.classList.add('hidden');
+            dom.deviceList.classList.remove('hidden');
+
+            filteredMarkers.forEach(m => {
+                const item = document.createElement('div');
+                const isSelected = m.id === state.selectedMarkerId;
+
+                item.className = `p-3 rounded-xl border transition cursor-pointer flex items-center justify-between group ${isSelected ? 'bg-indigo-600/10 border-indigo-500/50' : 'bg-slate-950/50 border-slate-800/80 hover:border-slate-750'}`;
+                
+                const badgeColor = m.condition === 'new' 
+                    ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
+                    : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+
+                const deviceIcon = m.type === 'cctv'
+                    ? '<i class="fa-solid fa-video text-cyan-400"></i>'
+                    : '<i class="fa-solid fa-id-card text-emerald-400"></i>';
+
+                const hasPhotoIndicator = m.photo ? `<i class="fa-solid fa-image text-[10px] text-indigo-400" title="Memiliki foto lokasi"></i>` : '';
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">
+                            ${deviceIcon}
+                        </div>
+                        <div class="overflow-hidden">
+                            <h4 class="text-xs font-semibold text-slate-200 truncate flex items-center gap-1.5">
+                                ${m.name || 'Unnamed Point'} 
+                                ${hasPhotoIndicator}
+                            </h4>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-[9px] font-mono text-slate-500">${m.id}</span>
+                                <span class="text-[8px] border px-1.5 rounded-full font-bold uppercase ${badgeColor}">${m.condition}</span>
+                                <span class="text-[8px] text-slate-500 font-mono">Size: ${m.scale ? m.scale.toFixed(1) : '1.0'}x</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="opacity-0 group-hover:opacity-100 p-1 bg-slate-800 hover:bg-rose-500/10 rounded text-slate-400 hover:text-rose-400 transition delete-btn-list" data-id="${m.id}" title="Hapus">
+                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                    </button>
+                `;
+
+                // Focus marker
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.delete-btn-list')) return;
+                    selectMarker(m.id);
+                    centerViewOnMarker(m);
+                });
+
+                // Delete directly from list row
+                const delBtn = item.querySelector('.delete-btn-list');
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    state.markers = state.markers.filter(device => device.id !== m.id);
+                    if (state.selectedMarkerId === m.id) deselectMarker();
+                    renderMarkers();
+                    showNotification("Titik perangkat telah dihapus.", "warning");
+                });
+
+                dom.deviceList.appendChild(item);
+            });
+        };
+
+        const centerViewOnMarker = (marker) => {
+            const containerW = dom.workspaceContainer.clientWidth;
+            const containerH = dom.workspaceContainer.clientHeight;
+            const rect = dom.blueprintWrapper.getBoundingClientRect();
+            
+            state.zoom = 1.25;
+            state.panX = (containerW / 2) - ((marker.x / 100) * rect.width * state.zoom);
+            state.panY = (containerH / 2) - ((marker.y / 100) * rect.height * state.zoom);
+            
+            updateTransform();
+        };
+
+        const updateCounterStats = () => {
+            const cctvCount = state.markers.filter(m => m.type === 'cctv').length;
+            const acsCount = state.markers.filter(m => m.type === 'acs').length;
+            const totalCount = state.markers.length;
+
+            dom.placedCount.textContent = totalCount;
+            dom.statCctv.textContent = cctvCount;
+            dom.statAcs.textContent = acsCount;
+            dom.statTotal.textContent = totalCount;
+            if (dom.rightCollapsedCount) dom.rightCollapsedCount.textContent = totalCount;
+
+            // Jumlah per tab filter pada Daftar Titik
+            if (dom.countAll) dom.countAll.textContent = totalCount;
+            if (dom.countCctv) dom.countCctv.textContent = cctvCount;
+            if (dom.countAcs) dom.countAcs.textContent = acsCount;
+        };
+
+        const clearAllMarkers = () => {
+            if (state.markers.length === 0) return;
+            state.markers = [];
+            deselectMarker();
+            renderMarkers();
+            showNotification("Semua titik berhasil dibersihkan.", "warning");
+        };
+
+        /* Side Panel Filters */
+        const applyFilter = (filterType) => {
+            state.activeFilter = filterType;
+            
+            [dom.btnFilterAll, dom.btnFilterCctv, dom.btnFilterAcs].forEach(btn => {
+                btn.className = "text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium transition";
+            });
+
+            if (filterType === 'all') {
+                dom.btnFilterAll.className = "text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded font-medium";
+            } else if (filterType === 'cctv') {
+                dom.btnFilterCctv.className = "text-[10px] px-2 py-0.5 bg-cyan-600 text-white rounded font-medium";
+            } else {
+                dom.btnFilterAcs.className = "text-[10px] px-2 py-0.5 bg-emerald-600 text-white rounded font-medium";
+            }
+
+            renderMarkers();
+        };
+
+        dom.btnFilterAll.addEventListener('click', () => applyFilter('all'));
+        dom.btnFilterCctv.addEventListener('click', () => applyFilter('cctv'));
+        dom.btnFilterAcs.addEventListener('click', () => applyFilter('acs'));
+
+
+        /* ==========================================================
+           EKSPOR GAMBAR
+           Menggambar ulang denah + marker pada canvas dengan meniru
+           PERSIS geometri marker di layar (ukuran 40px dasar, ikon
+           FontAwesome asli, FOV cone radius 120px, badge NEW/EXST),
+           sehingga hasil unduhan identik dengan tampilan aplikasi.
+        ========================================================== */
+        const drawRoundedRect = (ctx, x, y, w, h, r) => {
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(x, y, w, h, r);
+            } else {
+                ctx.moveTo(x + r, y);
+                ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r);
+                ctx.arcTo(x, y, x + w, y, r);
+                ctx.closePath();
+            }
+        };
+
+        // Badge kecil NEW/EXST di pojok kanan-atas marker (meniru DOM).
+        const drawStatusBadge = (ctx, m, cx, cy, s) => {
+            const label = m.condition === 'new' ? 'NEW' : 'EXST';
+            const fontSize = 7 * s;
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            const tw = ctx.measureText(label).width;
+            const padX = 4 * s;
+            const w = tw + padX * 2;
+            const h = fontSize + 4 * s;
+            // DOM: -top-1.5 -right-1.5 dari kotak marker 20px (diskalakan ikon)
+            const rightX = cx + s * (10 * s + 6);
+            const topY = cy - s * (10 * s + 6);
+            const isLightTheme = state.theme === 'light';
+
+            drawRoundedRect(ctx, rightX - w, topY, w, h, 2 * s);
+            ctx.fillStyle = isLightTheme ? '#ecfeff' : '#020617';
+            ctx.fill();
+            ctx.strokeStyle = isLightTheme ? '#22d3ee' : '#1e293b';
+            ctx.lineWidth = 1 * s;
+            ctx.stroke();
+
+            ctx.fillStyle = isLightTheme ? '#0e7490' : '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, rightX - w / 2, topY + h / 2);
+        };
+
+        const drawMarkerOnCanvas = (ctx, m) => {
+            const W = ctx.canvas.width;
+            const H = ctx.canvas.height;
+            const s = m.scale || 1.0;
+            const boxSize = 20 * s; // ukuran elemen marker di layar
+            // DOM menempatkan pojok kiri-atas marker pada x%/y%, kontennya di tengah kotak
+            const cx = (m.x / 100) * W + boxSize / 2;
+            const cy = (m.y / 100) * H + boxSize / 2;
+            const rot = ((m.rotation || 0) * Math.PI) / 180;
+
+            if (m.type === 'cctv') {
+                const coneFill = m.condition === 'new' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(234, 179, 8, 0.35)';
+                const coneStroke = m.condition === 'new' ? '#22d3ee' : '#eab308';
+
+                // 1. FOV cone — di layar: SVG 80px, r = 75/100*80 = 60px, dikali jangkauan (fovRange) & skala ikon
+                const R = 60 * s * (m.fovRange || 1.0);
+                const half = ((m.fovSpread || 90) / 2) * Math.PI / 180;
+                const up = -Math.PI / 2;
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(rot);
+                ctx.globalAlpha = 0.6; // meniru puncak animasi pulse FOV di layar
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, R, up - half, up + half);
+                ctx.closePath();
+                ctx.fillStyle = coneFill;
+                ctx.fill();
+                ctx.strokeStyle = coneStroke;
+                ctx.lineWidth = 1.6 * s;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+
+                // 2. Titik arah indigo di ujung atas (ikut berputar)
+                const dotDist = 10 * s;
+                ctx.beginPath();
+                ctx.arc(0, -dotDist, 2.5 * s, 0, Math.PI * 2);
+                ctx.fillStyle = '#6366f1'; // indigo-500
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1 * s;
+                ctx.stroke();
+                ctx.restore();
+
+                // 3. Lingkaran kamera (w-full = 20px) + border slate-900
+                ctx.beginPath();
+                ctx.arc(cx, cy, 10 * s, 0, Math.PI * 2);
+                ctx.fillStyle = m.condition === 'new' ? '#06b6d4' : '#eab308'; // cyan-500 / yellow-500
+                ctx.fill();
+                ctx.strokeStyle = '#0f172a'; // slate-900
+                ctx.lineWidth = 1.5 * s;
+                ctx.stroke();
+
+                // 4. Ikon kamera FontAwesome asli (fa-video)
+                ctx.fillStyle = '#020617'; // slate-950
+                ctx.font = `900 ${7 * s}px "Font Awesome 6 Free"`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('', cx, cy + 0.25 * s);
+
+            } else {
+                // 1. Lingkar pulsa emerald lembut (meniru animate-ping)
+                drawRoundedRect(ctx, cx - boxSize / 2, cy - boxSize / 2, boxSize, boxSize, 6 * s);
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+                ctx.fill();
+
+                // 2. Kotak reader (w-full = 20px, rounded-lg) + border slate-900
+                const sq = 20 * s;
+                drawRoundedRect(ctx, cx - sq / 2, cy - sq / 2, sq, sq, 4 * s);
+                ctx.fillStyle = m.condition === 'new' ? '#10b981' : '#f59e0b'; // emerald-500 / amber-500
+                ctx.fill();
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 1.5 * s;
+                ctx.stroke();
+
+                // 3. Ikon kartu FontAwesome asli (fa-id-card)
+                ctx.fillStyle = '#020617';
+                ctx.font = `900 ${6 * s}px "Font Awesome 6 Free"`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('', cx, cy + 0.25 * s);
+            }
+
+            // Badge status NEW/EXST
+            drawStatusBadge(ctx, m, cx, cy, s);
+        };
+
+        const generateCompositeMapImage = async () => {
+            if (!state.bgImageSrc) {
+                showNotification("Silakan upload denah lantai terlebih dahulu sebelum mengunduh hasil.", "error");
+                return;
+            }
+
+            showNotification("Menyiapkan ekspor gambar...");
+
+            // Pastikan font FontAwesome siap dipakai di canvas agar ikon tidak jadi kotak
+            try {
+                await document.fonts.load('900 14px "Font Awesome 6 Free"');
+                await document.fonts.ready;
+            } catch (e) { /* lanjut dengan font fallback */ }
+
+            const baseImg = new Image();
+            baseImg.crossOrigin = "anonymous";
+
+            baseImg.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = baseImg.naturalWidth;
+                canvas.height = baseImg.naturalHeight;
+                const ctx = canvas.getContext('2d');
+
+                ctx.drawImage(baseImg, 0, 0);
+
+                // Gambar marker sesuai filter yang sedang tampil (sama dengan layar)
+                const visibleMarkers = state.markers.filter(m => {
+                    if (state.activeFilter === 'all') return true;
+                    return m.type === state.activeFilter;
+                });
+                visibleMarkers.forEach(m => drawMarkerOnCanvas(ctx, m));
+
+                const link = document.createElement('a');
+                link.download = `Mapping_CCTV_ACS_${new Date().toISOString().slice(0,10)}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                showNotification("Gambar denah berhasil diunduh, identik dengan tampilan aplikasi!");
+            };
+
+            baseImg.onerror = function() {
+                showNotification("Gagal memuat gambar denah untuk diekspor.", "error");
+            };
+
+            baseImg.src = state.bgImageSrc;
+        };
+
+        /* Kumpulan seluruh perangkat dari semua lokasi (untuk statistik proyek). */
+        const allProjectMarkers = () => state.locations.flatMap(l => l.markers || []);
+
+        /* Membangun objek data proyek (semua lokasi + titik) yang dipakai bersama
+           oleh ekspor file (.json) maupun penyimpanan di dalam aplikasi. */
+        const buildProjectPayload = () => {
+            commitActiveLocation();
+            const allMarkers = allProjectMarkers();
+            return {
+                metadata: {
+                    export_date: new Date().toISOString(),
+                    total_locations: state.locations.length,
+                    total_devices: allMarkers.length,
+                    cctv_total: allMarkers.filter(m => m.type === 'cctv').length,
+                    acs_total: allMarkers.filter(m => m.type === 'acs').length,
+                    app_version: "v1.6"
+                },
+                project_state: {
+                    theme: state.theme,
+                    activeLocationId: state.activeLocationId
+                },
+                locations: state.locations
+            };
+        };
+
+        /* Menerapkan data proyek ke state & UI. Mendukung format baru (locations)
+           maupun migrasi otomatis dari format lama (devices + bgImageSrc). */
+        const applyProjectData = (data, fileLabel = "Proyek") => {
+            if (!data || !data.project_state) {
+                showNotification("Format data proyek tidak valid.", "error");
+                return false;
+            }
+
+            let locations = [];
+            if (Array.isArray(data.locations)) {
+                locations = data.locations;
+            } else if (Array.isArray(data.devices)) {
+                // Migrasi proyek lama (satu denah) menjadi satu lokasi.
+                locations = [{
+                    id: genLocId(),
+                    perusahaan: '(Proyek Lama)',
+                    gedung: 'Denah',
+                    alamat: '',
+                    gps: '',
+                    area: 'office',
+                    lantai: '1',
+                    denahSrc: data.project_state.bgImageSrc || null,
+                    denahName: fileLabel,
+                    denahType: 'image',
+                    imageWidth: data.project_state.imageWidth || 0,
+                    imageHeight: data.project_state.imageHeight || 0,
+                    idCounter: data.project_state.idCounter || 1,
+                    markers: data.devices
+                }];
+            }
+
+            state.locations = locations;
+            state.theme = data.project_state.theme || 'dark';
+            state.activeLocationId = null;
+            state.markers = [];
+            state.selectedMarkerId = null;
+
+            if (state.theme === 'light') {
+                document.body.classList.add('light-theme');
+                dom.themeIconSun.classList.remove('hidden');
+                dom.themeIconMoon.classList.add('hidden');
+            } else {
+                document.body.classList.remove('light-theme');
+                dom.themeIconSun.classList.add('hidden');
+                dom.themeIconMoon.classList.remove('hidden');
+            }
+
+            dom.editorPanel.classList.add('hidden');
+            renderLocationTree();
+
+            const preferred = data.project_state.activeLocationId;
+            const targetId = (preferred && locations.some(l => l.id === preferred))
+                ? preferred
+                : (locations[0] ? locations[0].id : null);
+
+            if (targetId) {
+                selectLocation(targetId);
+            } else {
+                showEmptyWorkspace();
+                resetView();
+                renderMarkers();
+                renderActiveLocationBanner();
+                if (dom.noLocationHint) dom.noLocationHint.classList.remove('hidden');
+            }
+            return true;
+        };
+
+        const hasProjectData = () => state.locations.length > 0;
+
+        /* =========================================================
+           PENYIMPANAN LOKAL (IndexedDB)
+           Dipakai untuk simpan-otomatis seluruh proyek (lokasi + denah +
+           titik) di perangkat. IndexedDB dipilih agar gambar denah & foto
+           yang besar tetap muat (tidak dibatasi kuota kecil localStorage).
+        ========================================================= */
+        const DenahDB = {
+            db: null,
+            open() {
+                if (this.db) return Promise.resolve(this.db);
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open('SecurityMapPlanner', 1);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('denah')) {
+                            db.createObjectStore('denah', { keyPath: 'id' });
+                        }
+                    };
+                    req.onsuccess = () => { this.db = req.result; resolve(this.db); };
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async _tx(mode, fn) {
+                const db = await this.open();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction('denah', mode);
+                    const req = fn(tx.objectStore('denah'));
+                    tx.oncomplete = () => resolve(req ? req.result : undefined);
+                    tx.onerror = () => reject(tx.error);
+                    tx.onabort = () => reject(tx.error);
+                });
+            },
+            put(record) { return this._tx('readwrite', (s) => s.put(record)); },
+            delete(id) { return this._tx('readwrite', (s) => s.delete(id)); },
+            get(id) { return this._tx('readonly', (s) => s.get(id)); },
+            getAll() { return this._tx('readonly', (s) => s.getAll()); }
+        };
+
+        const escapeHTML = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+
+        /* =========================================================
+           SIMPAN OTOMATIS
+           Tidak ada tombol SAVE / SAVE AS. Setiap perubahan (lokasi, denah,
+           titik, tema) otomatis tersimpan ke IndexedDB dengan debounce.
+           Saat aplikasi dibuka lagi, proyek terakhir langsung dipulihkan.
+        ========================================================= */
+        const AUTOSAVE_ID = 'autosave-project';
+        let autoSaveTimer = null;
+        let appReady = false;
+
+        const markAutosaveStatus = (label) => {
+            if (dom.autosaveText) dom.autosaveText.textContent = label;
+        };
+
+        // Tulis snapshot proyek ke IndexedDB (atau bersihkan bila kosong).
+        const runAutoSave = async () => {
+            try {
+                if (!hasProjectData()) {
+                    await DenahDB.delete(AUTOSAVE_ID);
+                    markAutosaveStatus('Tersimpan otomatis');
+                    return;
+                }
+                await DenahDB.put({
+                    id: AUTOSAVE_ID,
+                    savedAt: new Date().toISOString(),
+                    payload: buildProjectPayload()
+                });
+                const t = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                markAutosaveStatus(`Tersimpan ${t}`);
+            } catch (err) {
+                console.error(err);
+                markAutosaveStatus('Gagal menyimpan otomatis');
+            }
+        };
+
+        // Jadwalkan simpan-otomatis (debounce) — dipanggil dari tiap perubahan.
+        const scheduleAutoSave = () => {
+            if (!appReady) return; // hindari menimpa data saat pemulihan awal
+            markAutosaveStatus('Menyimpan…');
+            if (autoSaveTimer) clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(runAutoSave, 700);
+        };
+
+        // Pulihkan proyek terakhir saat aplikasi dibuka.
+        const loadAutoSave = async () => {
+            try {
+                const rec = await DenahDB.get(AUTOSAVE_ID);
+                if (rec && rec.payload) {
+                    applyProjectData(rec.payload, 'Autosave');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        /* Theme Toggle System */
+        const setupThemeToggle = () => {
+            dom.btnThemeToggle.addEventListener('click', () => {
+                if (state.theme === 'dark') {
+                    state.theme = 'light';
+                    document.body.classList.add('light-theme');
+                    dom.themeIconSun.classList.remove('hidden');
+                    dom.themeIconMoon.classList.add('hidden');
+                    showNotification("Mode Terang Aktif");
+                } else {
+                    state.theme = 'dark';
+                    document.body.classList.remove('light-theme');
+                    dom.themeIconSun.classList.add('hidden');
+                    dom.themeIconMoon.classList.remove('hidden');
+                    showNotification("Mode Gelap Aktif");
+                }
+                renderMarkers();
+            });
+        };
+
+        /* Custom Notification Toast Alerts System */
+        const showNotification = (message, type = 'success') => {
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-slate-900 border-emerald-500/30 text-slate-100";
+            let icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+
+            if (state.theme === 'light') {
+                bgClass = "bg-white border-emerald-500/50 text-slate-900 shadow-xl";
+            }
+
+            if (type === 'warning') {
+                bgClass = state.theme === 'light' ? "bg-white border-amber-500/50 text-slate-900 shadow-xl" : "bg-slate-900 border-amber-500/30 text-slate-100";
+                icon = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i>';
+            } else if (type === 'error') {
+                bgClass = state.theme === 'light' ? "bg-white border-rose-500/50 text-slate-900 shadow-xl" : "bg-slate-900 border-rose-500/30 text-slate-100";
+                icon = '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
+            }
+
+            toast.className = `p-4 rounded-xl border shadow-2xl flex items-center gap-3 transition duration-300 transform translate-y-2 opacity-0 max-w-sm pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `
+                <div class="text-base">${icon}</div>
+                <p class="text-xs font-semibold leading-normal">${message}</p>
+            `;
+
+            document.getElementById('toast-container').appendChild(toast);
+
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Animate Out & Remove
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        };
+
+
+        /* Attachment Click Listeners & Event Mapping Initialization */
+        window.addEventListener('DOMContentLoaded', async () => {
+
+            /* ---- Panel Lokasi (kiri) & Perangkat (kanan): tombol collapse/expand ---- */
+            dom.btnCollapseLeft.addEventListener('click', () => setLeftCollapsed(true));
+            dom.btnExpandLeft.addEventListener('click', () => setLeftCollapsed(false));
+            dom.btnCollapseRight.addEventListener('click', () => setRightCollapsed(true));
+            dom.btnExpandRight.addEventListener('click', () => setRightCollapsed(false));
+
+            /* ---- Tombol Tambah Lokasi (versi penuh & versi strip) ---- */
+            dom.btnAddLocation.addEventListener('click', () => openLocationModal());
+            dom.btnAddLocationCollapsed.addEventListener('click', () => {
+                if (state.leftCollapsed) setLeftCollapsed(false);
+                openLocationModal();
+            });
+
+            /* ---- Modal Form Lokasi ---- */
+            dom.btnCloseLocation.addEventListener('click', closeLocationModal);
+            dom.btnCancelLocation.addEventListener('click', closeLocationModal);
+            dom.btnSubmitLocation.addEventListener('click', submitLocationForm);
+            dom.formLocation.addEventListener('submit', (e) => { e.preventDefault(); submitLocationForm(); });
+            dom.modalLocation.addEventListener('click', (e) => {
+                if (e.target === dom.modalLocation) closeLocationModal();
+            });
+
+            // Toggle input "Lainnya" pada dropdown perusahaan
+            dom.locPerusahaan.addEventListener('change', () => {
+                if (dom.locPerusahaan.value === '__other__') {
+                    dom.locPerusahaanOther.classList.remove('hidden');
+                    dom.locPerusahaanOther.focus();
+                } else {
+                    dom.locPerusahaanOther.classList.add('hidden');
+                }
+            });
+
+            // Upload denah di dalam form (klik / seret)
+            dom.locDenahDrop.addEventListener('click', () => dom.locDenahFile.click());
+            dom.locDenahDrop.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dom.locDenahDrop.classList.add('drop-zone-active');
+            });
+            dom.locDenahDrop.addEventListener('dragleave', () => dom.locDenahDrop.classList.remove('drop-zone-active'));
+            dom.locDenahDrop.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                dom.locDenahDrop.classList.remove('drop-zone-active');
+                if (e.dataTransfer.files.length > 0) {
+                    const denah = await processDenahFile(e.dataTransfer.files[0]);
+                    if (denah) { state.pendingDenah = denah; showDenahInfo(denah); }
+                }
+            });
+            dom.locDenahFile.addEventListener('change', async (e) => {
+                if (e.target.files.length > 0) {
+                    const denah = await processDenahFile(e.target.files[0]);
+                    if (denah) { state.pendingDenah = denah; showDenahInfo(denah); }
+                }
+            });
+            dom.locDenahRemove.addEventListener('click', clearDenahInfo);
+
+            // Zoom Controller buttons
+            dom.btnZoomIn.addEventListener('click', zoomIn);
+            dom.btnZoomOut.addEventListener('click', zoomOut);
+            dom.btnZoomReset.addEventListener('click', resetView);
+
+            // Selection Modals click
+            dom.btnSelectCCTV.addEventListener('click', () => selectDeviceType('cctv'));
+            dom.btnSelectACS.addEventListener('click', () => selectDeviceType('acs'));
+            dom.btnModalCancel.addEventListener('click', closeSelectorModal);
+
+            // Mobile: tombol kembali dari detail perangkat ke daftar lokasi.
+            if (dom.btnMobileBack) dom.btnMobileBack.addEventListener('click', exitMobileDetail);
+
+            // Global Actions
+            dom.btnClearCanvas.addEventListener('click', () => {
+                if (confirm("Apakah Anda yakin ingin menghapus semua titik perangkat yang telah dipetakan?")) {
+                    clearAllMarkers();
+                }
+            });
+
+            dom.btnExportImage.addEventListener('click', generateCompositeMapImage);
+
+            // Setup Theme Toggle
+            setupThemeToggle();
+
+            // Sizing controls in sidebar
+            dom.btnScaleDec.addEventListener('click', () => {
+                const activeId = state.selectedMarkerId;
+                if (activeId) {
+                    const marker = state.markers.find(m => m.id === activeId);
+                    if (marker) {
+                        marker.scale = Math.min(2.0, Math.max(0.5, Math.round(((marker.scale || 1.0) - 0.1) * 10) / 10));
+                        dom.labelScaleVal.textContent = `${(marker.scale || 1.0).toFixed(1)}x`;
+                        renderMarkers();
+                    }
+                }
+            });
+
+            dom.btnScaleInc.addEventListener('click', () => {
+                const activeId = state.selectedMarkerId;
+                if (activeId) {
+                    const marker = state.markers.find(m => m.id === activeId);
+                    if (marker) {
+                        marker.scale = Math.min(2.0, Math.max(0.5, Math.round(((marker.scale || 1.0) + 0.1) * 10) / 10));
+                        dom.labelScaleVal.textContent = `${(marker.scale || 1.0).toFixed(1)}x`;
+                        renderMarkers();
+                    }
+                }
+            });
+
+            // Saat kembali ke tampilan desktop, batalkan mode overlay mobile.
+            window.addEventListener('resize', () => {
+                if (!isMobile()) {
+                    dom.leftSidebar.classList.remove('mobile-hide');
+                    dom.rightSidebar.classList.remove('mobile-detail');
+                    state.mobileView = 'list';
+                }
+            });
+
+            /* ---- Kondisi awal: kiri terbuka, kanan diciutkan; render pohon lokasi ---- */
+            setLeftCollapsed(false);
+            setRightCollapsed(true);
+            renderLocationTree();
+            renderActiveLocationBanner();
+
+            // Pulihkan proyek terakhir (simpan-otomatis), lalu aktifkan autosave.
+            await loadAutoSave();
+            appReady = true;
+        });
+    </script>
+</body>
+</html>

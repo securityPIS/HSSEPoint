@@ -1,0 +1,954 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, Legend 
+} from 'recharts';
+import { 
+  LogOut, Clock, Users, Package, History, Plus, CheckCircle, X, AlertCircle, 
+  Camera, Search, ChevronRight, MapPin, BarChart3, ShieldCheck, MoreVertical, LogIn, Upload 
+} from 'lucide-react';
+
+// --- MOCK DATA ---
+const LOCATIONS = ['Gate Utama', 'Lobi Resepsionis', 'Gate Logistik', 'Basement Parking'];
+
+const MOCK_SECURITY_OFFICERS = [
+  { id: 'SEC-01', name: 'Budi Santoso', email: 'budi.s@security.com', location: 'Gate Utama', status: 'Active' },
+  { id: 'SEC-02', name: 'Agus Pratama', email: 'agus.p@security.com', location: 'Lobi Resepsionis', status: 'Active' },
+  { id: 'SEC-03', name: 'Hendra Wijaya', email: 'hendra.w@security.com', location: 'Gate Logistik', status: 'Inactive' }
+];
+
+const MOCK_PACKAGES = [
+  { id: 'PKG-101', sender: 'JNE Express', recipient: 'Bpk. Andi (IT Dept)', type: 'Kardus Sedang/Besar', time: '09:15', date: '2026-06-19', status: 'RECEIVED', photo: 'https://images.unsplash.com/photo-1620062483863-12502660a920?w=150&h=150&fit=crop' },
+  { id: 'PKG-102', sender: 'Gojek (Food)', recipient: 'Ibu Rina (HRD)', type: 'Makanan / Minuman', time: '11:30', date: '2026-06-19', status: 'PICKED_UP', photo: null }
+];
+
+const MOCK_VISITS = [
+  { id: 'V-101', name: 'Ahmad Faisal', asal: 'PT Teknologi Jaya', keperluan: 'Meeting Vendor IT', tujuan: 'Bpk. Andi', time: '08:30', date: '2026-06-19', status: 'CHECKED_OUT', timeOut: '10:45', cardNumber: 'V-012', selfiePhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop', location: 'Lobi Resepsionis' },
+  { id: 'V-102', name: 'Sarah Nabila', asal: 'Kandidat Karyawan', keperluan: 'Interview HRD', tujuan: 'Ibu Rina', time: '09:00', date: '2026-06-19', status: 'CHECKED_IN', cardNumber: 'V-045', selfiePhoto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop', location: 'Gate Utama' },
+  { id: 'V-103', name: 'Budi Hartono', asal: 'Kurir Spesial', keperluan: 'Kirim Dokumen Rahasia', tujuan: 'Direksi', time: '09:15', date: '2026-06-19', status: 'PENDING', ktpPhoto: 'https://images.unsplash.com/photo-1621974737299-4c2f6d2e6123?w=150&h=100&fit=crop', selfiePhoto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop', location: 'Lobi Resepsionis' },
+  { id: 'V-104', name: 'Ahmad Faisal', asal: 'PT Teknologi Jaya', keperluan: 'Presentasi Produk', tujuan: 'Bpk. Andi', time: '13:00', date: '2026-06-15', status: 'CHECKED_OUT', timeOut: '15:30', cardNumber: 'V-018', selfiePhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop', location: 'Gate Utama' },
+  { id: 'V-105', name: 'Diana Putri', asal: 'Freelance Designer', keperluan: 'Diskusi Project', tujuan: 'Tim Marketing', time: '10:00', date: '2026-06-19', status: 'REJECTED', rejectReason: 'Tujuan sedang tidak ada di tempat', location: 'Lobi Resepsionis' },
+];
+
+// --- COMPONENTS ---
+const BrandLogo = ({ className = "h-8" }) => (
+  <div className={`flex items-center gap-3 ${className}`}>
+    <svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 199 151" className="h-full w-auto">
+      <path fill="#ed1b2f" d="m171.63 9.74c-3.83-5.73-10.34-9.49-17.73-9.49h-48.99l27.04 41.64c3.83 5.71 10.34 9.49 17.74 9.49h49z"/>
+      <path fill="#adc32b" d="m131.98 73.65c3.82-5.71 10.33-9.49 17.73-9.49h48.98l-27.04 41.64c-3.82 5.72-10.34 9.49-17.73 9.49h-49.01z"/>
+      <path fill="#006cb7" d="m110.78 74.76c2.7-4.08 6.05-7.66 9.93-10.6h-52.02c-7.39 0-13.91 3.78-17.72 9.49l-50.34 77.44h49.01c7.4 0 13.91-3.77 17.72-9.5z"/>
+    </svg>
+    <div className="flex flex-col justify-center">
+      <span className="text-[#006cb7] font-bold text-sm md:text-base leading-tight tracking-wide">VISITOR</span>
+      <span className="text-[#006cb7] font-bold text-sm md:text-base leading-tight tracking-wide">MANAGEMENT SYSTEM</span>
+    </div>
+  </div>
+);
+
+const Button = ({ children, variant = 'filled', className = '', ...props }) => {
+  const baseStyle = "flex justify-center items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none";
+  const variants = {
+    filled: "bg-[#3C6DB2] hover:bg-[#2A5288] text-white shadow-sm hover:shadow-md",
+    tonal: "bg-[#D5E3FF] hover:bg-[#B3C8F2] text-[#001B3E]",
+    outlined: "border border-[#74777F] hover:bg-[#1A1B1E]/5 text-[#3C6DB2]",
+    text: "hover:bg-[#1A1B1E]/5 text-[#3C6DB2]",
+    danger: "bg-[#BA313B] hover:bg-[#93242E] text-white shadow-sm",
+    success: "bg-[#ADC52D] hover:bg-[#8CA220] text-[#1A1B1E] shadow-sm",
+  };
+  return <button className={`${baseStyle} ${variants[variant]} ${className}`} {...props}>{children}</button>;
+};
+
+const InputField = ({ label, className = '', ...props }) => (
+  <div className={`w-full ${className}`}>
+    <label className="block text-xs font-medium text-[#44474E] mb-1 ml-1">{label}</label>
+    <input 
+      className="w-full px-4 py-3 bg-transparent border border-[#74777F] rounded-[8px] outline-none focus:border-2 focus:border-[#3C6DB2] text-[#1A1B1E] transition-colors placeholder:text-[#74777F]/60" 
+      {...props} 
+    />
+  </div>
+);
+
+const Badge = ({ status }) => {
+  const config = {
+    PENDING: { color: 'bg-[#FFEFD6] text-[#5E4200]', icon: Clock, label: 'Menunggu Verifikasi' },
+    CHECKED_IN: { color: 'bg-[#E6F893] text-[#192100]', icon: LogIn, label: 'Sedang Berkunjung' },
+    CHECKED_OUT: { color: 'bg-[#EFEDF1] text-[#44474E]', icon: LogOut, label: 'Selesai' },
+    REJECTED: { color: 'bg-[#FFDAD6] text-[#410002]', icon: X, label: 'Ditolak' }
+  };
+  const st = config[status] || config.PENDING;
+  const Icon = st.icon;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${st.color}`}>
+      <Icon size={14} /> {st.label}
+    </span>
+  );
+};
+
+const ModalBase = ({ isOpen, onClose, title, children, footer }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1A1B1E]/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-[#FDFBFF] rounded-[28px] w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-6 pb-4">
+          <h2 className="text-2xl font-normal text-[#1A1B1E]">{title}</h2>
+        </div>
+        <div className="px-6 py-2 max-h-[60vh] overflow-y-auto">{children}</div>
+        <div className="p-6 pt-4 flex justify-end gap-2">{footer}</div>
+      </div>
+    </div>
+  );
+};
+
+// --- SCREENS ---
+const LoginScreen = ({ onLogin }) => (
+  <div className="min-h-screen bg-[#F4F2F6] flex flex-col items-center justify-center p-4">
+    <div className="w-full max-w-md bg-[#FDFBFF] rounded-[28px] shadow-sm p-8 flex flex-col items-center text-center">
+      <BrandLogo className="h-12 mb-8 justify-center" />
+      <h1 className="text-2xl font-normal text-[#1A1B1E] mb-2">Selamat Datang</h1>
+      <p className="text-[#44474E] mb-8 text-sm">Silakan masuk menggunakan akun Google Anda untuk melanjutkan ke sistem.</p>
+      
+      <div className="w-full space-y-4">
+        <Button variant="filled" className="w-full h-14 text-base" onClick={() => onLogin({ role: 'visitor', type: 'new', name: 'John Doe', email: 'john@gmail.com' })}>
+           Masuk sebagai Tamu Baru
+        </Button>
+        <Button variant="tonal" className="w-full h-14 text-base" onClick={() => onLogin({ role: 'visitor', type: 'returning', name: 'Sarah Nabila', email: 'sarah@gmail.com', asal: 'PT Teknologi Jaya' })}>
+           Masuk sebagai Tamu Lama
+        </Button>
+        <div className="flex gap-4 pt-4 border-t border-[#EAE7EC]">
+          <Button variant="outlined" className="flex-1" onClick={() => onLogin({ role: 'security', name: 'Budi (Security)' })}>
+            Petugas
+          </Button>
+          <Button variant="outlined" className="flex-1" onClick={() => onLogin({ role: 'admin', name: 'Admin IT' })}>
+            Admin
+          </Button>
+        </div>
+      </div>
+      
+      <p className="text-xs text-[#74777F] mt-8 max-w-xs">
+        Dengan masuk, Anda menyetujui Kebijakan Privasi serta Syarat & Ketentuan kami (sesuai UU PDP).
+      </p>
+    </div>
+  </div>
+);
+
+const VisitorFormScreen = ({ user, onSubmit }) => {
+  const isReturning = user.type === 'returning';
+  const [formData, setFormData] = useState({
+    name: user.name, ktp: '', asal: user.asal || '', tujuan: '', keperluan: '', consent: false
+  });
+  const [ktpPhoto, setKtpPhoto] = useState(false);
+  const [selfiePhoto, setSelfiePhoto] = useState(false);
+
+  const isFormValid = isReturning 
+    ? formData.tujuan && formData.keperluan && selfiePhoto && formData.consent
+    : formData.name && formData.ktp.length === 16 && formData.asal && formData.tujuan && formData.keperluan && ktpPhoto && selfiePhoto && formData.consent;
+
+  return (
+    <div className="min-h-screen bg-[#F4F2F6] p-4 md:py-8 flex justify-center">
+      <div className="w-full max-w-lg bg-[#FDFBFF] rounded-[28px] shadow-sm overflow-hidden">
+        <div className="bg-[#3C6DB2] p-6 text-white text-center">
+          <BrandLogo className="h-8 justify-center brightness-0 invert mb-4" />
+          <h1 className="text-2xl font-normal">Halo, {user.name}</h1>
+          <p className="text-white/80 text-sm mt-1">{isReturning ? 'Silakan isi detail kunjungan Anda hari ini.' : 'Lengkapi data diri untuk registrasi tamu.'}</p>
+        </div>
+
+        <div className="p-6 space-y-8">
+          {!isReturning && (
+            <section className="space-y-4">
+              <h2 className="text-lg font-medium text-[#1A1B1E] flex items-center gap-2 border-b border-[#EAE7EC] pb-2">
+                <Users size={20} className="text-[#3C6DB2]"/> Informasi Pribadi
+              </h2>
+              <InputField label="Nama Lengkap" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <InputField label="Nomor KTP (16 Digit)" type="number" maxLength="16" placeholder="Contoh: 3171234567890123" value={formData.ktp} onChange={e => setFormData({...formData, ktp: e.target.value})} />
+              <InputField label="Asal / Instansi" placeholder="Darimana Anda berasal" value={formData.asal} onChange={e => setFormData({...formData, asal: e.target.value})} />
+              
+              <div className="border border-[#74777F]/30 border-dashed p-4 rounded-[16px] text-center bg-[#F4F2F6]">
+                <p className="text-sm font-medium text-[#1A1B1E] mb-2">Foto KTP Asli</p>
+                {ktpPhoto ? (
+                  <div className="flex flex-col items-center"><CheckCircle className="text-[#ADC52D] mb-1" size={28} /><span className="text-xs text-[#44474E]">Foto KTP tersimpan</span></div>
+                ) : (
+                  <Button type="button" variant="tonal" onClick={() => setKtpPhoto(true)} className="w-full py-2.5"><Camera size={18}/> Ambil Foto KTP</Button>
+                )}
+              </div>
+            </section>
+          )}
+
+          <section className="space-y-4">
+            <h2 className="text-lg font-medium text-[#1A1B1E] flex items-center gap-2 border-b border-[#EAE7EC] pb-2">
+              <MapPin size={20} className="text-[#3C6DB2]"/> Detail Kunjungan
+            </h2>
+            <InputField label="Orang yang Dituju" placeholder="Nama karyawan / departemen" value={formData.tujuan} onChange={e => setFormData({...formData, tujuan: e.target.value})} />
+            <div className="w-full">
+              <label className="block text-xs font-medium text-[#44474E] mb-1 ml-1">Keperluan Kunjungan</label>
+              <textarea 
+                className="w-full px-4 py-3 bg-transparent border border-[#74777F] rounded-[8px] outline-none focus:border-2 focus:border-[#3C6DB2] text-[#1A1B1E] min-h-[100px] resize-none" 
+                placeholder="Jelaskan secara singkat keperluan Anda..."
+                value={formData.keperluan} onChange={e => setFormData({...formData, keperluan: e.target.value})} 
+              />
+            </div>
+            
+            <div className="border border-[#74777F]/30 border-dashed p-4 rounded-[16px] text-center bg-[#F4F2F6]">
+              <p className="text-sm font-medium text-[#1A1B1E] mb-2">Verifikasi Wajah</p>
+              {selfiePhoto ? (
+                <div className="flex flex-col items-center"><CheckCircle className="text-[#ADC52D] mb-1" size={28} /><span className="text-xs text-[#44474E]">Foto wajah tersimpan</span></div>
+              ) : (
+                <Button type="button" variant="tonal" onClick={() => setSelfiePhoto(true)} className="w-full py-2.5"><Camera size={18}/> Ambil Selfie</Button>
+              )}
+            </div>
+          </section>
+
+          <section className="bg-[#E6F893]/30 p-4 rounded-[16px] border border-[#E6F893]">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" className="mt-1 w-5 h-5 accent-[#3C6DB2]" checked={formData.consent} onChange={e => setFormData({...formData, consent: e.target.checked})} />
+              <span className="text-xs text-[#192100] leading-relaxed">
+                Saya menyetujui data pribadi saya (nama, NIK, foto wajah, dan KTP) diproses oleh Pertamina untuk keperluan keamanan kunjungan sesuai dengan <strong>Undang-Undang Perlindungan Data Pribadi (UU PDP)</strong>. Data akan disimpan maksimal 1 bulan.
+              </span>
+            </label>
+          </section>
+
+          <Button variant="filled" className="w-full h-14 text-base" disabled={!isFormValid} onClick={() => onSubmit(formData)}>
+            {isReturning ? 'Kirim Reservasi Kunjungan' : 'Kirim Registrasi'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const VisitorStatusScreen = ({ statusData, onLogout }) => (
+  <div className="min-h-screen bg-[#F4F2F6] flex flex-col items-center justify-center p-4">
+    <div className="w-full max-w-md bg-[#FDFBFF] rounded-[28px] shadow-sm p-8 text-center flex flex-col items-center animate-in zoom-in-95 duration-300">
+      <BrandLogo className="h-8 mb-8" />
+      
+      {statusData.status === 'PENDING' && (
+        <>
+          <div className="w-24 h-24 bg-[#FFEFD6] text-[#5E4200] rounded-full flex items-center justify-center mb-6 animate-pulse">
+            <Clock size={48} />
+          </div>
+          <h2 className="text-2xl font-normal text-[#1A1B1E] mb-2">Menunggu Verifikasi</h2>
+          <p className="text-[#44474E] text-sm mb-6">Mohon tunggu sebentar di lobi. Petugas keamanan sedang memverifikasi data dan tujuan Anda (<strong>{statusData.tujuan}</strong>).</p>
+        </>
+      )}
+
+      {statusData.status === 'CHECKED_IN' && (
+        <>
+          <div className="w-24 h-24 bg-[#E6F893] text-[#192100] rounded-full flex items-center justify-center mb-6">
+            <CheckCircle size={48} />
+          </div>
+          <h2 className="text-2xl font-normal text-[#1A1B1E] mb-2">Kunjungan Disetujui</h2>
+          <p className="text-[#44474E] text-sm mb-6">Silakan masuk. Jangan lupa mengenakan kartu visitor Anda selama berada di dalam area.</p>
+        </>
+      )}
+
+      {statusData.status === 'REJECTED' && (
+        <>
+          <div className="w-24 h-24 bg-[#FFDAD6] text-[#410002] rounded-full flex items-center justify-center mb-6">
+            <X size={48} />
+          </div>
+          <h2 className="text-2xl font-normal text-[#1A1B1E] mb-2">Kunjungan Ditolak</h2>
+          <div className="bg-[#FFDAD6]/30 border border-[#FFDAD6] p-4 rounded-[16px] text-sm text-[#410002] mb-6 w-full text-left">
+            <strong>Alasan:</strong> {statusData.rejectReason || 'Tujuan tidak dapat ditemui.'}
+          </div>
+        </>
+      )}
+
+      <Button variant="text" onClick={onLogout} className="mt-4">Kembali ke Beranda</Button>
+    </div>
+  </div>
+);
+
+const SecurityDashboard = ({ user, onLogout }) => {
+  const [activeTab, setActiveTab] = useState('antrean'); 
+  const [visits, setVisits] = useState(MOCK_VISITS);
+  const [packages, setPackages] = useState(MOCK_PACKAGES);
+  
+  const [showCheckInModal, setShowCheckInModal] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(null); 
+  const [showCheckoutModal, setShowCheckoutModal] = useState(null); 
+
+  const [cardNumber, setCardNumber] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+
+  const [showAddPackageModal, setShowAddPackageModal] = useState(false);
+  const [newPackage, setNewPackage] = useState({ sender: '', recipient: '', type: 'Dokumen', notes: '' });
+  const [packagePhoto, setPackagePhoto] = useState(false);
+
+  const pendingVisits = visits.filter(v => v.status === 'PENDING');
+  const activeVisits = visits.filter(v => v.status === 'CHECKED_IN');
+  const historyVisits = visits;
+
+  const handleCheckIn = () => {
+    if(!cardNumber) return;
+    setVisits(visits.map(v => v.id === showCheckInModal.id ? { ...v, status: 'CHECKED_IN', cardNumber } : v));
+    setShowCheckInModal(null); setCardNumber('');
+  };
+  const handleReject = () => {
+    if(!rejectReason) return;
+    setVisits(visits.map(v => v.id === showRejectModal.id ? { ...v, status: 'REJECTED', rejectReason } : v));
+    setShowRejectModal(null); setRejectReason('');
+  };
+  const handleCheckOut = () => {
+    setVisits(visits.map(v => v.id === showCheckoutModal.id ? { ...v, status: 'CHECKED_OUT', timeOut: new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) } : v));
+    setShowCheckoutModal(null);
+  };
+
+  const handleAddPackage = (e) => {
+    e.preventDefault();
+    if(!newPackage.sender || !newPackage.recipient) return;
+    const pkg = {
+      id: `PKG-${100 + packages.length + 1}`,
+      sender: newPackage.sender,
+      recipient: newPackage.recipient,
+      type: newPackage.type,
+      time: new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}),
+      date: new Date().toISOString().split('T')[0],
+      status: 'RECEIVED',
+      photo: packagePhoto ? 'https://images.unsplash.com/photo-1620062483863-12502660a920?w=150&h=150&fit=crop' : null
+    };
+    setPackages([pkg, ...packages]);
+    setShowAddPackageModal(false);
+    setNewPackage({ sender: '', recipient: '', type: 'Dokumen', notes: '' });
+    setPackagePhoto(false);
+  };
+
+  const handlePickupPackage = (id) => {
+    setPackages(packages.map(p => p.id === id ? { ...p, status: 'PICKED_UP' } : p));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F4F2F6] flex flex-col md:flex-row font-sans">
+      <aside className="w-full md:w-72 bg-[#FDFBFF] flex flex-col md:h-screen sticky top-0 z-10 md:rounded-r-[32px] shadow-sm border-r border-[#EAE7EC]">
+        <div className="p-6 md:pb-4 flex items-center justify-between md:justify-center">
+          <BrandLogo className="h-8" />
+          <button className="md:hidden text-[#44474E]" onClick={onLogout}><LogOut size={24}/></button>
+        </div>
+        
+        <div className="px-6 py-4 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-[#1A1B1E] text-white flex items-center justify-center font-medium text-lg">{user.name.charAt(0)}</div>
+          <div>
+            <div className="font-medium text-[#1A1B1E]">{user.name}</div>
+            <div className="text-xs text-[#74777F]">Petugas Keamanan</div>
+          </div>
+        </div>
+        
+        <nav className="flex-1 px-4 py-4 flex flex-row md:flex-col gap-2 overflow-x-auto">
+          <button onClick={() => setActiveTab('antrean')} className={`flex items-center justify-between px-4 py-3.5 rounded-full transition-colors whitespace-nowrap text-sm font-medium ${activeTab === 'antrean' ? 'bg-[#D5E3FF] text-[#001B3E]' : 'text-[#44474E] hover:bg-[#1A1B1E]/5'}`}>
+            <span className="flex items-center gap-3"><Clock size={20} /> Antrean <span className="md:hidden">({pendingVisits.length})</span></span>
+            {pendingVisits.length > 0 && <span className="hidden md:flex bg-[#BA313B] text-white text-[10px] w-5 h-5 items-center justify-center rounded-full">{pendingVisits.length}</span>}
+          </button>
+          <button onClick={() => setActiveTab('aktif')} className={`flex items-center gap-3 px-4 py-3.5 rounded-full transition-colors whitespace-nowrap text-sm font-medium ${activeTab === 'aktif' ? 'bg-[#D5E3FF] text-[#001B3E]' : 'text-[#44474E] hover:bg-[#1A1B1E]/5'}`}>
+            <Users size={20} /> Tamu Aktif
+          </button>
+          <button onClick={() => setActiveTab('paket')} className={`flex items-center gap-3 px-4 py-3.5 rounded-full transition-colors whitespace-nowrap text-sm font-medium ${activeTab === 'paket' ? 'bg-[#D5E3FF] text-[#001B3E]' : 'text-[#44474E] hover:bg-[#1A1B1E]/5'}`}>
+            <Package size={20} /> Paket & Kiriman
+          </button>
+          <button onClick={() => setActiveTab('riwayat')} className={`flex items-center gap-3 px-4 py-3.5 rounded-full transition-colors whitespace-nowrap text-sm font-medium ${activeTab === 'riwayat' ? 'bg-[#D5E3FF] text-[#001B3E]' : 'text-[#44474E] hover:bg-[#1A1B1E]/5'}`}>
+            <History size={20} /> Riwayat
+          </button>
+        </nav>
+        
+        <div className="p-6 mt-auto hidden md:block">
+          <Button variant="outlined" className="w-full" onClick={onLogout}>
+            <LogOut size={18} /> Keluar
+          </Button>
+        </div>
+      </aside>
+
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl font-normal text-[#1A1B1E]">
+            {activeTab === 'antrean' ? 'Antrean Menunggu' : activeTab === 'aktif' ? 'Tamu Aktif' : activeTab === 'paket' ? 'Paket & Kiriman Masuk' : 'Riwayat Kunjungan'}
+          </h1>
+        </div>
+
+        {/* TAB ANTREAN */}
+        {activeTab === 'antrean' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
+            {pendingVisits.map(v => (
+              <div key={v.id} className="bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC] hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-medium text-xl text-[#1A1B1E]">{v.name}</h3>
+                    <p className="text-sm text-[#74777F]">{v.asal}</p>
+                  </div>
+                  <span className="text-xs font-medium text-[#44474E] bg-[#F4F2F6] px-3 py-1 rounded-full">{v.time}</span>
+                </div>
+                
+                <div className="flex gap-3 mb-5">
+                  {v.ktpPhoto && <img src={v.ktpPhoto} alt="KTP" className="w-24 h-16 object-cover rounded-[12px] border border-[#EAE7EC] cursor-pointer hover:opacity-80" title="Foto KTP" />}
+                  {v.selfiePhoto && <img src={v.selfiePhoto} alt="Selfie" className="w-16 h-16 object-cover rounded-[12px] border border-[#EAE7EC] cursor-pointer hover:opacity-80" title="Foto Wajah" />}
+                </div>
+
+                <div className="bg-[#F4F2F6] p-4 rounded-[16px] mb-6">
+                  <div className="text-xs text-[#74777F] mb-1">Keperluan & Tujuan</div>
+                  <div className="text-sm font-medium text-[#1A1B1E]">{v.keperluan}</div>
+                  <div className="text-sm text-[#3C6DB2] mt-1 font-medium">Bertemu: {v.tujuan}</div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="success" className="flex-1" onClick={() => setShowCheckInModal(v)}>
+                    <CheckCircle size={18} /> Izinkan Masuk
+                  </Button>
+                  <Button variant="danger" className="px-5" onClick={() => setShowRejectModal(v)}>
+                    <X size={18} /> Tolak
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {pendingVisits.length === 0 && (
+              <div className="col-span-full py-20 flex flex-col items-center justify-center text-[#74777F] bg-[#FDFBFF] rounded-[28px] shadow-sm border border-[#EAE7EC] border-dashed">
+                <CheckCircle size={48} className="text-[#D5E3FF] mb-4" />
+                <p className="text-lg">Tidak ada tamu dalam antrean saat ini.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB TAMU AKTIF */}
+        {activeTab === 'aktif' && (
+          <div className="bg-[#FDFBFF] rounded-[28px] shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 border border-[#EAE7EC]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#F4F2F6] text-[#44474E] text-sm border-b border-[#EAE7EC]">
+                    <th className="p-5 font-medium pl-6">Visitor</th>
+                    <th className="p-5 font-medium hidden sm:table-cell">Nomor Kartu</th>
+                    <th className="p-5 font-medium hidden md:table-cell">Tujuan</th>
+                    <th className="p-5 font-medium hidden lg:table-cell">Waktu Masuk</th>
+                    <th className="p-5 font-medium text-right pr-6">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeVisits.map(v => (
+                    <tr key={v.id} className="border-b border-[#EAE7EC] hover:bg-[#F4F2F6]/50 transition-colors">
+                      <td className="p-5 pl-6">
+                        <div className="flex items-center gap-4">
+                          {v.selfiePhoto && (
+                            <img src={v.selfiePhoto} alt="Selfie" className="w-12 h-12 rounded-full object-cover shadow-sm hidden lg:block border border-[#EAE7EC]" />
+                          )}
+                          <div>
+                            <div className="font-medium text-[#1A1B1E] text-base">{v.name}</div>
+                            <div className="text-xs text-[#74777F]">{v.asal}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-5 hidden sm:table-cell">
+                        <span className="inline-block bg-[#D5E3FF] text-[#001B3E] font-bold px-3 py-1.5 rounded-[8px] text-sm">
+                          {v.cardNumber}
+                        </span>
+                      </td>
+                      <td className="p-5 hidden md:table-cell text-sm text-[#44474E]">{v.tujuan}</td>
+                      <td className="p-5 hidden lg:table-cell text-sm text-[#44474E]">{v.time}</td>
+                      <td className="p-5 text-right pr-6">
+                        <Button variant="outlined" className="text-sm" onClick={() => setShowCheckoutModal(v)}>
+                          Check-out
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  {activeVisits.length === 0 && (
+                    <tr><td colSpan="5" className="p-10 text-center text-[#74777F]">Tidak ada tamu aktif saat ini.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB PAKET */}
+        {activeTab === 'paket' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC]">
+              <div>
+                <h2 className="text-xl font-normal text-[#1A1B1E]">Daftar Paket</h2>
+                <p className="text-sm text-[#44474E] mt-1">Registrasi barang titipan kurir / ekspedisi.</p>
+              </div>
+              <Button variant="filled" onClick={() => setShowAddPackageModal(true)}><Plus size={18}/> Registrasi Paket</Button>
+            </div>
+
+            <div className="bg-[#FDFBFF] rounded-[28px] shadow-sm border border-[#EAE7EC] overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#F4F2F6] text-[#44474E] text-sm border-b border-[#EAE7EC]">
+                      <th className="p-5 font-medium pl-6">Detail Paket</th>
+                      <th className="p-5 font-medium hidden md:table-cell">Untuk (Penerima)</th>
+                      <th className="p-5 font-medium hidden md:table-cell">Waktu Masuk</th>
+                      <th className="p-5 font-medium">Status</th>
+                      <th className="p-5 font-medium text-right pr-6">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {packages.map(p => (
+                      <tr key={p.id} className="border-b border-[#EAE7EC] hover:bg-[#F4F2F6]/50 transition-colors">
+                        <td className="p-5 pl-6">
+                          <div className="flex items-center gap-4">
+                            {p.photo ? (
+                              <img src={p.photo} alt="Paket" className="w-12 h-12 rounded-[12px] object-cover shadow-sm hidden sm:block" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-[12px] bg-[#F4F2F6] border border-[#EAE7EC] flex items-center justify-center text-[#74777F] hidden sm:flex"><Package size={20}/></div>
+                            )}
+                            <div>
+                              <div className="font-medium text-[#1A1B1E] text-base">{p.sender}</div>
+                              <div className="text-xs text-[#74777F] mt-0.5">{p.type} • {p.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-5 hidden md:table-cell text-sm text-[#1A1B1E] font-medium">{p.recipient}</td>
+                        <td className="p-5 hidden md:table-cell text-sm text-[#44474E]">{p.date} {p.time}</td>
+                        <td className="p-5">
+                          <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-medium ${p.status === 'RECEIVED' ? 'bg-[#FFEFD6] text-[#5E4200]' : 'bg-[#E6F893] text-[#192100]'}`}>
+                            {p.status === 'RECEIVED' ? 'Di Pos Security' : 'Sudah Diambil'}
+                          </span>
+                        </td>
+                        <td className="p-5 text-right pr-6">
+                          {p.status === 'RECEIVED' ? (
+                            <Button variant="success" className="text-xs" onClick={() => handlePickupPackage(p.id)}>
+                              Tandai Diambil
+                            </Button>
+                          ) : (
+                            <span className="text-xs font-medium text-[#74777F] px-4">Selesai</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {packages.length === 0 && (
+                      <tr><td colSpan="5" className="p-10 text-center text-[#74777F]">Belum ada paket yang diregistrasi hari ini.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB RIWAYAT */}
+        {activeTab === 'riwayat' && (
+           <div className="bg-[#FDFBFF] rounded-[28px] shadow-sm border border-[#EAE7EC] overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+           <div className="overflow-x-auto">
+             <table className="w-full text-left border-collapse">
+               <thead>
+                 <tr className="bg-[#F4F2F6] text-[#44474E] text-sm border-b border-[#EAE7EC]">
+                   <th className="p-5 font-medium pl-6">Visitor</th>
+                   <th className="p-5 font-medium hidden md:table-cell">Waktu</th>
+                   <th className="p-5 font-medium">Status</th>
+                   <th className="p-5 font-medium hidden sm:table-cell">Detail</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {historyVisits.map(v => (
+                   <tr key={v.id} className="border-b border-[#EAE7EC] hover:bg-[#F4F2F6]/50 transition-colors">
+                     <td className="p-5 pl-6">
+                       <div className="font-medium text-[#1A1B1E] text-base">{v.name}</div>
+                       <div className="text-xs text-[#74777F] mt-0.5">{v.date}</div>
+                     </td>
+                     <td className="p-5 hidden md:table-cell text-sm text-[#44474E]">
+                       {v.time} {v.timeOut ? `- ${v.timeOut}` : ''}
+                     </td>
+                     <td className="p-5">
+                       <Badge status={v.status} />
+                     </td>
+                     <td className="p-5 hidden sm:table-cell text-sm text-[#44474E]">
+                       {v.status === 'REJECTED' ? v.rejectReason : `Bertemu: ${v.tujuan}`}
+                     </td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           </div>
+         </div>
+        )}
+      </main>
+
+      {/* MODALS */}
+      <ModalBase isOpen={showAddPackageModal} onClose={() => setShowAddPackageModal(false)} title="Registrasi Paket Masuk" 
+        footer={<><Button variant="text" onClick={() => setShowAddPackageModal(false)}>Batal</Button><Button variant="filled" onClick={handleAddPackage} disabled={!newPackage.sender || !newPackage.recipient}>Simpan Paket</Button></>}>
+        <div className="space-y-4 pt-2">
+          <InputField label="Nama Pengirim / Ekspedisi" placeholder="Contoh: JNE / Gojek / Bpk. Budi" value={newPackage.sender} onChange={e => setNewPackage({...newPackage, sender: e.target.value})} required />
+          <InputField label="Nama Penerima" placeholder="Contoh: Bpk. Andi (IT)" value={newPackage.recipient} onChange={e => setNewPackage({...newPackage, recipient: e.target.value})} required />
+          <div className="w-full">
+            <label className="block text-xs font-medium text-[#44474E] mb-1 ml-1">Jenis Barang</label>
+            <select className="w-full px-4 py-3 bg-transparent border border-[#74777F] rounded-[8px] outline-none focus:border-2 focus:border-[#3C6DB2] text-[#1A1B1E]" value={newPackage.type} onChange={e => setNewPackage({...newPackage, type: e.target.value})}>
+              <option value="Dokumen">Dokumen</option>
+              <option value="Kardus Sedang/Besar">Kardus Sedang/Besar</option>
+              <option value="Makanan / Minuman">Makanan / Minuman</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div className="border border-[#74777F]/30 border-dashed p-4 rounded-[16px] text-center bg-[#F4F2F6] mt-4">
+            <p className="text-sm font-medium text-[#1A1B1E] mb-2">Foto Barang / Resi (Opsional)</p>
+            {packagePhoto ? (
+              <div className="flex flex-col items-center"><CheckCircle className="text-[#ADC52D] mb-1" size={28} /><span className="text-xs text-[#44474E]">Foto tersimpan</span></div>
+            ) : (<Button type="button" variant="tonal" onClick={() => setPackagePhoto(true)} className="w-full"><Camera size={18}/> Ambil Foto Paket</Button>)}
+          </div>
+        </div>
+      </ModalBase>
+
+      <ModalBase isOpen={!!showCheckInModal} onClose={() => setShowCheckInModal(null)} title="Check-in Visitor" 
+        footer={<><Button variant="text" onClick={() => setShowCheckInModal(null)}>Batal</Button><Button variant="success" onClick={handleCheckIn} disabled={!cardNumber}>Konfirmasi Check-in</Button></>}>
+        <div className="space-y-4 pt-2">
+          <div className="bg-[#E6F893]/30 p-5 rounded-[20px] border border-[#E6F893]">
+            <p className="text-sm text-[#192100] mb-1">Visitor: <strong className="text-base">{showCheckInModal?.name}</strong></p>
+            <p className="text-xs text-[#44474E]">Pastikan Anda telah menerima KTP fisik tamu dan mencocokkan wajahnya sebelum memberikan kartu.</p>
+          </div>
+          <InputField label="Nomor Kartu Visitor (Wajib)" placeholder="Contoh: V-042" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} autoFocus />
+        </div>
+      </ModalBase>
+
+      <ModalBase isOpen={!!showRejectModal} onClose={() => setShowRejectModal(null)} title="Tolak Kunjungan" 
+        footer={<><Button variant="text" onClick={() => setShowRejectModal(null)}>Batal</Button><Button variant="danger" onClick={handleReject} disabled={!rejectReason}>Konfirmasi Tolak</Button></>}>
+        <div className="space-y-4 pt-2">
+          <div className="bg-[#FFDAD6]/30 p-5 rounded-[20px] border border-[#FFDAD6]">
+            <p className="text-sm text-[#410002]">Visitor: <strong className="text-base">{showRejectModal?.name}</strong></p>
+          </div>
+          <div className="w-full">
+            <label className="block text-xs font-medium text-[#44474E] mb-1 ml-1">Alasan Penolakan (Wajib)</label>
+            <textarea className="w-full px-4 py-3 bg-transparent border border-[#74777F] rounded-[8px] outline-none focus:border-2 focus:border-[#BA313B] text-[#1A1B1E] min-h-[100px] resize-none" placeholder="Contoh: KTP tidak jelas, tujuan tidak ada di tempat..." value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} autoFocus />
+          </div>
+          <p className="text-xs text-[#74777F] ml-1">Alasan ini akan dikirimkan otomatis ke email visitor.</p>
+        </div>
+      </ModalBase>
+
+      <ModalBase isOpen={!!showCheckoutModal} onClose={() => setShowCheckoutModal(null)} title="Check-out Visitor" 
+        footer={<><Button variant="text" onClick={() => setShowCheckoutModal(null)}>Batal</Button><Button variant="filled" onClick={handleCheckOut}>Konfirmasi Selesai</Button></>}>
+        <div className="pt-2 text-[#44474E]">
+          <p className="mb-4 text-base">Selesaikan kunjungan untuk <strong className="text-[#1A1B1E]">{showCheckoutModal?.name}</strong>?</p>
+          <div className="flex items-start gap-3 p-5 bg-[#D5E3FF]/30 border border-[#D5E3FF] rounded-[20px]">
+            <AlertCircle className="text-[#3C6DB2] shrink-0 mt-0.5" size={20}/>
+            <p className="text-sm text-[#001B3E]">Pastikan untuk mengambil kembali Kartu Visitor <strong>{showCheckoutModal?.cardNumber}</strong> dan mengembalikan KTP fisik kepada tamu.</p>
+          </div>
+        </div>
+      </ModalBase>
+    </div>
+  );
+};
+
+const AdminDashboard = ({ user, onLogout }) => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [officers, setOfficers] = useState(MOCK_SECURITY_OFFICERS);
+  const [showAddOfficer, setShowAddOfficer] = useState(false);
+  const [newOfficer, setNewOfficer] = useState({ name: '', email: '', location: LOCATIONS[0] });
+  
+  const [expandedVisitorId, setExpandedVisitorId] = useState(null);
+
+  const visitorsWithHistory = useMemo(() => {
+    const grouped = MOCK_VISITS.reduce((acc, visit) => {
+      if(!acc[visit.name]) acc[visit.name] = { 
+        name: visit.name, asal: visit.asal, 
+        photo: visit.selfiePhoto || 'https://via.placeholder.com/150',
+        history: [] 
+      };
+      acc[visit.name].history.push(visit);
+      return acc;
+    }, {});
+    return Object.values(grouped).map(v => {
+      v.history.sort((a, b) => new Date(b.date) - new Date(a.date));
+      return v;
+    });
+  }, []);
+
+  const handleAddOfficer = (e) => {
+    e.preventDefault();
+    if(newOfficer.name && newOfficer.email) {
+      setOfficers([...officers, { id: `SEC-0${officers.length + 1}`, ...newOfficer, status: 'Active' }]);
+      setShowAddOfficer(false);
+      setNewOfficer({ name: '', email: '', location: LOCATIONS[0] });
+    }
+  };
+
+  const toggleOfficerStatus = (id) => {
+    setOfficers(officers.map(o => o.id === id ? { ...o, status: o.status === 'Active' ? 'Inactive' : 'Active' } : o));
+  };
+
+  const chartDataWeekly = [
+    { name: 'Sen', kunjungan: 12 }, { name: 'Sel', kunjungan: 19 },
+    { name: 'Rab', kunjungan: 15 }, { name: 'Kam', kunjungan: 22 },
+    { name: 'Jum', kunjungan: 28 }, { name: 'Sab', kunjungan: 5 }, { name: 'Min', kunjungan: 2 }
+  ];
+
+  const chartDataDept = [
+    { name: 'IT Dept', value: 35 }, { name: 'HRD', value: 25 },
+    { name: 'Operasional', value: 20 }, { name: 'Manajemen', value: 10 }, { name: 'Lainnya', value: 10 }
+  ];
+  const PIE_COLORS = ['#3C6DB2', '#ADC52D', '#BA313B', '#1A1B1E', '#74777F'];
+
+  return (
+    <div className="min-h-screen bg-[#F4F2F6] flex flex-col md:flex-row font-sans">
+      <aside className="w-full md:w-72 bg-[#1A1B1E] text-white flex flex-col md:h-screen sticky top-0 z-10 md:rounded-r-[32px] shadow-lg">
+        <div className="p-6 md:pb-8 flex items-center justify-between md:justify-center">
+          <BrandLogo className="h-8 brightness-0 invert" />
+          <button className="md:hidden text-white/70 hover:text-white" onClick={onLogout}><LogOut size={24}/></button>
+        </div>
+        
+        <div className="px-6 py-4 flex items-center gap-4 border-b border-white/10 mb-4 pb-6">
+          <div className="w-12 h-12 rounded-full bg-[#3C6DB2] text-white flex items-center justify-center font-medium text-lg">{user.name.charAt(0)}</div>
+          <div>
+            <div className="font-medium text-base">{user.name}</div>
+            <div className="text-sm text-white/60">Administrator</div>
+          </div>
+        </div>
+        
+        <nav className="flex-1 px-4 py-2 flex flex-row md:flex-col gap-2 overflow-x-auto">
+          <button onClick={() => setActiveTab('dashboard')} className={`flex items-center gap-3 px-4 py-3.5 rounded-full transition-colors whitespace-nowrap text-sm font-medium ${activeTab === 'dashboard' ? 'bg-[#3C6DB2] text-white' : 'text-white/60 hover:bg-white/5'}`}>
+            <BarChart3 size={20} /> Dashboard Overview
+          </button>
+          <button onClick={() => setActiveTab('assignment')} className={`flex items-center gap-3 px-4 py-3.5 rounded-full transition-colors whitespace-nowrap text-sm font-medium ${activeTab === 'assignment' ? 'bg-[#3C6DB2] text-white' : 'text-white/60 hover:bg-white/5'}`}>
+            <ShieldCheck size={20} /> Assignment Petugas
+          </button>
+          <button onClick={() => setActiveTab('visitor')} className={`flex items-center gap-3 px-4 py-3.5 rounded-full transition-colors whitespace-nowrap text-sm font-medium ${activeTab === 'visitor' ? 'bg-[#3C6DB2] text-white' : 'text-white/60 hover:bg-white/5'}`}>
+            <History size={20} /> Jejak Visitor
+          </button>
+        </nav>
+        
+        <div className="p-6 mt-auto hidden md:block">
+          <button className="flex items-center justify-center gap-2 w-full py-3 rounded-full text-sm font-medium border border-white/20 text-white hover:bg-white/10 transition-colors" onClick={onLogout}>
+            <LogOut size={18} /> Keluar Sistem
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div className="mb-8 flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-normal text-[#1A1B1E] leading-tight">
+              {activeTab === 'dashboard' ? 'Dashboard Statistik' : activeTab === 'assignment' ? 'Manajemen Petugas' : 'Rekam Jejak Kunjungan'}
+            </h1>
+            <p className="text-sm text-[#44474E] mt-1.5">Data operasional Visitor Management System.</p>
+          </div>
+        </div>
+
+        {/* ADMIN TAB: DASHBOARD */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC]">
+                <div className="text-[#74777F] text-sm mb-2 flex items-center gap-2"><Users size={18}/> Total Tamu (Bulan Ini)</div>
+                <div className="text-4xl font-normal text-[#1A1B1E]">1,284</div>
+                <div className="text-sm text-[#ADC52D] mt-3 font-medium flex items-center gap-1">+12% dari bulan lalu</div>
+              </div>
+              <div className="bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC]">
+                <div className="text-[#74777F] text-sm mb-2 flex items-center gap-2"><CheckCircle size={18}/> Tamu Selesai Hari Ini</div>
+                <div className="text-4xl font-normal text-[#1A1B1E]">45</div>
+              </div>
+              <div className="bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC]">
+                <div className="text-[#74777F] text-sm mb-2 flex items-center gap-2"><AlertCircle size={18}/> Kunjungan Ditolak</div>
+                <div className="text-4xl font-normal text-[#BA313B]">3</div>
+                <div className="text-sm text-[#74777F] mt-3">Rata-rata alasan: Data tidak lengkap</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC] h-[420px] flex flex-col">
+                <h3 className="text-lg font-medium text-[#1A1B1E] mb-6">Tren Kunjungan Mingguan</h3>
+                <div className="flex-1 min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartDataWeekly} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EAE7EC" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#74777F', fontSize: 13}} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#74777F', fontSize: 13}} />
+                      <RechartsTooltip cursor={{fill: '#F4F2F6'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                      <Bar dataKey="kunjungan" fill="#3C6DB2" radius={[6, 6, 0, 0]} barSize={36} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC] h-[420px] flex flex-col">
+                <h3 className="text-lg font-medium text-[#1A1B1E] mb-6">Distribusi Tujuan Kunjungan</h3>
+                <div className="flex-1 min-h-0 relative flex justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={chartDataDept} cx="50%" cy="50%" innerRadius={90} outerRadius={125} paddingAngle={2} dataKey="value" stroke="none">
+                        {chartDataDept.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                      <Legend verticalAlign="bottom" height={40} iconType="circle" iconSize={12} formatter={(value) => <span className="text-sm text-[#44474E] ml-1">{value}</span>} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ADMIN TAB: ASSIGNMENT */}
+        {activeTab === 'assignment' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex justify-between items-center bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC]">
+              <p className="text-[#44474E] text-base">Kelola akun dan lokasi penugasan petugas keamanan.</p>
+              <Button variant="filled" onClick={() => setShowAddOfficer(true)}><Plus size={18}/> Tambah Petugas</Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {officers.map(officer => (
+                <div key={officer.id} className="bg-[#FDFBFF] p-6 rounded-[28px] shadow-sm border border-[#EAE7EC] flex flex-col">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-[#D5E3FF] text-[#001B3E] flex items-center justify-center font-medium text-xl">
+                        {officer.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-medium text-[#1A1B1E] text-lg">{officer.name}</div>
+                        <div className="text-sm text-[#74777F]">{officer.id}</div>
+                      </div>
+                    </div>
+                    <button className="text-[#74777F] hover:bg-[#F4F2F6] p-2 rounded-full transition-colors"><MoreVertical size={20}/></button>
+                  </div>
+                  
+                  <div className="bg-[#F4F2F6] p-4 rounded-[16px] flex items-center gap-3 mb-6 mt-auto">
+                    <MapPin size={20} className="text-[#3C6DB2]"/>
+                    <span className="text-base font-medium text-[#1A1B1E]">{officer.location}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-[#EAE7EC] pt-5">
+                    <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${officer.status === 'Active' ? 'bg-[#E6F893] text-[#192100]' : 'bg-[#EFEDF1] text-[#44474E]'}`}>
+                      {officer.status === 'Active' ? 'Aktif Bertugas' : 'Nonaktif'}
+                    </span>
+                    <button onClick={() => toggleOfficerStatus(officer.id)} className="text-sm font-medium text-[#3C6DB2] hover:underline">
+                      {officer.status === 'Active' ? 'Nonaktifkan' : 'Aktifkan'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ADMIN TAB: VISITOR TIMELINE */}
+        {activeTab === 'visitor' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="bg-[#FDFBFF] p-5 rounded-[28px] shadow-sm border border-[#EAE7EC] flex items-center gap-3">
+              <Search className="text-[#74777F] ml-2" size={24}/>
+              <input type="text" placeholder="Cari nama visitor atau instansi..." className="flex-1 bg-transparent border-none outline-none text-[#1A1B1E] text-base placeholder:text-[#74777F]" />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {visitorsWithHistory.map(visitor => {
+                const isExpanded = expandedVisitorId === visitor.name;
+                return (
+                  <div key={visitor.name} className={`bg-[#FDFBFF] rounded-[28px] shadow-sm border overflow-hidden transition-all duration-300 ${isExpanded ? 'border-[#3C6DB2] ring-1 ring-[#3C6DB2]' : 'border-[#EAE7EC] hover:border-[#3C6DB2]/50'}`}>
+                    {/* Header Card (Clickable) */}
+                    <div className="p-6 flex items-center justify-between cursor-pointer select-none" onClick={() => setExpandedVisitorId(isExpanded ? null : visitor.name)}>
+                      <div className="flex items-center gap-5">
+                        <img src={visitor.photo} alt={visitor.name} className="w-16 h-16 rounded-full object-cover border-4 border-[#F4F2F6]" />
+                        <div>
+                          <h3 className="text-xl font-medium text-[#1A1B1E]">{visitor.name}</h3>
+                          <p className="text-base text-[#74777F] mt-0.5">{visitor.asal}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right hidden sm:block">
+                          <div className="text-base font-medium text-[#1A1B1E]">{visitor.history.length} Kunjungan</div>
+                          <div className="text-sm text-[#74777F]">Terakhir: {visitor.history[0].date}</div>
+                        </div>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isExpanded ? 'bg-[#D5E3FF] text-[#001B3E]' : 'bg-[#F4F2F6] text-[#44474E]'}`}>
+                           <ChevronRight className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} size={24} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expandable Timeline */}
+                    {isExpanded && (
+                      <div className="px-8 pb-8 pt-4 border-t border-[#EAE7EC] bg-[#FDFBFF] animate-in slide-in-from-top-2">
+                        <h4 className="text-base font-medium text-[#1A1B1E] mb-6">Riwayat Perjalanan (Timeline)</h4>
+                        <div className="relative border-l-2 border-[#EAE7EC] ml-3 space-y-6">
+                          {visitor.history.map((visit, idx) => (
+                            <div key={idx} className="relative pl-8">
+                              {/* Timeline Dot */}
+                              <div className="absolute -left-[11px] top-2 w-5 h-5 rounded-full bg-[#FDFBFF] border-[3px] border-[#3C6DB2]"></div>
+                              
+                              <div className="bg-[#F4F2F6] p-5 rounded-[20px] hover:shadow-md transition-shadow">
+                                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-medium text-[#1A1B1E] text-base">{visit.date}</span>
+                                    <span className="text-sm text-[#74777F] bg-[#EAE7EC] px-3 py-1 rounded-full">{visit.time} {visit.timeOut ? `- ${visit.timeOut}` : ''}</span>
+                                  </div>
+                                  <Badge status={visit.status} />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
+                                  <div>
+                                    <span className="block text-sm text-[#74777F] mb-1">Bertemu dengan</span>
+                                    <span className="text-base font-medium text-[#1A1B1E]">{visit.tujuan}</span>
+                                  </div>
+                                  <div>
+                                    <span className="block text-sm text-[#74777F] mb-1">Keperluan</span>
+                                    <span className="text-base font-medium text-[#1A1B1E]">{visit.keperluan}</span>
+                                  </div>
+                                  <div>
+                                    <span className="block text-sm text-[#74777F] mb-1">Lokasi Check-in</span>
+                                    <span className="text-base font-medium text-[#3C6DB2] flex items-center gap-1.5"><MapPin size={16}/> {visit.location}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </main>
+
+      <ModalBase isOpen={showAddOfficer} onClose={() => setShowAddOfficer(false)} title="Tambah Petugas Baru"
+        footer={<><Button variant="text" onClick={() => setShowAddOfficer(false)}>Batal</Button><Button variant="filled" onClick={handleAddOfficer}>Simpan Data</Button></>}>
+        <form className="space-y-4 pt-2" onSubmit={handleAddOfficer}>
+          <InputField label="Nama Lengkap" value={newOfficer.name} onChange={e => setNewOfficer({...newOfficer, name: e.target.value})} required />
+          <InputField label="Email Address" type="email" value={newOfficer.email} onChange={e => setNewOfficer({...newOfficer, email: e.target.value})} required />
+          <div className="w-full">
+            <label className="block text-xs font-medium text-[#44474E] mb-1 ml-1">Lokasi Penugasan</label>
+            <select className="w-full px-4 py-3 bg-transparent border border-[#74777F] rounded-[8px] outline-none focus:border-2 focus:border-[#3C6DB2] text-[#1A1B1E]" value={newOfficer.location} onChange={e => setNewOfficer({...newOfficer, location: e.target.value})}>
+              {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+            </select>
+          </div>
+        </form>
+      </ModalBase>
+    </div>
+  );
+};
+
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [visitStatus, setVisitStatus] = useState(null);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    // Simulasi resume state untuk tamu lama jika misal ia sedang dalam status kunjungan aktif/pending sebelumnya
+    if(userData.role === 'visitor' && userData.type === 'returning') {
+      // setVisitStatus({ status: 'PENDING', tujuan: 'Bpk. Andi' }); 
+    }
+  };
+
+  const handleVisitorSubmit = (formData) => {
+    setVisitStatus({ status: 'PENDING', tujuan: formData.tujuan });
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setVisitStatus(null);
+  };
+
+  if (!user) return <LoginScreen onLogin={handleLogin} />;
+
+  if (user.role === 'visitor') {
+    if (visitStatus) return <VisitorStatusScreen statusData={visitStatus} onLogout={handleLogout} />;
+    return <VisitorFormScreen user={user} onSubmit={handleVisitorSubmit} />;
+  }
+
+  if (user.role === 'security') {
+    return <SecurityDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  if (user.role === 'admin') {
+    return <AdminDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  return <div>Role tidak diketahui</div>;
+};
+
+export default App;
