@@ -94,7 +94,7 @@ end; $$;
 
 -- 8) updated_at otomatis pada locations -----------------------------------
 create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin new.updated_at = now(); new.updated_by = auth.uid(); return new; end; $$;
 
 drop trigger if exists locations_touch on public.locations;
@@ -157,7 +157,25 @@ drop policy if exists loc_delete on public.locations;
 create policy loc_delete on public.locations for delete
   using (public.is_admin() or (public.can_write() and public.is_member(company_id)));
 
--- 11) ADMIN PERTAMA --------------------------------------------------------
+-- 11) HARDENING HAK AKSES FUNGSI ------------------------------------------
+-- Supabase secara default memberi EXECUTE ke anon/authenticated pada setiap
+-- fungsi baru di schema public. Fungsi SECURITY DEFINER sebaiknya TIDAK bisa
+-- dipanggil anon sebagai RPC. Cabut dari anon; sisakan authenticated hanya
+-- untuk yang dibutuhkan (helper dipakai RLS + request_access).
+revoke execute on function public.is_admin()                       from anon;
+revoke execute on function public.can_write()                      from anon;
+revoke execute on function public.is_member(uuid)                  from anon;
+revoke execute on function public.request_access(text, text, text) from anon;
+-- Fungsi trigger tidak untuk dipanggil siapa pun (jalan sebagai definer via trigger).
+revoke execute on function public.handle_new_user()  from public, anon, authenticated;
+revoke execute on function public.touch_updated_at() from public, anon, authenticated;
+
+grant execute on function public.is_admin()                       to authenticated;
+grant execute on function public.can_write()                      to authenticated;
+grant execute on function public.is_member(uuid)                  to authenticated;
+grant execute on function public.request_access(text, text, text) to authenticated;
+
+-- 12) ADMIN PERTAMA --------------------------------------------------------
 -- Login DULU sekali via Google di aplikasi supaya baris profil Anda terbuat,
 -- lalu jalankan perintah ini (ganti dengan email Google Anda):
 --
