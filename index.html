@@ -17,6 +17,8 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
+    <!-- Supabase JS client (auth Google + database cloud) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Konfigurasi Tailwind: font Inter sebagai basis -->
     <script>
         tailwind.config = {
@@ -462,6 +464,24 @@
         /* Shadow berwarna */
         body.light-theme .shadow-indigo-500\/20 { --tw-shadow-color: rgba(20, 184, 166, 0.20); --tw-shadow: var(--tw-shadow-colored); }
         body.light-theme .shadow-indigo-600\/20 { --tw-shadow-color: rgba(13, 148, 136, 0.20); --tw-shadow: var(--tw-shadow-colored); }
+
+        /* ===== Gerbang autentikasi (sembunyikan aplikasi sampai login & disetujui) ===== */
+        body.cloud-gated > header,
+        body.cloud-gated > #app-shell { display: none !important; }
+
+        /* ===== Mode hanya-baca (role management) ===== */
+        body.readonly-mode #btn-add-location,
+        body.readonly-mode #btn-add-location-collapsed,
+        body.readonly-mode #btn-clear-canvas,
+        body.readonly-mode .loc-edit,
+        body.readonly-mode .loc-del,
+        body.readonly-mode .delete-btn-list,
+        body.readonly-mode #btn-delete-device { display: none !important; }
+
+        /* Latar gerbang auth */
+        #auth-gate {
+            background: radial-gradient(1200px 600px at 50% -10%, #ffffff 0%, #eef1f6 60%);
+        }
     </style>
 </head>
 <body class="light-theme bg-slate-950 text-slate-100 font-sans h-screen flex flex-col no-select overflow-hidden">
@@ -539,6 +559,28 @@
                 <span id="autosave-text">Tersimpan otomatis</span>
             </div>
 
+            <!-- Badge mode hanya-baca (role management) -->
+            <span id="readonly-badge" class="hidden items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/30" title="Akun Anda hanya memiliki akses baca">
+                <i class="fa-solid fa-eye"></i> Hanya Baca
+            </span>
+
+            <!-- Tombol Kelola User (khusus admin) -->
+            <button id="btn-open-admin" class="hidden items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition" title="Kelola pengguna & perusahaan">
+                <i class="fa-solid fa-users-gear"></i> <span class="hidden sm:inline">Kelola User</span>
+            </button>
+
+            <!-- Menu pengguna (nama + keluar) -->
+            <div id="user-menu" class="hidden items-center gap-2 pl-1">
+                <div class="hidden md:flex flex-col items-end leading-tight">
+                    <span id="user-name" class="text-xs font-semibold text-slate-200 max-w-[140px] truncate">—</span>
+                    <span id="user-role" class="text-[10px] text-slate-400">—</span>
+                </div>
+                <img id="user-avatar" alt="" class="w-8 h-8 rounded-full border border-slate-700 object-cover bg-slate-800" />
+                <button id="btn-signout" class="p-2.5 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-500 rounded-xl border border-slate-700 transition" title="Keluar">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+
             <!-- Theme Toggle Button (posisi paling kanan) -->
             <button id="btn-theme-toggle" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition" title="Ganti Tema">
                 <i class="fa-solid fa-sun text-amber-500" id="theme-icon-sun"></i>
@@ -548,7 +590,7 @@
     </header>
 
     <!-- Main Container Layout (Mengunci layar agar tidak terjadi scroll global) -->
-    <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden relative">
+    <div id="app-shell" class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden relative">
         
         <!-- Sidebar Kiri: Daftar Lokasi (Perusahaan > Gedung > Lantai) -->
         <aside id="left-sidebar" class="order-1 w-full md:w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex flex-col h-full min-h-0 shrink-0 shadow-lg z-20 transition-all duration-200">
@@ -967,6 +1009,149 @@
         </div>
     </div>
 
+    <!-- ============ GERBANG AUTENTIKASI (Login Google + Request Access) ============ -->
+    <div id="auth-gate" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-y-auto">
+        <div class="w-full max-w-md my-auto">
+            <!-- Brand -->
+            <div class="flex flex-col items-center mb-6">
+                <div class="w-16 h-16 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%" role="img" aria-label="HSSE POINT">
+                        <defs>
+                            <linearGradient id="shieldGradG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1A365D"/><stop offset="100%" stop-color="#0F766E"/></linearGradient>
+                            <linearGradient id="pinGradG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#2DD4BF"/><stop offset="100%" stop-color="#0D9488"/></linearGradient>
+                            <linearGradient id="lineGradG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2DD4BF" stop-opacity="0.1"/><stop offset="50%" stop-color="#2DD4BF" stop-opacity="0.9"/><stop offset="100%" stop-color="#2DD4BF" stop-opacity="0.1"/></linearGradient>
+                        </defs>
+                        <path d="M 200 120 L 320 150 C 320 250 260 320 200 360 C 140 320 80 250 80 150 Z" fill="url(#shieldGradG)" stroke="#2DD4BF" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M 110 165 C 150 250 250 250 290 165" fill="none" stroke="url(#lineGradG)" stroke-width="6"/>
+                        <path d="M 140 280 C 180 200 220 200 260 280" fill="none" stroke="url(#lineGradG)" stroke-width="4"/>
+                        <circle cx="160" cy="220" r="5" fill="#2DD4BF"/><circle cx="240" cy="220" r="5" fill="#2DD4BF"/><circle cx="200" cy="280" r="5" fill="#2DD4BF"/>
+                        <path d="M 200 40 C 165 40 140 65 140 100 C 140 145 200 205 200 205 C 200 205 260 145 260 100 C 260 65 235 40 200 40 Z" fill="url(#pinGradG)" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+                        <circle cx="200" cy="95" r="18" fill="#1A365D"/>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold text-slate-900">HSSE POINT</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Penitikan CCTV &amp; Access Control Reader pada Denah</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xl p-6">
+                <!-- LOADING -->
+                <div id="screen-loading" class="text-center py-8">
+                    <i class="fa-solid fa-circle-notch fa-spin text-2xl text-teal-600"></i>
+                    <p class="text-xs text-slate-500 mt-3">Memuat…</p>
+                </div>
+
+                <!-- LOGIN -->
+                <div id="screen-login" class="hidden">
+                    <h2 class="text-base font-bold text-slate-900">Masuk</h2>
+                    <p class="text-xs text-slate-500 mt-1 mb-5">Gunakan akun Google Anda untuk melanjutkan.</p>
+                    <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-sm font-semibold text-slate-700 transition shadow-sm">
+                        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.5-2.1 14.3-5.6l-6.6-5.6C29.7 34.6 27 35.6 24 35.6c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.6C39.9 36 44 30.6 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+                        Masuk dengan Google
+                    </button>
+                    <p class="text-[11px] text-slate-400 mt-4 text-center leading-relaxed">Dengan masuk, Anda menyetujui pengelolaan data akun oleh administrator perusahaan.</p>
+                </div>
+
+                <!-- REQUEST ACCESS -->
+                <div id="screen-request" class="hidden">
+                    <h2 class="text-base font-bold text-slate-900">Lengkapi Data &amp; Minta Akses</h2>
+                    <p class="text-xs text-slate-500 mt-1 mb-4">Data ini digunakan admin untuk menyetujui &amp; menetapkan akses Anda.</p>
+                    <form id="form-request" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Email</label>
+                            <input type="email" id="req-email" readonly class="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-500 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap <span class="text-rose-500">*</span></label>
+                            <input type="text" id="req-name" required class="w-full bg-white border border-slate-300 focus:border-teal-500 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none transition" placeholder="Nama lengkap Anda">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">No. Telepon <span class="text-rose-500">*</span></label>
+                            <input type="tel" id="req-phone" required class="w-full bg-white border border-slate-300 focus:border-teal-500 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none transition" placeholder="Contoh: 0812xxxxxxx">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Divisi <span class="text-rose-500">*</span></label>
+                            <input type="text" id="req-division" required class="w-full bg-white border border-slate-300 focus:border-teal-500 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none transition" placeholder="Contoh: HSSE / IT / Security">
+                        </div>
+                        <button type="submit" id="btn-submit-request" class="w-full bg-indigo-600 text-white text-sm font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Request Access
+                        </button>
+                    </form>
+                    <button id="btn-request-signout" class="w-full text-xs text-slate-500 hover:text-slate-700 mt-3 py-1.5">Keluar</button>
+                </div>
+
+                <!-- WAITING -->
+                <div id="screen-waiting" class="hidden text-center">
+                    <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-hourglass-half text-xl"></i></div>
+                    <h2 class="text-base font-bold text-slate-900">Menunggu Persetujuan</h2>
+                    <p class="text-xs text-slate-500 mt-1 mb-4">Permintaan akses Anda sedang ditinjau administrator. Anda akan bisa masuk setelah disetujui.</p>
+                    <div id="waiting-summary" class="text-left text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1 mb-4"></div>
+                    <button id="btn-waiting-refresh" class="w-full bg-indigo-600 text-white text-sm font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2"><i class="fa-solid fa-rotate"></i> Periksa Status</button>
+                    <button id="btn-waiting-signout" class="w-full text-xs text-slate-500 hover:text-slate-700 mt-3 py-1.5">Keluar</button>
+                </div>
+
+                <!-- REJECTED -->
+                <div id="screen-rejected" class="hidden text-center">
+                    <div class="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-ban text-xl"></i></div>
+                    <h2 class="text-base font-bold text-slate-900">Akses Ditolak</h2>
+                    <p class="text-xs text-slate-500 mt-1 mb-4">Permintaan akses Anda tidak disetujui. Silakan hubungi administrator untuk informasi lebih lanjut.</p>
+                    <button id="btn-rejected-signout" class="w-full text-xs text-slate-500 hover:text-slate-700 py-1.5">Keluar</button>
+                </div>
+
+                <!-- CONFIG BELUM DIISI -->
+                <div id="screen-config" class="hidden text-center">
+                    <div class="w-14 h-14 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-gear text-xl"></i></div>
+                    <h2 class="text-base font-bold text-slate-900">Cloud Belum Dikonfigurasi</h2>
+                    <p class="text-xs text-slate-500 mt-1">Isi <code class="text-teal-700 font-mono">SUPABASE_CONFIG</code> (url &amp; anon key) di dalam <code class="font-mono">index.html</code>, lalu muat ulang halaman.</p>
+                </div>
+            </div>
+            <p class="text-center text-[11px] text-slate-400 mt-5">HSSE POINT • Cloud Multi-User</p>
+        </div>
+    </div>
+
+    <!-- ============ MODAL ADMIN: KELOLA USER & PERUSAHAAN ============ -->
+    <div id="modal-admin" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[92vh]">
+            <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-users-gear text-indigo-400"></i> Kelola User &amp; Perusahaan</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Setujui user, atur role, dan tetapkan perusahaan.</p>
+                </div>
+                <button id="btn-close-admin" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex items-center gap-1 px-5 pt-4 shrink-0">
+                <button id="admin-tabbtn-users" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Pengguna</button>
+                <button id="admin-tabbtn-companies" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Perusahaan</button>
+                <button id="btn-admin-refresh" class="ml-auto px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+
+            <!-- Tab: Pengguna -->
+            <div id="admin-tab-users" class="p-5 overflow-y-auto flex-1">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="flex items-center gap-1.5">
+                        <button data-filter="all" class="admin-user-filter text-[11px] px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold">Semua</button>
+                        <button data-filter="pending" class="admin-user-filter text-[11px] px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-semibold">Menunggu</button>
+                        <button data-filter="active" class="admin-user-filter text-[11px] px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-semibold">Aktif</button>
+                    </div>
+                    <span id="admin-users-count" class="ml-auto text-[11px] text-slate-500"></span>
+                </div>
+                <div id="admin-users-list" class="space-y-3"></div>
+                <div id="admin-users-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-users text-2xl mb-2 block opacity-40"></i>Tidak ada pengguna.</div>
+            </div>
+
+            <!-- Tab: Perusahaan -->
+            <div id="admin-tab-companies" class="hidden p-5 overflow-y-auto flex-1">
+                <form id="form-add-company" class="flex items-center gap-2 mb-4">
+                    <input type="text" id="new-company-name" required placeholder="Nama perusahaan baru…" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                    <button type="submit" class="bg-indigo-600 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Tambah</button>
+                </form>
+                <div id="admin-companies-list" class="space-y-2"></div>
+                <div id="admin-companies-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-building text-2xl mb-2 block opacity-40"></i>Belum ada perusahaan.</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Notification/Toast Overlay -->
     <div id="toast-container" class="fixed bottom-12 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         <!-- Dynmically generated notifications -->
@@ -1003,6 +1188,37 @@
             theme: 'light', // 'dark' or 'light' (default: light)
             mobileView: 'list' // 'list' | 'detail' (navigasi khusus mobile)
         };
+
+        /* =========================================================
+           KONFIGURASI SUPABASE (CLOUD + AUTENTIKASI)
+           Isi url & anonKey dari: Supabase Dashboard > Project Settings >
+           API. anon key AMAN ditaruh di sisi klien (dilindungi RLS).
+           Selama masih placeholder, aplikasi berjalan MODE LOKAL (IndexedDB)
+           persis seperti sebelumnya — tidak ada login.
+        ========================================================= */
+        const SUPABASE_CONFIG = {
+            url: 'https://YOUR-PROJECT.supabase.co',
+            anonKey: 'YOUR-ANON-PUBLIC-KEY'
+        };
+
+        const isCloudConfigured = () =>
+            /^https:\/\/[a-z0-9-]+\.supabase\.(co|in)/i.test(SUPABASE_CONFIG.url) &&
+            !!SUPABASE_CONFIG.anonKey && !/YOUR-|xxxx/i.test(SUPABASE_CONFIG.anonKey);
+
+        let sb = null;         // klien Supabase (dibuat saat boot bila terkonfigurasi)
+        let cloudMode = false; // true bila mode cloud aktif (login diperlukan)
+
+        // Status autentikasi & profil pengguna aktif.
+        const auth = {
+            user: null,        // objek user dari Supabase Auth
+            profile: null,     // baris tabel profiles {id,email,full_name,phone,division,role,status}
+            companies: []      // [{id,name}] perusahaan yang ditugaskan ke user ini
+        };
+
+        const currentRole = () => (auth.profile && auth.profile.role) || null;
+        const isAdmin = () => currentRole() === 'admin';
+        // 'user' & 'admin' boleh mengubah; 'management' hanya baca.
+        const canEdit = () => !cloudMode || currentRole() === 'user' || currentRole() === 'admin';
 
         // Cache DOM elements
         const dom = {
@@ -1377,10 +1593,13 @@
 
         // Hapus lokasi beserta perangkatnya.
         const deleteLocation = (id) => {
+            if (!requireEdit()) return;
             const loc = state.locations.find(l => l.id === id);
             if (!loc) return;
             if (!confirm(`Hapus lokasi "${loc.perusahaan} - ${loc.gedung} - Lantai ${loc.lantai}" beserta semua titik perangkatnya?`)) return;
 
+            if (cloudMode) cloudDeleteLocation(id);
+            cloudDirty.delete(id);
             const wasActive = state.activeLocationId === id;
             state.locations = state.locations.filter(l => l.id !== id);
 
@@ -1428,8 +1647,14 @@
         };
 
         const openLocationModal = (editId = null) => {
+            if (!requireEdit()) return;
             resetLocationForm();
+            populatePerusahaanOptions();   // isi dropdown perusahaan dari cloud (no-op di mode lokal)
             state.editingLocationId = editId;
+
+            if (cloudMode && auth.companies.length === 0) {
+                showNotification("Belum ada perusahaan yang ditugaskan ke akun Anda. Hubungi admin.", "warning");
+            }
 
             if (editId) {
                 const loc = state.locations.find(l => l.id === editId);
@@ -1437,7 +1662,9 @@
                 dom.modalLocationTitle.innerHTML = '<i class="fa-solid fa-pen text-indigo-400"></i> Ubah Lokasi';
                 dom.btnSubmitLocation.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan';
 
-                if (PERUSAHAAN_PRESETS.includes(loc.perusahaan)) {
+                if (cloudMode) {
+                    dom.locPerusahaan.value = loc.company_id || '';
+                } else if (PERUSAHAAN_PRESETS.includes(loc.perusahaan)) {
                     dom.locPerusahaan.value = loc.perusahaan;
                 } else {
                     dom.locPerusahaan.value = '__other__';
@@ -1466,19 +1693,31 @@
         };
 
         const submitLocationForm = () => {
-            let perusahaan = dom.locPerusahaan.value;
-            if (perusahaan === '__other__') perusahaan = dom.locPerusahaanOther.value.trim();
+            if (!requireEdit()) return;
+
+            // Perusahaan: mode cloud memakai company_id dari dropdown; mode lokal memakai nama.
+            let perusahaan, companyId = null;
+            if (cloudMode) {
+                companyId = dom.locPerusahaan.value;
+                const opt = dom.locPerusahaan.options[dom.locPerusahaan.selectedIndex];
+                perusahaan = opt ? opt.textContent : '';
+                if (!companyId) { showNotification("Perusahaan wajib dipilih.", "error"); return; }
+            } else {
+                perusahaan = dom.locPerusahaan.value;
+                if (perusahaan === '__other__') perusahaan = dom.locPerusahaanOther.value.trim();
+                if (!perusahaan) { showNotification("Nama Perusahaan wajib diisi.", "error"); return; }
+            }
             const gedung = dom.locGedung.value.trim();
             const area = dom.locArea.value;
             const lantai = dom.locLantai.value.trim();
 
-            if (!perusahaan) { showNotification("Nama Perusahaan wajib diisi.", "error"); return; }
             if (!gedung) { showNotification("Nama Gedung wajib diisi.", "error"); return; }
             if (!area) { showNotification("Area wajib dipilih.", "error"); return; }
             if (!lantai) { showNotification("Lantai wajib diisi.", "error"); return; }
 
             const data = {
                 perusahaan,
+                company_id: companyId,
                 gedung,
                 alamat: dom.locAlamat.value.trim(),
                 gps: dom.locGps.value.trim(),
@@ -1489,6 +1728,7 @@
                 denahType: state.pendingDenah ? state.pendingDenah.type : null
             };
 
+            let saved = null;
             if (state.editingLocationId) {
                 const loc = state.locations.find(l => l.id === state.editingLocationId);
                 if (loc) {
@@ -1496,6 +1736,7 @@
                     renderLocationTree();
                     if (state.activeLocationId === loc.id) loadLocationIntoWorkspace(loc);
                     showNotification("Lokasi berhasil diperbarui.");
+                    saved = loc;
                 }
             } else {
                 const loc = { id: genLocId(), ...data, markers: [], idCounter: 1, imageWidth: 0, imageHeight: 0 };
@@ -1503,7 +1744,9 @@
                 renderLocationTree();
                 selectLocation(loc.id);
                 showNotification("Lokasi baru berhasil ditambahkan.");
+                saved = loc;
             }
+            if (cloudMode && saved) cloudUpsertLocation(saved);
             scheduleAutoSave();
             closeLocationModal();
         };
@@ -1681,6 +1924,9 @@
             // Klik kiri murni (e.button === 0) digunakan untuk menitik
             if (e.button !== 0) return;
 
+            // Guard role: management (hanya baca) tidak boleh menambah titik
+            if (!canEdit()) { denyReadOnly(); return; }
+
             // Guard: harus ada lokasi aktif dengan denah sebelum menaruh titik
             if (!state.activeLocationId) {
                 showNotification("Pilih atau tambah lokasi terlebih dahulu.", "warning");
@@ -1705,6 +1951,7 @@
 
         // Choose Device & Generate Pin Info
         const selectDeviceType = (type) => {
+            if (!requireEdit()) { closeSelectorModal(); return; }
             const newId = `${type === 'cctv' ? 'CTV' : 'ACS'}-${String(state.idCounter++).padStart(3, '0')}`;
             const defaultName = type === 'cctv' ? `CCTV Titik ${state.idCounter - 1}` : `Access Reader ${state.idCounter - 1}`;
             
@@ -1886,7 +2133,8 @@
             markerEl.addEventListener('mousedown', (e) => {
                 if (e.target.closest('.rotate-handle') || e.target.closest('.marker-toolbar')) return;
                 if (e.button !== 0) return; // Hanya ijinkan klik kiri untuk menggeser posisi pin
-                
+                if (!canEdit()) return;     // management: hanya baca, tidak boleh menggeser
+
                 e.stopPropagation();
                 isDragging = true;
                 
@@ -1923,6 +2171,7 @@
             // Touch Dragging (Mobile)
             markerEl.addEventListener('touchstart', (e) => {
                 if (e.target.closest('.rotate-handle') || e.target.closest('.marker-toolbar')) return;
+                if (!canEdit()) return;     // management: hanya baca
                 e.stopPropagation();
                 isDragging = true;
                 if (state.selectedMarkerId !== markerData.id) {
@@ -1995,6 +2244,7 @@
 
                 rotateHandle.addEventListener('mousedown', (e) => {
                     if (e.button !== 0) return;
+                    if (!canEdit()) return;     // management: hanya baca
                     e.stopPropagation();
                     isRotating = true;
                     if (state.selectedMarkerId !== markerData.id) {
@@ -2017,6 +2267,7 @@
 
                 // Touch rotation
                 rotateHandle.addEventListener('touchstart', (e) => {
+                    if (!canEdit()) return;     // management: hanya baca
                     e.stopPropagation();
                     isRotating = true;
                     if (state.selectedMarkerId !== markerData.id) {
@@ -2202,6 +2453,7 @@
 
         // Delete Device Action
         dom.btnDeleteDevice.addEventListener('click', () => {
+            if (!requireEdit()) return;
             const activeId = state.selectedMarkerId;
             if (activeId) {
                 state.markers = state.markers.filter(m => m.id !== activeId);
@@ -2279,6 +2531,7 @@
                 const delBtn = item.querySelector('.delete-btn-list');
                 delBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    if (!requireEdit()) return;
                     state.markers = state.markers.filter(device => device.id !== m.id);
                     if (state.selectedMarkerId === m.id) deselectMarker();
                     renderMarkers();
@@ -2319,6 +2572,7 @@
         };
 
         const clearAllMarkers = () => {
+            if (!requireEdit()) return;
             if (state.markers.length === 0) return;
             state.markers = [];
             deselectMarker();
@@ -2711,6 +2965,14 @@
         // Jadwalkan simpan-otomatis (debounce) — dipanggil dari tiap perubahan.
         const scheduleAutoSave = () => {
             if (!appReady) return; // hindari menimpa data saat pemulihan awal
+            if (cloudMode) {
+                if (!canEdit()) return;                 // management: hanya baca
+                if (state.activeLocationId) cloudDirty.add(state.activeLocationId);
+                markAutosaveStatus('Menyimpan…');
+                if (autoSaveTimer) clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(runCloudAutoSave, 800);
+                return;
+            }
             markAutosaveStatus('Menyimpan…');
             if (autoSaveTimer) clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(runAutoSave, 700);
@@ -2799,6 +3061,435 @@
                     toast.remove();
                 }, 300);
             }, 4000);
+        };
+
+
+        /* =========================================================
+           MODUL CLOUD + AUTENTIKASI (Supabase)
+           Aktif hanya bila SUPABASE_CONFIG terisi. Menyediakan: login
+           Google, alur request-access, gerbang persetujuan, role-gating,
+           penyimpanan data per-perusahaan, dan panel admin kelola user.
+        ========================================================= */
+        const $ = (id) => document.getElementById(id);
+        const roleLabel = (r) => ({ user: 'User', management: 'Management (Baca)', admin: 'Administrator' }[r] || '—');
+        const denyReadOnly = () => showNotification('Akun Anda hanya memiliki akses baca.', 'warning');
+        const requireEdit = () => { if (!canEdit()) { denyReadOnly(); return false; } return true; };
+
+        /* ---- Gerbang layar auth ---- */
+        const GATE_SCREENS = ['screen-loading', 'screen-login', 'screen-request', 'screen-waiting', 'screen-rejected', 'screen-config'];
+        const showGate = (screen) => {
+            document.body.classList.add('cloud-gated');
+            $('auth-gate').classList.remove('hidden');
+            GATE_SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== screen));
+        };
+        const hideGate = () => {
+            document.body.classList.remove('cloud-gated');
+            $('auth-gate').classList.add('hidden');
+        };
+
+        /* ---- Konversi baris <-> objek lokasi ---- */
+        const rowToLocation = (r) => {
+            const d = r.data || {};
+            return {
+                id: r.id, company_id: r.company_id, perusahaan: r.company_name || '',
+                gedung: d.gedung || '', alamat: d.alamat || '', gps: d.gps || '',
+                area: d.area || 'office', lantai: d.lantai || '',
+                denahSrc: d.denahSrc || null, denahName: d.denahName || null, denahType: d.denahType || null,
+                imageWidth: d.imageWidth || 0, imageHeight: d.imageHeight || 0,
+                idCounter: d.idCounter || 1, markers: d.markers || []
+            };
+        };
+        const locationToRow = (loc) => ({
+            id: loc.id, company_id: loc.company_id || null, company_name: loc.perusahaan || '',
+            data: {
+                gedung: loc.gedung, alamat: loc.alamat, gps: loc.gps, area: loc.area, lantai: loc.lantai,
+                denahSrc: loc.denahSrc || null, denahName: loc.denahName || null, denahType: loc.denahType || null,
+                imageWidth: loc.imageWidth || 0, imageHeight: loc.imageHeight || 0,
+                idCounter: loc.idCounter || 1, markers: loc.markers || []
+            }
+        });
+
+        /* ---- Data cloud: muat & simpan lokasi (RLS memfilter per perusahaan) ---- */
+        const cloudDirty = new Set();
+        const cloudLoadProject = async () => {
+            const { data, error } = await sb.from('locations').select('*').order('created_at', { ascending: true });
+            if (error) { console.error(error); showNotification('Gagal memuat data cloud: ' + error.message, 'error'); return; }
+            state.locations = (data || []).map(rowToLocation);
+            state.activeLocationId = null; state.markers = []; state.selectedMarkerId = null;
+            dom.editorPanel.classList.add('hidden');
+            renderLocationTree();
+            if (state.locations.length) {
+                selectLocation(state.locations[0].id);
+            } else {
+                showEmptyWorkspace(); resetView(); renderMarkers(); renderActiveLocationBanner();
+                if (dom.noLocationHint) dom.noLocationHint.classList.remove('hidden');
+            }
+        };
+        const cloudUpsertLocation = async (loc) => {
+            if (!cloudMode || !canEdit()) return;
+            const { error } = await sb.from('locations').upsert(locationToRow(loc));
+            if (error) { console.error(error); showNotification('Gagal menyimpan ke cloud: ' + error.message, 'error'); }
+        };
+        const cloudDeleteLocation = async (id) => {
+            if (!cloudMode) return;
+            const { error } = await sb.from('locations').delete().eq('id', id);
+            if (error) { console.error(error); showNotification('Gagal menghapus di cloud: ' + error.message, 'error'); }
+        };
+        const runCloudAutoSave = async () => {
+            try {
+                commitActiveLocation();
+                const ids = Array.from(cloudDirty); cloudDirty.clear();
+                for (const id of ids) {
+                    const loc = state.locations.find(l => l.id === id);
+                    if (loc) await cloudUpsertLocation(loc);
+                }
+                const t = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                markAutosaveStatus('Tersimpan ' + t);
+            } catch (e) { console.error(e); markAutosaveStatus('Gagal menyimpan'); }
+        };
+
+        /* ---- Isi dropdown perusahaan dari perusahaan yang ditugaskan ---- */
+        const populatePerusahaanOptions = () => {
+            if (!cloudMode) return; // mode lokal memakai opsi statis di HTML
+            const sel = dom.locPerusahaan;
+            sel.innerHTML = '<option value="">-- Pilih Perusahaan --</option>' +
+                auth.companies.map(c => `<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('');
+            dom.locPerusahaanOther.classList.add('hidden');
+        };
+
+        /* ---- Aktifkan/nonaktifkan editor sesuai role ---- */
+        const setEditorEnabled = (enabled) => {
+            ['input-dev-name', 'input-dev-model', 'btn-cond-existing', 'btn-cond-new', 'btn-scale-dec', 'btn-scale-inc', 'input-dev-photo', 'btn-remove-photo', 'btn-delete-device'].forEach(id => {
+                const el = $(id); if (!el) return;
+                el.disabled = !enabled;
+                el.classList.toggle('opacity-50', !enabled);
+                el.classList.toggle('pointer-events-none', !enabled);
+            });
+            const ph = $('photo-upload-placeholder');
+            if (ph) { ph.classList.toggle('pointer-events-none', !enabled); ph.classList.toggle('opacity-50', !enabled); }
+        };
+        const applyRoleUI = () => {
+            const ro = cloudMode && !canEdit();
+            document.body.classList.toggle('readonly-mode', ro);
+            $('readonly-badge').classList.toggle('hidden', !ro);
+            $('readonly-badge').classList.toggle('flex', ro);
+            $('btn-open-admin').classList.toggle('hidden', !isAdmin());
+            $('btn-open-admin').classList.toggle('flex', isAdmin());
+            setEditorEnabled(!ro);
+        };
+
+        /* ---- Muat perusahaan milik user ---- */
+        const loadUserCompanies = async () => {
+            if (isAdmin()) {
+                const { data } = await sb.from('companies').select('id,name').order('name');
+                auth.companies = data || [];
+            } else {
+                const { data } = await sb.from('user_companies').select('company_id, companies(name)').eq('user_id', auth.user.id);
+                auth.companies = (data || []).map(r => ({ id: r.company_id, name: (r.companies && r.companies.name) || '' }));
+            }
+        };
+
+        /* ---- Profil: ambil (atau buat cadangan bila trigger belum jalan) ---- */
+        const fetchOrCreateProfile = async () => {
+            const uid = auth.user.id;
+            let { data, error } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
+            if (error) { console.error(error); showNotification('Gagal memuat profil: ' + error.message, 'error'); return null; }
+            if (!data) {
+                const email = auth.user.email || '';
+                const ins = await sb.from('profiles').insert({ id: uid, email, status: 'new' }).select('*').maybeSingle();
+                if (ins.error) { console.error(ins.error); return { id: uid, email, status: 'new', role: null }; }
+                data = ins.data;
+            }
+            return data;
+        };
+
+        /* ---- Router utama berdasarkan sesi & status profil ---- */
+        let routeSeq = 0;
+        const routeByAuth = async (session) => {
+            const seq = ++routeSeq;
+            if (!session || !session.user) { auth.user = null; auth.profile = null; auth.companies = []; showGate('screen-login'); return; }
+            auth.user = session.user;
+            showGate('screen-loading');
+            const profile = await fetchOrCreateProfile();
+            if (seq !== routeSeq) return;
+            if (!profile) { showGate('screen-login'); return; }
+            auth.profile = profile;
+            const st = profile.status;
+            if (st === 'active') {
+                await loadUserCompanies();
+                if (seq !== routeSeq) return;
+                await enterApp();
+            } else if (st === 'rejected') {
+                showGate('screen-rejected');
+            } else if (st === 'pending') {
+                showWaiting(profile);
+            } else {
+                showRequestForm(profile);
+            }
+        };
+
+        const showRequestForm = (profile) => {
+            showGate('screen-request');
+            $('req-email').value = auth.user.email || '';
+            $('req-name').value = profile.full_name || (auth.user.user_metadata && auth.user.user_metadata.full_name) || '';
+            $('req-phone').value = profile.phone || '';
+            $('req-division').value = profile.division || '';
+        };
+        const showWaiting = (profile) => {
+            showGate('screen-waiting');
+            $('waiting-summary').innerHTML = [
+                ['Nama', profile.full_name], ['Email', auth.user.email],
+                ['Telepon', profile.phone], ['Divisi', profile.division]
+            ].map(([k, v]) => `<div class="flex justify-between gap-3"><span class="text-slate-500">${k}</span><span class="font-semibold text-slate-800 text-right">${escapeHTML(v || '-')}</span></div>`).join('');
+        };
+
+        const enterApp = async () => {
+            hideGate();
+            applyRoleUI();
+            const um = $('user-menu'); um.classList.remove('hidden'); um.classList.add('flex');
+            $('user-name').textContent = auth.profile.full_name || auth.user.email || 'Pengguna';
+            $('user-role').textContent = roleLabel(currentRole());
+            const av = auth.user.user_metadata && (auth.user.user_metadata.avatar_url || auth.user.user_metadata.picture);
+            if (av) { $('user-avatar').src = av; $('user-avatar').classList.remove('hidden'); }
+            else { $('user-avatar').classList.add('hidden'); }
+            await cloudLoadProject();
+            appReady = true;
+        };
+
+        /* ---- Wiring tombol auth ---- */
+        const wireAuthUI = () => {
+            $('btn-google-login').addEventListener('click', async () => {
+                const { error } = await sb.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.origin + window.location.pathname }
+                });
+                if (error) showNotification('Gagal masuk: ' + error.message, 'error');
+            });
+            $('form-request').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const full_name = $('req-name').value.trim();
+                const phone = $('req-phone').value.trim();
+                const division = $('req-division').value.trim();
+                if (!full_name || !phone || !division) { showNotification('Lengkapi semua data.', 'error'); return; }
+                const btn = $('btn-submit-request'); btn.disabled = true;
+                // RPC aman (SECURITY DEFINER) — user hanya bisa set data diri + status 'pending',
+                // tidak bisa menaikkan role sendiri.
+                const { error } = await sb.rpc('request_access', { p_full_name: full_name, p_phone: phone, p_division: division });
+                btn.disabled = false;
+                if (error) { console.error(error); showNotification('Gagal mengirim: ' + error.message, 'error'); return; }
+                auth.profile = Object.assign(auth.profile || {}, { full_name, phone, division, status: 'pending' });
+                showWaiting(auth.profile);
+                showNotification('Permintaan akses terkirim. Menunggu persetujuan admin.');
+            });
+            const doSignOut = async () => { await sb.auth.signOut(); };
+            ['btn-request-signout', 'btn-waiting-signout', 'btn-rejected-signout', 'btn-signout'].forEach(id => {
+                const el = $(id); if (el) el.addEventListener('click', doSignOut);
+            });
+            $('btn-waiting-refresh').addEventListener('click', async () => {
+                const { data: { session } } = await sb.auth.getSession();
+                await routeByAuth(session);
+            });
+        };
+
+        /* =========================================================
+           PANEL ADMIN — kelola user & perusahaan
+        ========================================================= */
+        const admin = { profiles: [], companies: [], userCompanies: {}, filter: 'all', tab: 'users' };
+
+        const openAdminModal = async () => {
+            if (!isAdmin()) return;
+            $('modal-admin').classList.remove('hidden');
+            await loadAdminData();
+        };
+        const closeAdminModal = () => $('modal-admin').classList.add('hidden');
+
+        const loadAdminData = async () => {
+            const [p, c, uc] = await Promise.all([
+                sb.from('profiles').select('*').order('created_at', { ascending: false }),
+                sb.from('companies').select('*').order('name'),
+                sb.from('user_companies').select('user_id, company_id')
+            ]);
+            if (p.error || c.error || uc.error) {
+                showNotification('Gagal memuat data admin: ' + ((p.error || c.error || uc.error).message), 'error');
+                return;
+            }
+            admin.profiles = p.data || [];
+            admin.companies = c.data || [];
+            admin.userCompanies = {};
+            (uc.data || []).forEach(r => { (admin.userCompanies[r.user_id] = admin.userCompanies[r.user_id] || []).push(r.company_id); });
+            renderAdminUsers();
+            renderAdminCompanies();
+        };
+
+        const statusPill = (s) => {
+            const map = {
+                active: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
+                pending: 'bg-amber-500/15 text-amber-500 border-amber-500/30',
+                'new': 'bg-sky-500/15 text-sky-500 border-sky-500/30',
+                rejected: 'bg-rose-500/15 text-rose-500 border-rose-500/30'
+            };
+            const label = { active: 'Aktif', pending: 'Menunggu', 'new': 'Baru', rejected: 'Ditolak' }[s] || s || '-';
+            return `<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${map[s] || 'bg-slate-500/15 text-slate-400 border-slate-500/30'}">${label}</span>`;
+        };
+
+        const renderAdminUsers = () => {
+            const wrap = $('admin-users-list');
+            const list = admin.profiles.filter(p => {
+                if (admin.filter === 'all') return true;
+                if (admin.filter === 'pending') return p.status === 'pending' || p.status === 'new';
+                if (admin.filter === 'active') return p.status === 'active';
+                return true;
+            });
+            $('admin-users-count').textContent = `${list.length} pengguna`;
+            $('admin-users-empty').classList.toggle('hidden', list.length > 0);
+            wrap.innerHTML = list.map(p => {
+                const assigned = admin.userCompanies[p.id] || [];
+                const companyChecks = admin.companies.map(c => `
+                    <label class="flex items-center gap-1.5 text-[11px] text-slate-300 bg-slate-950/60 border border-slate-800 rounded-lg px-2 py-1 cursor-pointer hover:border-slate-700">
+                        <input type="checkbox" class="admin-co accent-indigo-500" value="${c.id}" ${assigned.includes(c.id) ? 'checked' : ''}> ${escapeHTML(c.name)}
+                    </label>`).join('') || '<span class="text-[11px] text-slate-500">Belum ada perusahaan. Tambah di tab Perusahaan.</span>';
+                const roleSel = ['user', 'management', 'admin'].map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${roleLabel(r)}</option>`).join('');
+                const isPending = p.status === 'pending' || p.status === 'new';
+                return `
+                <div class="admin-user-card bg-slate-950/50 border border-slate-800 rounded-xl p-4" data-uid="${p.id}">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-slate-100 truncate">${escapeHTML(p.full_name || '(tanpa nama)')}</p>
+                            <p class="text-[11px] text-slate-400 truncate">${escapeHTML(p.email || '')}</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">${escapeHTML(p.division || '-')} • ${escapeHTML(p.phone || '-')}</p>
+                        </div>
+                        ${statusPill(p.status)}
+                    </div>
+                    <div class="grid sm:grid-cols-[140px_1fr] gap-3 items-start">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Role</label>
+                            <select class="admin-role w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2 py-1.5 text-xs text-slate-100 focus:outline-none">${roleSel}</select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Perusahaan (boleh lebih dari satu)</label>
+                            <div class="flex flex-wrap gap-1.5">${companyChecks}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 mt-3">
+                        ${isPending
+                            ? `<button class="admin-reject text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition">Tolak</button>
+                               <button class="admin-approve text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition">Setujui &amp; Simpan</button>`
+                            : `<button class="admin-revoke text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Cabut Akses</button>
+                               <button class="admin-save text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition">Simpan</button>`}
+                    </div>
+                </div>`;
+            }).join('');
+
+            wrap.querySelectorAll('.admin-user-card').forEach(card => {
+                const uid = card.getAttribute('data-uid');
+                const getRole = () => card.querySelector('.admin-role').value;
+                const getCompanies = () => Array.from(card.querySelectorAll('.admin-co:checked')).map(cb => cb.value);
+                const save = async (status) => {
+                    await adminSaveUser(uid, getRole(), getCompanies(), status);
+                };
+                const approveBtn = card.querySelector('.admin-approve');
+                const rejectBtn = card.querySelector('.admin-reject');
+                const saveBtn = card.querySelector('.admin-save');
+                const revokeBtn = card.querySelector('.admin-revoke');
+                if (approveBtn) approveBtn.addEventListener('click', () => save('active'));
+                if (rejectBtn) rejectBtn.addEventListener('click', () => adminSetStatus(uid, 'rejected'));
+                if (saveBtn) saveBtn.addEventListener('click', () => save('active'));
+                if (revokeBtn) revokeBtn.addEventListener('click', () => adminSetStatus(uid, 'pending'));
+            });
+        };
+
+        const adminSaveUser = async (uid, role, companyIds, status) => {
+            const upd = await sb.from('profiles').update({ role, status }).eq('id', uid);
+            if (upd.error) { showNotification('Gagal menyimpan: ' + upd.error.message, 'error'); return; }
+            const del = await sb.from('user_companies').delete().eq('user_id', uid);
+            if (del.error) { showNotification('Gagal update perusahaan: ' + del.error.message, 'error'); return; }
+            if (companyIds.length) {
+                const ins = await sb.from('user_companies').insert(companyIds.map(cid => ({ user_id: uid, company_id: cid })));
+                if (ins.error) { showNotification('Gagal menugaskan perusahaan: ' + ins.error.message, 'error'); return; }
+            }
+            showNotification('Pengguna diperbarui.');
+            await loadAdminData();
+        };
+        const adminSetStatus = async (uid, status) => {
+            const { error } = await sb.from('profiles').update({ status }).eq('id', uid);
+            if (error) { showNotification('Gagal: ' + error.message, 'error'); return; }
+            showNotification(status === 'rejected' ? 'Pengguna ditolak.' : 'Akses dicabut.', 'warning');
+            await loadAdminData();
+        };
+
+        const renderAdminCompanies = () => {
+            const wrap = $('admin-companies-list');
+            $('admin-companies-empty').classList.toggle('hidden', admin.companies.length > 0);
+            wrap.innerHTML = admin.companies.map(c => `
+                <div class="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2">
+                    <span class="text-sm font-semibold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-building text-indigo-400"></i> ${escapeHTML(c.name)}</span>
+                    <button class="admin-del-co text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${c.id}"><i class="fa-solid fa-trash-can"></i></button>
+                </div>`).join('');
+            wrap.querySelectorAll('.admin-del-co').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('Hapus perusahaan ini? Lokasi yang terkait juga dapat terpengaruh.')) return;
+                    const { error } = await sb.from('companies').delete().eq('id', btn.getAttribute('data-id'));
+                    if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
+                    showNotification('Perusahaan dihapus.', 'warning');
+                    await loadAdminData();
+                });
+            });
+        };
+
+        const wireAdminUI = () => {
+            $('btn-open-admin').addEventListener('click', openAdminModal);
+            $('btn-close-admin').addEventListener('click', closeAdminModal);
+            $('btn-admin-refresh').addEventListener('click', loadAdminData);
+            $('modal-admin').addEventListener('click', (e) => { if (e.target === $('modal-admin')) closeAdminModal(); });
+            const setTab = (tab) => {
+                admin.tab = tab;
+                $('admin-tab-users').classList.toggle('hidden', tab !== 'users');
+                $('admin-tab-companies').classList.toggle('hidden', tab !== 'companies');
+                $('admin-tabbtn-users').className = `px-3 py-1.5 text-xs font-semibold rounded-lg transition ${tab === 'users' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`;
+                $('admin-tabbtn-companies').className = `px-3 py-1.5 text-xs font-semibold rounded-lg transition ${tab === 'companies' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`;
+            };
+            $('admin-tabbtn-users').addEventListener('click', () => setTab('users'));
+            $('admin-tabbtn-companies').addEventListener('click', () => setTab('companies'));
+            document.querySelectorAll('.admin-user-filter').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    admin.filter = btn.getAttribute('data-filter');
+                    document.querySelectorAll('.admin-user-filter').forEach(b => {
+                        const on = b === btn;
+                        b.className = `admin-user-filter text-[11px] px-2.5 py-1 rounded-lg font-semibold ${on ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`;
+                    });
+                    renderAdminUsers();
+                });
+            });
+            $('form-add-company').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = $('new-company-name').value.trim();
+                if (!name) return;
+                const { error } = await sb.from('companies').insert({ name });
+                if (error) { showNotification('Gagal menambah: ' + error.message, 'error'); return; }
+                $('new-company-name').value = '';
+                showNotification('Perusahaan ditambahkan.');
+                await loadAdminData();
+            });
+        };
+
+        /* ---- Boot cloud ---- */
+        const initCloudAuth = async () => {
+            try {
+                sb = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+            } catch (e) {
+                console.error(e); showGate('screen-config'); return;
+            }
+            cloudMode = true;
+            showGate('screen-loading');
+            wireAuthUI();
+            wireAdminUI();
+            sb.auth.onAuthStateChange((event, session) => {
+                // Abaikan refresh token / update user agar workspace tidak ter-reload saat sedang bekerja.
+                if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return;
+                routeByAuth(session);
+            });
+            const { data: { session } } = await sb.auth.getSession();
+            await routeByAuth(session);
         };
 
 
@@ -2925,9 +3616,16 @@
             renderLocationTree();
             renderActiveLocationBanner();
 
-            // Pulihkan proyek terakhir (simpan-otomatis), lalu aktifkan autosave.
-            await loadAutoSave();
-            appReady = true;
+            // Wiring tombol kelola user (tersedia hanya bila admin, lihat applyRoleUI)
+            // dilakukan di initCloudAuth() agar hanya aktif saat mode cloud.
+
+            // Mode CLOUD (login Google + data per perusahaan) vs MODE LOKAL (IndexedDB).
+            if (isCloudConfigured()) {
+                await initCloudAuth();   // appReady di-set setelah user aktif masuk aplikasi
+            } else {
+                await loadAutoSave();    // pulihkan proyek terakhir dari IndexedDB
+                appReady = true;
+            }
         });
     </script>
 </body>
