@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HSSE POINT — Pemetaan CCTV & Access Reader</title>
+    <!-- Favicon: logo HSSE POINT (perisai + pin lokasi) sebagai SVG inline -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNDAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InMiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxQTM2NUQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwRjc2NkUiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0icCIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzJERDRCRiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBEOTQ4OCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJsIiB4MT0iMCIgeTE9IjEiIHgyPSIxIiB5Mj0iMCI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMkRENEJGIiBzdG9wLW9wYWNpdHk9IjAuMSIvPjxzdG9wIG9mZnNldD0iMC41IiBzdG9wLWNvbG9yPSIjMkRENEJGIiBzdG9wLW9wYWNpdHk9IjAuOSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzJERDRCRiIgc3RvcC1vcGFjaXR5PSIwLjEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cGF0aCBkPSJNIDIwMCAxMjAgTCAzMjAgMTUwIEMgMzIwIDI1MCAyNjAgMzIwIDIwMCAzNjAgQyAxNDAgMzIwIDgwIDI1MCA4MCAxNTAgWiIgZmlsbD0idXJsKCNzKSIgc3Ryb2tlPSIjMkRENEJGIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTSAxMTAgMTY1IEMgMTUwIDI1MCAyNTAgMjUwIDI5MCAxNjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNsKSIgc3Ryb2tlLXdpZHRoPSIxMiIvPjxjaXJjbGUgY3g9IjE2MCIgY3k9IjIyMCIgcj0iOSIgZmlsbD0iIzJERDRCRiIvPjxjaXJjbGUgY3g9IjI0MCIgY3k9IjIyMCIgcj0iOSIgZmlsbD0iIzJERDRCRiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjI4MCIgcj0iOSIgZmlsbD0iIzJERDRCRiIvPjxwYXRoIGQ9Ik0gMjAwIDQwIEMgMTY1IDQwIDE0MCA2NSAxNDAgMTAwIEMgMTQwIDE0NSAyMDAgMjA1IDIwMCAyMDUgQyAyMDAgMjA1IDI2MCAxNDUgMjYwIDEwMCBDIDI2MCA2NSAyMzUgNDAgMjAwIDQwIFoiIGZpbGw9InVybCgjcCkiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxMCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9Ijk1IiByPSIyMCIgZmlsbD0iIzFBMzY1RCIvPjwvc3ZnPgo=">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter (tipografi modern & profesional) -->
@@ -2673,14 +2675,26 @@
                             </div>
                         </div>
                     </div>
-                    <button class="opacity-0 group-hover:opacity-100 p-1 bg-slate-800 hover:bg-rose-500/10 rounded text-slate-400 hover:text-rose-400 transition delete-btn-list" data-id="${m.id}" title="Hapus">
-                        <i class="fa-solid fa-trash-can text-[10px]"></i>
-                    </button>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button class="opacity-0 group-hover:opacity-100 p-1 bg-slate-800 hover:bg-rose-500/10 rounded text-slate-400 hover:text-rose-400 transition delete-btn-list" data-id="${m.id}" title="Hapus">
+                            <i class="fa-solid fa-trash-can text-[10px]"></i>
+                        </button>
+                        <button class="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition open-detail-list" data-id="${m.id}" title="Buka detail perangkat">
+                            <i class="fa-solid fa-chevron-right text-[12px]"></i>
+                        </button>
+                    </div>
                 `;
 
-                // Focus marker
+                // Klik baris = cukup tampilkan posisi titik di denah (tanpa buka editor).
                 item.addEventListener('click', (e) => {
-                    if (e.target.closest('.delete-btn-list')) return;
+                    if (e.target.closest('.delete-btn-list') || e.target.closest('.open-detail-list')) return;
+                    focusMarkerOnMap(m.id);
+                });
+
+                // Klik chevron = buka detail perangkat.
+                const openBtn = item.querySelector('.open-detail-list');
+                openBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     selectMarker(m.id);
                     centerViewOnMarker(m);
                 });
@@ -2714,6 +2728,15 @@
             state.panY = -state.zoom * ((marker.y / 100) - 0.5) * H0;
 
             updateTransform();
+        };
+
+        // Klik baris daftar: sorot titik di denah & pusatkan, tanpa membuka editor.
+        const focusMarkerOnMap = (id) => {
+            const marker = state.markers.find(m => m.id === id);
+            if (!marker) return;
+            state.selectedMarkerId = id;
+            renderMarkers();            // cincin seleksi + highlight baris daftar
+            centerViewOnMarker(marker);
         };
 
         const updateCounterStats = () => {
