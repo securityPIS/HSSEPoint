@@ -349,15 +349,15 @@
             border-color: #cbd5e1;
             color: #475569;
         }
-        body.light-theme #btn-cond-existing.border-yellow-500 {
-            color: #d97706;
-            border-color: #fbbf24;
-            background-color: #fef3c7;
+        body.light-theme #btn-cond-existing.border-green-500 {
+            color: #15803d;
+            border-color: #22c55e;
+            background-color: #dcfce7;
         }
-        body.light-theme #btn-cond-new.border-cyan-500 {
-            color: #0891b2;
-            border-color: #22d3ee;
-            background-color: #ecfeff;
+        body.light-theme #btn-cond-new.border-yellow-500 {
+            color: #a16207;
+            border-color: #eab308;
+            background-color: #fef9c3;
         }
         body.light-theme #editor-panel {
             background-color: #f1f5f9;
@@ -506,7 +506,7 @@
 <body class="light-theme bg-slate-950 text-slate-100 font-sans h-screen flex flex-col no-select overflow-hidden">
 
     <!-- Header / Navbar (Terkunci / Fixed di bagian atas) -->
-    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10 shadow-md shrink-0">
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4 relative z-40 shadow-md shrink-0">
         <div class="flex items-center gap-3">
             <div class="w-11 h-11 flex items-center justify-center shrink-0 brand-logo">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%" role="img" aria-label="HSSE POINT">
@@ -625,8 +625,9 @@
 
             <!-- Konten penuh panel lokasi -->
             <div id="left-full" class="flex flex-col h-full min-h-0">
-                <!-- Header panel -->
-                <div class="p-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+                <!-- Header panel (disembunyikan di mobile: chevron ciutkan tidak
+                     relevan di layar kecil) -->
+                <div class="p-4 border-b border-slate-800 hidden md:flex items-center justify-between shrink-0">
                     <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-location-dot text-indigo-400"></i> Daftar Lokasi
                     </h2>
@@ -2124,8 +2125,8 @@
 
                 // Tambahkan markup HTML marker berdasarkan jenis alat
                 if (m.type === 'cctv') {
-                    const colorClass = m.condition === 'new' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(234, 179, 8, 0.35)'; // Cyan atau Kuning
-                    const strokeColor = m.condition === 'new' ? '#22d3ee' : '#eab308';
+                    const colorClass = m.condition === 'new' ? 'rgba(234, 179, 8, 0.35)' : 'rgba(34, 197, 94, 0.35)'; // Kuning (plan) / Hijau (existing)
+                    const strokeColor = m.condition === 'new' ? '#eab308' : '#22c55e';
                     const fovRange = m.fovRange || 1.0; // panjang/jangkauan cone (1.0 = standar)
 
                     markerEl.innerHTML = `
@@ -2147,7 +2148,7 @@
                             </div>
                             
                             <!-- Camera Icon Circle -->
-                            <div class="device-icon-container w-full h-full rounded-full ${m.condition === 'new' ? 'bg-cyan-500 border-2 border-slate-900 shadow-cyan-500/50' : 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                            <div class="device-icon-container w-full h-full rounded-full ${m.condition === 'new' ? 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50' : 'bg-green-500 border-2 border-slate-900 shadow-green-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
                                 <i class="fa-solid fa-video text-slate-950 text-[10px]"></i>
                             </div>
 
@@ -2166,7 +2167,7 @@
                             <div class="absolute inset-0 rounded-xl bg-emerald-500/20 animate-ping z-0"></div>
 
                             <!-- ACS Reader Icon Box -->
-                            <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-emerald-500 border-2 border-slate-900 shadow-emerald-500/50' : 'bg-amber-500 border-2 border-slate-900 shadow-amber-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                            <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50' : 'bg-green-500 border-2 border-slate-900 shadow-green-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
                                 <i class="fa-solid fa-id-card text-slate-950 text-[10px]"></i>
                             </div>
 
@@ -2476,11 +2477,11 @@
 
         const updateConditionBadges = (condition) => {
             if (condition === 'existing') {
-                dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-yellow-500/10 border-2 border-yellow-500 text-yellow-500 flex items-center justify-center gap-1.5 transition";
+                dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-green-500/10 border-2 border-green-500 text-green-500 flex items-center justify-center gap-1.5 transition";
                 dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-400 flex items-center justify-center gap-1.5 transition";
             } else {
                 dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-400 flex items-center justify-center gap-1.5 transition";
-                dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-cyan-500/10 border-2 border-cyan-500 text-cyan-400 flex items-center justify-center gap-1.5 transition";
+                dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-yellow-500/10 border-2 border-yellow-500 text-yellow-500 flex items-center justify-center gap-1.5 transition";
             }
         };
 
@@ -2645,9 +2646,9 @@
 
                 item.className = `p-3 rounded-xl border transition cursor-pointer flex items-center justify-between group ${isSelected ? 'bg-indigo-600/10 border-indigo-500/50' : 'bg-slate-950/50 border-slate-800/80 hover:border-slate-750'}`;
                 
-                const badgeColor = m.condition === 'new' 
-                    ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
-                    : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                const badgeColor = m.condition === 'new'
+                    ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                    : 'bg-green-500/10 text-green-500 border-green-500/20';
 
                 const deviceIcon = m.type === 'cctv'
                     ? '<i class="fa-solid fa-video text-cyan-400"></i>'
@@ -2700,14 +2701,18 @@
         };
 
         const centerViewOnMarker = (marker) => {
-            const containerW = dom.workspaceContainer.clientWidth;
-            const containerH = dom.workspaceContainer.clientHeight;
-            const rect = dom.blueprintWrapper.getBoundingClientRect();
-            
+            // Dimensi denah TANPA skala (offsetWidth tidak terpengaruh transform).
+            const W0 = dom.blueprintWrapper.offsetWidth;
+            const H0 = dom.blueprintWrapper.offsetHeight;
+            if (!W0 || !H0) return;
+
+            // transform-layer terpusat di frame (flex center) dengan origin tengah.
+            // Agar titik (x%,y%) tepat di tengah frame:
+            //   pan = -zoom * (persen - 0.5) * dimensiTanpaSkala
             state.zoom = 1.25;
-            state.panX = (containerW / 2) - ((marker.x / 100) * rect.width * state.zoom);
-            state.panY = (containerH / 2) - ((marker.y / 100) * rect.height * state.zoom);
-            
+            state.panX = -state.zoom * ((marker.x / 100) - 0.5) * W0;
+            state.panY = -state.zoom * ((marker.y / 100) - 0.5) * H0;
+
             updateTransform();
         };
 
@@ -2820,8 +2825,8 @@
             const rot = ((m.rotation || 0) * Math.PI) / 180;
 
             if (m.type === 'cctv') {
-                const coneFill = m.condition === 'new' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(234, 179, 8, 0.35)';
-                const coneStroke = m.condition === 'new' ? '#22d3ee' : '#eab308';
+                const coneFill = m.condition === 'new' ? 'rgba(234, 179, 8, 0.35)' : 'rgba(34, 197, 94, 0.35)';
+                const coneStroke = m.condition === 'new' ? '#eab308' : '#22c55e';
 
                 // 1. FOV cone — di layar: SVG 80px, r = 75/100*80 = 60px, dikali jangkauan (fovRange) & skala ikon
                 const R = 60 * s * (m.fovRange || 1.0);
@@ -2857,7 +2862,7 @@
                 // 3. Lingkaran kamera (w-full = 20px) + border slate-900
                 ctx.beginPath();
                 ctx.arc(cx, cy, 10 * s, 0, Math.PI * 2);
-                ctx.fillStyle = m.condition === 'new' ? '#06b6d4' : '#eab308'; // cyan-500 / yellow-500
+                ctx.fillStyle = m.condition === 'new' ? '#eab308' : '#22c55e'; // yellow-500 (plan) / green-500 (existing)
                 ctx.fill();
                 ctx.strokeStyle = '#0f172a'; // slate-900
                 ctx.lineWidth = 1.5 * s;
@@ -2879,7 +2884,7 @@
                 // 2. Kotak reader (w-full = 20px, rounded-lg) + border slate-900
                 const sq = 20 * s;
                 drawRoundedRect(ctx, cx - sq / 2, cy - sq / 2, sq, sq, 4 * s);
-                ctx.fillStyle = m.condition === 'new' ? '#10b981' : '#f59e0b'; // emerald-500 / amber-500
+                ctx.fillStyle = m.condition === 'new' ? '#eab308' : '#22c55e'; // yellow-500 (plan) / green-500 (existing)
                 ctx.fill();
                 ctx.strokeStyle = '#0f172a';
                 ctx.lineWidth = 1.5 * s;
