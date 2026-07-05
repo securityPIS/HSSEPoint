@@ -376,13 +376,12 @@
             background-color: #e2e8f0;
             border-color: #cbd5e1;
         }
-        body.light-theme #btn-theme-toggle {
-            background-color: #f1f5f9;
-            border-color: #cbd5e1;
-            color: #475569;
+        /* Light mode: kartu dropdown avatar & nama lantai agar terbaca */
+        body.light-theme #avatar-dropdown {
+            background-color: #ffffff;
+            border-color: #e5e9f0;
         }
-        body.light-theme #btn-theme-toggle:hover {
-            background-color: #e2e8f0;
+        body.light-theme .loc-lantai-name {
             color: #0f172a;
         }
         /* 1 & 2. PERBAIKAN LIGHT MODE UNTUK HUD ZOOM & KOTAK SERET BERKAS */
@@ -546,7 +545,6 @@
                     HSSE POINT
                     <span class="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-medium">v1.6</span>
                 </h1>
-                <p class="text-xs text-slate-400">Penitikan CCTV & Access Control Reader pada Denah</p>
             </div>
         </div>
 
@@ -584,28 +582,38 @@
                 <i class="fa-solid fa-eye"></i> Hanya Baca
             </span>
 
-            <!-- Tombol Kelola User (khusus admin) -->
-            <button id="btn-open-admin" class="hidden items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition" title="Kelola pengguna & perusahaan">
-                <i class="fa-solid fa-users-gear"></i> <span class="hidden sm:inline">Kelola User</span>
-            </button>
-
-            <!-- Menu pengguna (nama + keluar) -->
-            <div id="user-menu" class="hidden items-center gap-2 pl-1">
-                <div class="hidden md:flex flex-col items-end leading-tight">
-                    <span id="user-name" class="text-xs font-semibold text-slate-200 max-w-[140px] truncate">—</span>
-                    <span id="user-role" class="text-[10px] text-slate-400">—</span>
-                </div>
-                <img id="user-avatar" alt="" class="w-8 h-8 rounded-full border border-slate-700 object-cover bg-slate-800" />
-                <button id="btn-signout" class="p-2.5 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-500 rounded-xl border border-slate-700 transition" title="Keluar">
-                    <i class="fa-solid fa-right-from-bracket"></i>
+            <!-- Menu pengguna: avatar di pojok kanan atas + dropdown menu
+                 (Kelola User, Tema, Keluar) yang tampil saat avatar diklik. -->
+            <div id="user-menu" class="hidden items-center relative">
+                <button id="btn-avatar-menu" class="relative w-9 h-9 rounded-full border border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-500/40 transition" title="Menu akun">
+                    <i class="fa-solid fa-user text-slate-400 text-sm"></i>
+                    <img id="user-avatar" alt="" class="hidden absolute inset-0 w-full h-full rounded-full object-cover" />
                 </button>
-            </div>
 
-            <!-- Theme Toggle Button (posisi paling kanan) -->
-            <button id="btn-theme-toggle" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition" title="Ganti Tema">
-                <i class="fa-solid fa-sun text-amber-500" id="theme-icon-sun"></i>
-                <i class="fa-solid fa-moon text-indigo-400 hidden" id="theme-icon-moon"></i>
-            </button>
+                <!-- Dropdown -->
+                <div id="avatar-dropdown" class="hidden absolute right-0 top-full mt-2 w-60 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-800">
+                        <p id="user-name" class="text-sm font-semibold text-slate-100 truncate">—</p>
+                        <p id="user-role" class="text-[11px] text-slate-400 mt-0.5">—</p>
+                    </div>
+                    <div class="py-1">
+                        <!-- Kelola User (khusus admin) -->
+                        <button id="btn-open-admin" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Kelola pengguna & perusahaan">
+                            <i class="fa-solid fa-users-gear w-4 text-center text-slate-400"></i> Kelola User
+                        </button>
+                        <!-- Ganti Tema (Gelap/Terang) -->
+                        <button id="btn-theme-toggle" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Ganti Tema">
+                            <i class="fa-solid fa-sun text-amber-500 w-4 text-center" id="theme-icon-sun"></i>
+                            <i class="fa-solid fa-moon text-indigo-400 w-4 text-center hidden" id="theme-icon-moon"></i>
+                            <span id="theme-toggle-label">Mode Gelap</span>
+                        </button>
+                        <!-- Keluar -->
+                        <button id="btn-signout" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition" title="Keluar">
+                            <i class="fa-solid fa-right-from-bracket w-4 text-center"></i> Keluar
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -856,16 +864,16 @@
 
             <!-- Clear & Helper HUD -->
             <div class="absolute top-4 right-4 z-10 flex items-center gap-1.5">
-                <button id="btn-clear-canvas" class="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 text-xs font-semibold rounded-xl transition border border-rose-500/20 flex items-center gap-1.5 shadow-lg">
-                    <i class="fa-solid fa-trash-arrow-up"></i> Bersihkan Semua
+                <button id="btn-clear-canvas" class="w-10 h-10 flex items-center justify-center bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 rounded-full transition border border-rose-500/20 shadow-lg" title="Bersihkan Semua">
+                    <i class="fa-solid fa-trash-can"></i>
                 </button>
             </div>
 
             <!-- Tombol Tambah Perangkat (KHUSUS MOBILE) -->
             <!-- Di layar sentuh, ketuk denah dipakai untuk geser/zoom sehingga
                  penambahan titik dilakukan lewat tombol khusus ini. -->
-            <button id="btn-mobile-add-device" class="md:hidden absolute bottom-16 right-4 z-20 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-bold rounded-full shadow-xl shadow-indigo-600/40 flex items-center gap-2 transition" title="Tambah Perangkat">
-                <i class="fa-solid fa-plus"></i> Tambah Perangkat
+            <button id="btn-mobile-add-device" class="md:hidden absolute bottom-6 right-4 z-20 w-14 h-14 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xl rounded-full shadow-xl shadow-indigo-600/40 transition" title="Tambah Perangkat">
+                <i class="fa-solid fa-plus"></i>
             </button>
 
             <!-- Dynamic Workspace Wrapper -->
@@ -904,8 +912,8 @@
                 </div>
             </div>
 
-            <!-- Workspace Status / Bottom Instructions -->
-            <div class="bg-slate-900 border-t border-slate-800 px-6 py-2 flex justify-between items-center text-[10px] text-slate-500 shrink-0">
+            <!-- Workspace Status / Bottom Instructions (disembunyikan di mobile) -->
+            <div class="bg-slate-900 border-t border-slate-800 px-6 py-2 hidden md:flex justify-between items-center text-[10px] text-slate-500 shrink-0">
                 <div class="flex items-center gap-3">
                     <span class="flex items-center gap-1"><i class="fa-solid fa-mouse"></i> Klik Kanan + Geser: Navigasi Map</span>
                     <span class="flex items-center gap-1"><i class="fa-solid fa-mouse-pointer"></i> Klik Kiri Titik: Edit Detail / Taruh Titik Baru</span>
@@ -1357,6 +1365,11 @@
             btnThemeToggle: document.getElementById('btn-theme-toggle'),
             themeIconSun: document.getElementById('theme-icon-sun'),
             themeIconMoon: document.getElementById('theme-icon-moon'),
+            themeToggleLabel: document.getElementById('theme-toggle-label'),
+
+            // Menu avatar (dropdown akun)
+            btnAvatarMenu: document.getElementById('btn-avatar-menu'),
+            avatarDropdown: document.getElementById('avatar-dropdown'),
 
             // Indikator simpan otomatis
             autosaveText: document.getElementById('autosave-text'),
@@ -1607,7 +1620,7 @@
                                 leaf.innerHTML = `
                                     <i class="fa-solid fa-layer-group text-[11px] ${isActive ? 'text-indigo-300' : 'text-slate-500'}"></i>
                                     <div class="flex-1 overflow-hidden">
-                                        <p class="text-[11px] font-semibold ${isActive ? 'text-white' : 'text-slate-300'} truncate">Lantai ${escapeHTML(loc.lantai)}</p>
+                                        <p class="loc-lantai-name text-[11px] font-semibold ${isActive ? 'text-white' : 'text-slate-300'} truncate">Lantai ${escapeHTML(loc.lantai)}</p>
                                         <div class="flex items-center gap-2 mt-0.5">
                                             <span class="text-[8px] uppercase font-bold ${loc.area === 'outdoor' ? 'text-amber-400' : 'text-sky-400'}">${AREA_LABEL[loc.area] || loc.area || ''}</span>
                                             <span class="text-[8px] text-slate-500 flex items-center gap-0.5"><i class="fa-solid fa-microchip"></i> ${devCount}</span>
@@ -1930,18 +1943,12 @@
         });
 
         // ===== Gestur Sentuh (Mobile) =====
-        // GESER denah  : sentuh-tahan sesaat lalu geser (satu jari).
+        // GESER denah  : geser satu jari (langsung, tanpa perlu tahan).
         // ZOOM denah    : cubit (pinch) dua jari.
-        let touchHoldTimer = null;   // timer sentuh-tahan sebelum pan aktif
-        let touchPanArmed = false;   // true bila tahan sudah cukup lama
-        let touchStartClientX = 0, touchStartClientY = 0;
         let isPinching = false;
         let pinchStartDist = 0;
         let pinchStartZoom = 1;
 
-        const clearTouchHold = () => {
-            if (touchHoldTimer) { clearTimeout(touchHoldTimer); touchHoldTimer = null; }
-        };
         const touchDist = (t0, t1) => {
             const dx = t0.clientX - t1.clientX;
             const dy = t0.clientY - t1.clientY;
@@ -1951,29 +1958,17 @@
         dom.workspaceContainer.addEventListener('touchstart', (e) => {
             // Dua jari -> mulai cubit untuk zoom
             if (e.touches.length === 2) {
-                clearTouchHold();
-                touchPanArmed = false;
                 state.isPanning = false;
                 isPinching = true;
                 pinchStartDist = touchDist(e.touches[0], e.touches[1]);
                 pinchStartZoom = state.zoom;
                 return;
             }
-            // Satu jari pada area kosong denah -> pan hanya setelah SENTUH-TAHAN
+            // Satu jari pada area kosong denah -> langsung geser
             if (e.touches.length === 1 && !e.target.closest('.device-marker')) {
-                touchPanArmed = false;
-                touchStartClientX = e.touches[0].clientX;
-                touchStartClientY = e.touches[0].clientY;
-                clearTouchHold();
-                touchHoldTimer = setTimeout(() => {
-                    touchPanArmed = true;
-                    state.isPanning = true;
-                    state.startPanX = touchStartClientX - state.panX;
-                    state.startPanY = touchStartClientY - state.panY;
-                    dom.workspaceContainer.classList.remove('cursor-default');
-                    dom.workspaceContainer.classList.add('cursor-grabbing');
-                    if (navigator.vibrate) navigator.vibrate(20);
-                }, 220);
+                state.isPanning = true;
+                state.startPanX = e.touches[0].clientX - state.panX;
+                state.startPanY = e.touches[0].clientY - state.panY;
             }
         }, { passive: true });
 
@@ -1989,32 +1984,17 @@
                 }
                 return;
             }
-            // Geser denah setelah sentuh-tahan aktif
-            if (state.isPanning && touchPanArmed && e.touches.length === 1) {
+            // Geser denah (satu jari)
+            if (state.isPanning && e.touches.length === 1) {
                 state.panX = e.touches[0].clientX - state.startPanX;
                 state.panY = e.touches[0].clientY - state.startPanY;
                 updateTransform();
-                return;
-            }
-            // Jari bergeser jauh sebelum tahan sempat aktif -> batalkan sentuh-tahan
-            if (touchHoldTimer && e.touches.length === 1) {
-                const dx = e.touches[0].clientX - touchStartClientX;
-                const dy = e.touches[0].clientY - touchStartClientY;
-                if (Math.sqrt(dx * dx + dy * dy) > 12) clearTouchHold();
             }
         }, { passive: true });
 
         document.addEventListener('touchend', (e) => {
-            clearTouchHold();
             if (e.touches.length < 2) isPinching = false;
-            if (e.touches.length === 0) {
-                touchPanArmed = false;
-                if (state.isPanning) {
-                    state.isPanning = false;
-                    dom.workspaceContainer.classList.remove('cursor-grabbing');
-                    dom.workspaceContainer.classList.add('cursor-default');
-                }
-            }
+            if (e.touches.length === 0) state.isPanning = false;
         });
 
         // Scroll Wheel Zoom
@@ -2089,7 +2069,7 @@
         // Choose Device & Generate Pin Info
         const selectDeviceType = (type) => {
             if (!requireEdit()) { closeSelectorModal(); return; }
-            const newId = `${type === 'cctv' ? 'CTV' : 'ACS'}-${String(state.idCounter++).padStart(3, '0')}`;
+            const newId = `${type === 'cctv' ? 'CCTV' : 'ACS'}-${String(state.idCounter++).padStart(3, '0')}`;
             const defaultName = type === 'cctv' ? `CCTV Titik ${state.idCounter - 1}` : `Access Reader ${state.idCounter - 1}`;
             
             const newMarker = {
@@ -2171,9 +2151,9 @@
                                 <i class="fa-solid fa-video text-slate-950 text-[10px]"></i>
                             </div>
 
-                            <!-- Small Badge for status -->
-                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20">
-                                ${m.condition === 'new' ? 'NEW' : 'EXST'}
+                            <!-- Badge kode perangkat -->
+                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap">
+                                ${escapeHTML(m.id)}
                             </div>
                         </div>
                     `;
@@ -2190,9 +2170,9 @@
                                 <i class="fa-solid fa-id-card text-slate-950 text-[10px]"></i>
                             </div>
 
-                            <!-- Small Badge for status -->
-                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20">
-                                ${m.condition === 'new' ? 'NEW' : 'EXST'}
+                            <!-- Badge kode perangkat -->
+                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap">
+                                ${escapeHTML(m.id)}
                             </div>
                         </div>
                     `;
@@ -2802,9 +2782,9 @@
             }
         };
 
-        // Badge kecil NEW/EXST di pojok kanan-atas marker (meniru DOM).
+        // Badge kode perangkat di pojok kanan-atas marker (meniru DOM).
         const drawStatusBadge = (ctx, m, cx, cy, s) => {
-            const label = m.condition === 'new' ? 'NEW' : 'EXST';
+            const label = m.id;
             const fontSize = 7 * s;
             ctx.font = `bold ${fontSize}px sans-serif`;
             const tw = ctx.measureText(label).width;
@@ -3177,10 +3157,12 @@
                 document.body.classList.add('light-theme');
                 dom.themeIconSun.classList.remove('hidden');
                 dom.themeIconMoon.classList.add('hidden');
+                if (dom.themeToggleLabel) dom.themeToggleLabel.textContent = 'Mode Terang';
             } else {
                 document.body.classList.remove('light-theme');
                 dom.themeIconSun.classList.add('hidden');
                 dom.themeIconMoon.classList.remove('hidden');
+                if (dom.themeToggleLabel) dom.themeToggleLabel.textContent = 'Mode Gelap';
             }
         };
 
@@ -3755,6 +3737,24 @@
 
             // Setup Theme Toggle
             setupThemeToggle();
+
+            // Menu avatar: buka/tutup dropdown (Kelola User, Tema, Keluar).
+            if (dom.btnAvatarMenu && dom.avatarDropdown) {
+                dom.btnAvatarMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dom.avatarDropdown.classList.toggle('hidden');
+                });
+                // Tutup menu setelah memilih salah satu aksi.
+                dom.avatarDropdown.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) dom.avatarDropdown.classList.add('hidden');
+                });
+                // Tutup menu saat klik di luar.
+                document.addEventListener('click', (e) => {
+                    if (!dom.avatarDropdown.contains(e.target) && !dom.btnAvatarMenu.contains(e.target)) {
+                        dom.avatarDropdown.classList.add('hidden');
+                    }
+                });
+            }
 
             // Sizing controls in sidebar
             dom.btnScaleDec.addEventListener('click', () => {
