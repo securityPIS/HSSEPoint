@@ -851,7 +851,8 @@
             
             <!-- Tool Control Overlay HUD -->
             <!-- 1. KOTAK ZOOM DIBERI ID AGAR SINKRON WARNANYA DI MODE LIGHT -->
-            <div id="zoom-hud" class="absolute top-4 left-4 z-10 flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-1.5 rounded-xl shadow-xl">
+            <!-- HUD zoom disembunyikan di mobile (zoom cukup lewat cubit dua jari) -->
+            <div id="zoom-hud" class="absolute top-4 left-4 z-10 hidden md:flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-1.5 rounded-xl shadow-xl">
                 <button id="btn-zoom-in" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition" title="Perbesar (Zoom In)">
                     <i class="fa-solid fa-plus text-sm"></i>
                 </button>
@@ -2561,8 +2562,10 @@
 
         // Desktop: klik area unggah -> pilih dari galeri/berkas.
         dom.photoUploadPlaceholder.addEventListener('click', (e) => {
-            // Abaikan bila yang diklik adalah tombol Kamera/Galeri (mobile).
-            if (e.target.closest('#btn-photo-camera') || e.target.closest('#btn-photo-gallery')) return;
+            // Abaikan bila berasal dari tombol Kamera/Galeri, ATAU dari input file
+            // itu sendiri — klik programatik pada input akan menggelembung ke sini
+            // dan (dulu) ikut membuka galeri saat tombol Kamera ditekan.
+            if (e.target.closest('#btn-photo-camera') || e.target.closest('#btn-photo-gallery') || e.target.closest('input')) return;
             dom.inputDevPhoto.click();
         });
 
