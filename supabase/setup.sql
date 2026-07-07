@@ -64,16 +64,24 @@ create index if not exists buildings_company_idx on public.buildings(company_id)
 create index if not exists floors_building_idx    on public.floors(building_id);
 
 -- 4c) KATALOG PERANGKAT (device catalog) ----------------------------------
---    Agar penitikan tidak terbatas CCTV & ACS. icon = Iconify id (mis. 'mdi:fire'),
---    jenis = label kategori untuk pengelompokan dropdown saat menitik.
+--    Agar penitikan tidak terbatas CCTV & ACS. icon = Iconify id (mis. 'mdi:fire').
 create table if not exists public.perangkat (
   id         uuid primary key default gen_random_uuid(),
   name       text not null unique,
   code       text not null,
   icon       text not null default '',
-  jenis      text not null default '',
   created_at timestamptz not null default now()
 );
+
+-- Jenis perangkat bisa banyak per perangkat (mirip Lantai per Gedung).
+create table if not exists public.perangkat_jenis (
+  id           uuid primary key default gen_random_uuid(),
+  perangkat_id uuid not null references public.perangkat(id) on delete cascade,
+  name         text not null,
+  created_at   timestamptz not null default now(),
+  unique (perangkat_id, name)
+);
+create index if not exists perangkat_jenis_perangkat_idx on public.perangkat_jenis(perangkat_id);
 
 -- 5) HELPER (SECURITY DEFINER -> bypass RLS saat cek role, hindari rekursi)
 create or replace function public.is_admin()
@@ -142,6 +150,7 @@ alter table public.locations      enable row level security;
 alter table public.buildings      enable row level security;
 alter table public.floors         enable row level security;
 alter table public.perangkat      enable row level security;
+alter table public.perangkat_jenis enable row level security;
 
 -- 10) POLICIES -------------------------------------------------------------
 -- profiles: user lihat/insert dirinya (status 'new'); hanya admin yang meng-update.
@@ -190,6 +199,14 @@ create policy perangkat_select on public.perangkat for select
 
 drop policy if exists perangkat_admin_all on public.perangkat;
 create policy perangkat_admin_all on public.perangkat for all
+  using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists perangkat_jenis_select on public.perangkat_jenis;
+create policy perangkat_jenis_select on public.perangkat_jenis for select
+  using (auth.uid() is not null);
+
+drop policy if exists perangkat_jenis_admin_all on public.perangkat_jenis;
+create policy perangkat_jenis_admin_all on public.perangkat_jenis for all
   using (public.is_admin()) with check (public.is_admin());
 
 -- user_companies: user lihat miliknya; hanya admin yang mengatur.

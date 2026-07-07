@@ -784,9 +784,17 @@
                         <input type="text" id="input-dev-name" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: CCTV Area Lobby">
                     </div>
 
-                    <!-- Input: Jenis Perangkat -->
+                    <!-- Dropdown: Jenis Perangkat (khusus perangkat katalog) -->
+                    <div id="editor-jenis-wrap" class="hidden">
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Jenis Perangkat</label>
+                        <select id="input-dev-jenis" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                            <option value="">-- Pilih jenis --</option>
+                        </select>
+                    </div>
+
+                    <!-- Input: Model Perangkat -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Jenis/Model Perangkat</label>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Model Perangkat</label>
                         <input type="text" id="input-dev-model" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: IP Dome 4MP / RFID Reader">
                     </div>
 
@@ -1079,40 +1087,8 @@
             <h3 class="text-sm font-bold text-white mb-1">Tambah Perangkat Baru</h3>
             <p class="text-xs text-slate-400 mb-5">Pilih jenis perangkat yang ingin dititik di lokasi ini.</p>
             
-            <div class="grid grid-cols-2 gap-3 mb-5">
-                <!-- CCTV Option Button -->
-                <button id="modal-select-cctv" class="flex flex-col items-center justify-center p-4 rounded-xl border border-cyan-500/20 hover:border-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-300 transition group">
-                    <div class="w-12 h-12 rounded-lg bg-cyan-400/10 flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
-                        <i class="fa-solid fa-video"></i>
-                    </div>
-                    <span class="text-xs font-bold">CCTV</span>
-                    <span class="text-[9px] text-slate-500 mt-0.5 text-center leading-none">Kamera & Area Pandang</span>
-                </button>
-                
-                <!-- Access Reader Option Button -->
-                <button id="modal-select-acs" class="flex flex-col items-center justify-center p-4 rounded-xl border border-emerald-500/20 hover:border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition group">
-                    <div class="w-12 h-12 rounded-lg bg-emerald-400/10 flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
-                        <i class="fa-solid fa-id-card"></i>
-                    </div>
-                    <span class="text-xs font-bold">Access Reader</span>
-                    <span class="text-[9px] text-slate-500 mt-0.5 text-center leading-none">Kartu / Biometrik</span>
-                </button>
-            </div>
-
-            <!-- Perangkat lain dari katalog (Kelola Perangkat) -->
-            <div id="selector-custom-wrap" class="hidden mb-5">
-                <div class="flex items-center gap-2 mb-2.5">
-                    <span class="h-px flex-1 bg-slate-800"></span>
-                    <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">atau perangkat lain</span>
-                    <span class="h-px flex-1 bg-slate-800"></span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <select id="selector-perangkat" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
-                        <option value="">-- Pilih perangkat --</option>
-                    </select>
-                    <button id="selector-add-custom" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-location-dot"></i> Titik</button>
-                </div>
-            </div>
+            <!-- Grid semua perangkat (CCTV & ACS bawaan + katalog Kelola Perangkat) -->
+            <div id="selector-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 max-h-[52vh] overflow-y-auto pr-0.5"></div>
 
             <div class="flex justify-end">
                 <button id="modal-cancel" class="text-xs text-slate-400 hover:text-slate-200 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition">
@@ -1311,12 +1287,9 @@
                             <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Kode <span class="text-rose-400">*</span></label>
                             <input type="text" id="new-perangkat-code" required placeholder="FA" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition uppercase">
                         </div>
-                        <div class="flex-1 min-w-[130px]">
-                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Jenis</label>
-                            <input type="text" id="new-perangkat-jenis" placeholder="mis. Fire Safety" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
-                        </div>
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Tambah</button>
                     </div>
+                    <p class="text-[10px] text-slate-500 mt-2">Setelah menambah perangkat, isi <span class="font-semibold text-slate-400">jenis</span>-nya (boleh lebih dari satu) pada kartu perangkat di bawah.</p>
 
                     <!-- Panel pencarian icon (Iconify open API) -->
                     <div id="icon-search-panel" class="hidden mt-3 bg-slate-950/60 border border-slate-800 rounded-xl p-3">
@@ -1478,8 +1451,6 @@
 
             // Modals
             modalSelector: document.getElementById('modal-selector'),
-            btnSelectCCTV: document.getElementById('modal-select-cctv'),
-            btnSelectACS: document.getElementById('modal-select-acs'),
             btnModalCancel: document.getElementById('modal-cancel'),
 
             // Editor Panel
@@ -1490,6 +1461,8 @@
             btnDeleteDevice: document.getElementById('btn-delete-device'),
             inputDevName: document.getElementById('input-dev-name'),
             inputDevModel: document.getElementById('input-dev-model'),
+            inputDevJenis: document.getElementById('input-dev-jenis'),
+            editorJenisWrap: document.getElementById('editor-jenis-wrap'),
             btnCondExisting: document.getElementById('btn-cond-existing'),
             btnCondNew: document.getElementById('btn-cond-new'),
             btnCloseEditor: document.getElementById('btn-close-editor'),
@@ -2240,28 +2213,43 @@
             openSelectorModal();
         });
 
-        // Isi dropdown perangkat katalog (dikelompokkan per jenis) & tampilkan
-        // bagian "perangkat lain" hanya bila katalog tidak kosong.
-        const populatePerangkatSelector = () => {
-            const sel = $('selector-perangkat');
-            const wrap = $('selector-custom-wrap');
-            const list = auth.perangkat || [];
-            if (!list.length) {
-                wrap.classList.add('hidden');
-                sel.innerHTML = '<option value="">-- Pilih perangkat --</option>';
-                return;
-            }
-            wrap.classList.remove('hidden');
-            const groups = {};
-            list.forEach(p => { const g = p.jenis || 'Lainnya'; (groups[g] = groups[g] || []).push(p); });
-            sel.innerHTML = '<option value="">-- Pilih perangkat --</option>' +
-                Object.keys(groups).map(g => `<optgroup label="${escapeHTML(g)}">` +
-                    groups[g].map(p => `<option value="${p.id}">${escapeHTML(p.name)}${p.code ? ` (${escapeHTML(p.code)})` : ''}</option>`).join('') +
-                    '</optgroup>').join('');
+        // Kartu pilihan perangkat (icon + nama). skema: cyan/emerald/indigo.
+        const selectorCard = (pick, name, iconHtml, scheme) => {
+            const s = {
+                cyan:    { border: 'border-cyan-500/20 hover:border-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10',       ibg: 'bg-cyan-400/10',    txt: 'text-cyan-400' },
+                emerald: { border: 'border-emerald-500/20 hover:border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10', ibg: 'bg-emerald-400/10', txt: 'text-emerald-400' },
+                indigo:  { border: 'border-indigo-500/20 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/10',   ibg: 'bg-indigo-400/10',  txt: 'text-indigo-400' }
+            }[scheme];
+            return `
+                <button type="button" data-pick="${escapeHTML(pick)}" class="flex flex-col items-center justify-center p-4 rounded-xl border ${s.border} ${s.txt} transition group">
+                    <div class="w-12 h-12 rounded-lg ${s.ibg} flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
+                        ${iconHtml}
+                    </div>
+                    <span class="text-xs font-bold text-center leading-tight">${escapeHTML(name)}</span>
+                </button>`;
+        };
+
+        // Render grid semua perangkat: CCTV & ACS bawaan + seluruh katalog (icon + nama).
+        const renderSelectorGrid = () => {
+            const grid = $('selector-grid');
+            const cards = [
+                selectorCard('cctv', 'CCTV', '<i class="fa-solid fa-video"></i>', 'cyan'),
+                selectorCard('acs', 'Access Reader', '<i class="fa-solid fa-id-card"></i>', 'emerald')
+            ];
+            (auth.perangkat || []).forEach(p => {
+                cards.push(selectorCard('custom:' + p.id, p.name, deviceIconMarkup(p.icon, 26, '#6366f1'), 'indigo'));
+            });
+            grid.innerHTML = cards.join('');
+            grid.querySelectorAll('[data-pick]').forEach(btn => btn.addEventListener('click', () => {
+                const v = btn.dataset.pick;
+                if (v === 'cctv') selectDeviceType('cctv');
+                else if (v === 'acs') selectDeviceType('acs');
+                else if (v.startsWith('custom:')) selectCustomDevice(v.slice(7));
+            }));
         };
 
         const openSelectorModal = () => {
-            populatePerangkatSelector();
+            renderSelectorGrid();
             dom.modalSelector.classList.remove('hidden');
         };
 
@@ -2331,11 +2319,11 @@
                 kode: code,
                 icon: p.icon || '',
                 perangkat: p.name,
-                jenis: p.jenis || '',
+                jenis: (p.jenis && p.jenis[0]) || '',   // default jenis pertama; bisa diubah di detail
                 x: state.pendingMarkerCoords.x,
                 y: state.pendingMarkerCoords.y,
                 name: `${p.name} ${n}`,
-                model: p.jenis || '',
+                model: '',
                 condition: 'new',
                 scale: 1.0,
                 photo: null
@@ -2733,6 +2721,20 @@
                     dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-emerald-400";
                     dom.editorDeviceIcon.innerHTML = `<i class="fa-solid fa-id-card"></i>`;
                 }
+
+                // Dropdown Jenis Perangkat: hanya untuk perangkat katalog (custom).
+                if (marker.type === 'custom') {
+                    const p = (auth.perangkat || []).find(x => x.id === marker.perangkatId);
+                    const list = ((p && p.jenis) || []).slice();
+                    // sertakan jenis marker walau tak lagi ada di katalog agar tak hilang
+                    if (marker.jenis && !list.includes(marker.jenis)) list.unshift(marker.jenis);
+                    dom.inputDevJenis.innerHTML = '<option value="">-- Pilih jenis --</option>' +
+                        list.map(j => `<option value="${escapeHTML(j)}">${escapeHTML(j)}</option>`).join('');
+                    dom.inputDevJenis.value = marker.jenis || '';
+                    dom.editorJenisWrap.classList.remove('hidden');
+                } else {
+                    dom.editorJenisWrap.classList.add('hidden');
+                }
             }
 
             renderMarkers();
@@ -2773,6 +2775,20 @@
                 const marker = state.markers.find(m => m.id === activeId);
                 if (marker) {
                     marker.model = e.target.value;
+                    updateDevicePanelList();
+                    scheduleAutoSave();
+                }
+            }
+        });
+
+        dom.inputDevJenis.addEventListener('change', (e) => {
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                const marker = state.markers.find(m => m.id === activeId);
+                if (marker) {
+                    marker.jenis = e.target.value;
+                    // Segarkan badge tipe agar mencerminkan jenis terpilih.
+                    dom.editorDeviceTypeBadge.textContent = (marker.jenis || marker.perangkat || 'Perangkat').toUpperCase();
                     updateDevicePanelList();
                     scheduleAutoSave();
                 }
@@ -3650,7 +3666,7 @@
 
         /* ---- Aktifkan/nonaktifkan editor sesuai role ---- */
         const setEditorEnabled = (enabled) => {
-            ['input-dev-name', 'input-dev-model', 'btn-cond-existing', 'btn-cond-new', 'btn-scale-dec', 'btn-scale-inc', 'input-dev-photo', 'input-dev-photo-camera', 'btn-photo-camera', 'btn-photo-gallery', 'btn-remove-photo', 'btn-delete-device', 'btn-mobile-add-device'].forEach(id => {
+            ['input-dev-name', 'input-dev-model', 'input-dev-jenis', 'btn-cond-existing', 'btn-cond-new', 'btn-scale-dec', 'btn-scale-inc', 'input-dev-photo', 'input-dev-photo-camera', 'btn-photo-camera', 'btn-photo-gallery', 'btn-remove-photo', 'btn-delete-device', 'btn-mobile-add-device'].forEach(id => {
                 const el = $(id); if (!el) return;
                 el.disabled = !enabled;
                 el.classList.toggle('opacity-50', !enabled);
@@ -3673,6 +3689,13 @@
             setEditorEnabled(!ro);
         };
 
+        // Gabungkan daftar jenis (banyak) ke tiap perangkat: {id,name,code,icon,jenis:[...]}.
+        const attachJenis = (perangkatRows, jenisRows) =>
+            (perangkatRows || []).map(p => ({
+                id: p.id, name: p.name, code: p.code, icon: p.icon,
+                jenis: (jenisRows || []).filter(j => j.perangkat_id === p.id).map(j => j.name)
+            }));
+
         /* ---- Muat perusahaan milik user + gedung & lantai (dropdown lokasi) ---- */
         const loadUserCompanies = async () => {
             if (isAdmin()) {
@@ -3684,14 +3707,15 @@
             }
             // Gedung, lantai & katalog perangkat bisa dibaca semua user login (RLS);
             // dipakai untuk dropdown pada form lokasi & saat menitik perangkat.
-            const [bd, fl, pk] = await Promise.all([
+            const [bd, fl, pk, pj] = await Promise.all([
                 sb.from('buildings').select('id,company_id,name').order('name'),
                 sb.from('floors').select('id,building_id,name').order('name'),
-                sb.from('perangkat').select('id,name,code,icon,jenis').order('jenis').order('name')
+                sb.from('perangkat').select('id,name,code,icon').order('name'),
+                sb.from('perangkat_jenis').select('perangkat_id,name').order('name')
             ]);
             auth.buildings = bd.data || [];
             auth.floors = fl.data || [];
-            auth.perangkat = pk.data || [];
+            auth.perangkat = attachJenis(pk.data, pj.data);
         };
 
         /* ---- Profil: ambil (atau buat cadangan bila trigger belum jalan) ---- */
@@ -4091,11 +4115,18 @@
         };
 
         const loadDevicesData = async () => {
-            const { data, error } = await sb.from('perangkat').select('*').order('jenis').order('name');
-            if (error) { showNotification('Gagal memuat perangkat: ' + error.message, 'error'); return; }
-            admin.perangkat = data || [];
-            // Segarkan katalog sisi aplikasi agar dropdown penitikan ikut terbarui.
-            auth.perangkat = admin.perangkat.map(p => ({ id: p.id, name: p.name, code: p.code, icon: p.icon, jenis: p.jenis }));
+            const [pk, pj] = await Promise.all([
+                sb.from('perangkat').select('id,name,code,icon').order('name'),
+                sb.from('perangkat_jenis').select('id,perangkat_id,name').order('name')
+            ]);
+            if (pk.error || pj.error) { showNotification('Gagal memuat perangkat: ' + ((pk.error || pj.error).message), 'error'); return; }
+            // admin menyimpan jenis sebagai {id,name} agar bisa dihapus per-id.
+            admin.perangkat = (pk.data || []).map(p => ({
+                id: p.id, name: p.name, code: p.code, icon: p.icon,
+                jenis: (pj.data || []).filter(j => j.perangkat_id === p.id).map(j => ({ id: j.id, name: j.name }))
+            }));
+            // Segarkan katalog sisi aplikasi (jenis cukup daftar nama) agar dropdown ikut terbarui.
+            auth.perangkat = admin.perangkat.map(p => ({ id: p.id, name: p.name, code: p.code, icon: p.icon, jenis: p.jenis.map(j => j.name) }));
             renderDevicesList();
         };
 
@@ -4109,27 +4140,54 @@
         const renderDevicesList = () => {
             const wrap = $('devices-list');
             $('devices-empty').classList.toggle('hidden', admin.perangkat.length > 0);
-            wrap.innerHTML = admin.perangkat.map(p => `
-                <div class="flex items-center justify-between gap-3 bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2.5">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 shrink-0">
-                            ${deviceIconMarkup(p.icon, 18, '#6366f1')}
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-xs font-bold text-slate-100 truncate">${escapeHTML(p.name)}</p>
-                            <div class="flex items-center gap-2 mt-0.5">
+            wrap.innerHTML = admin.perangkat.map(p => {
+                const chips = p.jenis.length ? p.jenis.map(j => `
+                    <span class="inline-flex items-center gap-1 text-[11px] bg-slate-800 text-slate-200 rounded-lg pl-2 pr-1 py-0.5">
+                        ${escapeHTML(j.name)}
+                        <button class="jenis-del w-4 h-4 flex items-center justify-center rounded text-slate-500 hover:text-rose-400 hover:bg-slate-700 transition" data-id="${j.id}" title="Hapus jenis"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </span>`).join('') : '<span class="text-[11px] text-slate-500">Belum ada jenis.</span>';
+                return `
+                <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-3.5">
+                    <div class="flex items-center justify-between gap-3 mb-2.5">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">${deviceIconMarkup(p.icon, 18, '#6366f1')}</div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-100 truncate">${escapeHTML(p.name)}</p>
                                 <span class="text-[9px] font-mono text-slate-500">${escapeHTML(p.code)}</span>
-                                ${p.jenis ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-semibold">${escapeHTML(p.jenis)}</span>` : ''}
                             </div>
                         </div>
+                        <button class="dev-del text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition shrink-0" data-id="${p.id}" title="Hapus perangkat"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
-                    <button class="dev-del text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition shrink-0" data-id="${p.id}" title="Hapus perangkat"><i class="fa-solid fa-trash-can"></i></button>
-                </div>`).join('');
+                    <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                        <span class="text-[10px] uppercase font-semibold text-slate-500 mr-0.5">Jenis</span>
+                        ${chips}
+                    </div>
+                    <form class="jenis-add flex items-center gap-2" data-pid="${p.id}">
+                        <input type="text" required placeholder="Tambah jenis… (mis. Dome / Bullet / PTZ)" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                        <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition shrink-0" title="Tambah jenis"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                </div>`;
+            }).join('');
+
             wrap.querySelectorAll('.dev-del').forEach(btn => btn.addEventListener('click', async () => {
                 if (!confirm('Hapus perangkat ini dari katalog? Titik yang sudah dipasang tidak ikut terhapus.')) return;
                 const { error } = await sb.from('perangkat').delete().eq('id', btn.dataset.id);
                 if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
                 showNotification('Perangkat dihapus.', 'warning');
+                await loadDevicesData();
+            }));
+            wrap.querySelectorAll('.jenis-del').forEach(btn => btn.addEventListener('click', async () => {
+                const { error } = await sb.from('perangkat_jenis').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus jenis: ' + error.message, 'error'); return; }
+                await loadDevicesData();
+            }));
+            wrap.querySelectorAll('.jenis-add').forEach(f => f.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = f.querySelector('input');
+                const name = input.value.trim();
+                if (!name) return;
+                const { error } = await sb.from('perangkat_jenis').insert({ perangkat_id: f.dataset.pid, name });
+                if (error) { showNotification('Gagal menambah jenis: ' + error.message, 'error'); return; }
                 await loadDevicesData();
             }));
         };
@@ -4189,14 +4247,12 @@
                 e.preventDefault();
                 const name = $('new-perangkat-name').value.trim();
                 const code = $('new-perangkat-code').value.trim().toUpperCase();
-                const jenis = $('new-perangkat-jenis').value.trim();
                 if (!name) { showNotification('Nama perangkat wajib diisi.', 'error'); return; }
                 if (!code) { showNotification('Kode perangkat wajib diisi.', 'error'); return; }
-                const { error } = await sb.from('perangkat').insert({ name, code, icon: pickedIcon, jenis });
+                const { error } = await sb.from('perangkat').insert({ name, code, icon: pickedIcon });
                 if (error) { showNotification('Gagal menambah: ' + error.message, 'error'); return; }
                 $('new-perangkat-name').value = '';
                 $('new-perangkat-code').value = '';
-                $('new-perangkat-jenis').value = '';
                 setPickedIcon('');
                 $('icon-search-results').innerHTML = '';
                 $('icon-search-input').value = '';
@@ -4317,17 +4373,9 @@
             dom.btnZoomOut.addEventListener('click', zoomOut);
             dom.btnZoomReset.addEventListener('click', resetView);
 
-            // Selection Modals click
-            dom.btnSelectCCTV.addEventListener('click', () => selectDeviceType('cctv'));
-            dom.btnSelectACS.addEventListener('click', () => selectDeviceType('acs'));
+            // Batal pada modal pemilih perangkat. (Kartu perangkat di-wire dinamis
+            // di renderSelectorGrid saat modal dibuka.)
             dom.btnModalCancel.addEventListener('click', closeSelectorModal);
-
-            // Titik perangkat dari katalog (Kelola Perangkat)
-            $('selector-add-custom').addEventListener('click', () => {
-                const id = $('selector-perangkat').value;
-                if (!id) { showNotification('Pilih perangkat dulu.', 'warning'); return; }
-                selectCustomDevice(id);
-            });
 
             // Mobile: tombol tambah perangkat (buka pemilih jenis perangkat).
             if (dom.btnMobileAddDevice) dom.btnMobileAddDevice.addEventListener('click', openMobileAddDevice);
