@@ -386,6 +386,37 @@
         body.light-theme .loc-lantai-name {
             color: #0f172a;
         }
+        /* ===== Kelola Perusahaan & Kelola User (light mode) =====
+           Panel berjenjang yang bersih & modern (bukan abu-abu suram),
+           dengan aksen teal sesuai brand. */
+        body.light-theme #modal-companies > .bg-slate-900,
+        body.light-theme #modal-admin > .bg-slate-900 {
+            background-color: #ffffff;
+            border-color: #e5e9f0;
+            box-shadow: 0 40px 80px -24px rgb(15 23 42 / 0.32), 0 12px 28px -14px rgb(15 23 42 / 0.16);
+        }
+        /* Kartu perusahaan / pengguna (level luar) — putih terangkat */
+        body.light-theme #modal-companies .bg-slate-950\/50,
+        body.light-theme #modal-admin .admin-user-card {
+            background-color: #ffffff;
+            border-color: #e3e8f0;
+            box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 10px 24px -16px rgb(15 23 42 / 0.16);
+        }
+        /* Kartu gedung (level dalam) — tint teal lembut untuk kedalaman */
+        body.light-theme #modal-companies .bg-slate-950\/40 {
+            background-color: #f1f8f6;
+            border-color: #d5e8e2;
+        }
+        /* Chip lantai — pil teal modern, bukan kotak abu-abu */
+        body.light-theme #modal-companies span.bg-slate-800 {
+            background-color: #e4f6ef;
+            border-color: #c2e8db;
+            color: #0f766e;
+        }
+        body.light-theme #modal-companies span.bg-slate-800 .co-del-floor:hover {
+            color: #e11d48;
+            background-color: #ffffff;
+        }
         /* 1 & 2. PERBAIKAN LIGHT MODE UNTUK HUD ZOOM & KOTAK SERET BERKAS */
         body.light-theme #zoom-hud {
             background-color: rgba(255, 255, 255, 0.95);
@@ -3765,7 +3796,7 @@
                     return `
                     <div class="bg-slate-950/40 border border-slate-800 rounded-lg p-3">
                         <div class="flex items-center justify-between gap-2 mb-2">
-                            <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-warehouse text-indigo-400/80"></i> ${escapeHTML(b.name)}</span>
+                            <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-warehouse text-indigo-400"></i> ${escapeHTML(b.name)}</span>
                             <button class="co-del-building text-[11px] font-semibold px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${b.id}" title="Hapus gedung"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
