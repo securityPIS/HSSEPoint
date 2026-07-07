@@ -390,14 +390,16 @@
            Panel berjenjang yang bersih & modern (bukan abu-abu suram),
            dengan aksen teal sesuai brand. */
         body.light-theme #modal-companies > .bg-slate-900,
-        body.light-theme #modal-admin > .bg-slate-900 {
+        body.light-theme #modal-admin > .bg-slate-900,
+        body.light-theme #modal-devices > .bg-slate-900 {
             background-color: #ffffff;
             border-color: #e5e9f0;
             box-shadow: 0 40px 80px -24px rgb(15 23 42 / 0.32), 0 12px 28px -14px rgb(15 23 42 / 0.16);
         }
-        /* Kartu perusahaan / pengguna (level luar) — putih terangkat */
+        /* Kartu perusahaan / pengguna / perangkat (level luar) — putih terangkat */
         body.light-theme #modal-companies .bg-slate-950\/50,
-        body.light-theme #modal-admin .admin-user-card {
+        body.light-theme #modal-admin .admin-user-card,
+        body.light-theme #modal-devices .bg-slate-950\/50 {
             background-color: #ffffff;
             border-color: #e3e8f0;
             box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 10px 24px -16px rgb(15 23 42 / 0.16);
@@ -637,6 +639,10 @@
                         <!-- Kelola Perusahaan (khusus admin) -->
                         <button id="btn-open-companies" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Kelola perusahaan, gedung & lantai">
                             <i class="fa-solid fa-building w-4 text-center text-slate-400"></i> Kelola Perusahaan
+                        </button>
+                        <!-- Kelola Perangkat (khusus admin) -->
+                        <button id="btn-open-devices" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Kelola jenis perangkat & icon">
+                            <i class="fa-solid fa-microchip w-4 text-center text-slate-400"></i> Kelola Perangkat
                         </button>
                         <!-- Ganti Tema (Gelap/Terang) -->
                         <button id="btn-theme-toggle" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Ganti Tema">
@@ -1093,6 +1099,21 @@
                 </button>
             </div>
 
+            <!-- Perangkat lain dari katalog (Kelola Perangkat) -->
+            <div id="selector-custom-wrap" class="hidden mb-5">
+                <div class="flex items-center gap-2 mb-2.5">
+                    <span class="h-px flex-1 bg-slate-800"></span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">atau perangkat lain</span>
+                    <span class="h-px flex-1 bg-slate-800"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="selector-perangkat" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                        <option value="">-- Pilih perangkat --</option>
+                    </select>
+                    <button id="selector-add-custom" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-location-dot"></i> Titik</button>
+                </div>
+            </div>
+
             <div class="flex justify-end">
                 <button id="modal-cancel" class="text-xs text-slate-400 hover:text-slate-200 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition">
                     Batal
@@ -1258,6 +1279,67 @@
         </div>
     </div>
 
+    <!-- ============ MODAL: KELOLA PERANGKAT (jenis perangkat + icon) ============ -->
+    <div id="modal-devices" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl relative flex flex-col max-h-[92vh]">
+            <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-microchip text-indigo-400"></i> Kelola Perangkat</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Tambahkan jenis perangkat sendiri (nama, kode, icon). Muncul di dropdown saat menitik.</p>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button id="btn-devices-refresh" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
+                    <button id="btn-close-devices" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1">
+                <!-- Tambah perangkat -->
+                <form id="form-add-perangkat" class="mb-4">
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Icon</label>
+                            <button type="button" id="perangkat-icon-btn" class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-800 hover:border-indigo-500 flex items-center justify-center text-slate-500 text-lg transition shrink-0" title="Pilih / cari icon">
+                                <span id="perangkat-icon-preview"><i class="fa-solid fa-icons"></i></span>
+                            </button>
+                        </div>
+                        <div class="flex-1 min-w-[150px]">
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Perangkat <span class="text-rose-400">*</span></label>
+                            <input type="text" id="new-perangkat-name" required placeholder="Nama perangkat (mis. Fire Alarm)" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                        </div>
+                        <div class="w-24">
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Kode <span class="text-rose-400">*</span></label>
+                            <input type="text" id="new-perangkat-code" required placeholder="FA" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition uppercase">
+                        </div>
+                        <div class="flex-1 min-w-[130px]">
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Jenis</label>
+                            <input type="text" id="new-perangkat-jenis" placeholder="mis. Fire Safety" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                        </div>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Tambah</button>
+                    </div>
+
+                    <!-- Panel pencarian icon (Iconify open API) -->
+                    <div id="icon-search-panel" class="hidden mt-3 bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                <input type="text" id="icon-search-input" placeholder="Cari icon… (mis. fire, camera, door, sensor)" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                            </div>
+                            <span id="icon-search-status" class="text-[10px] text-slate-500 shrink-0"></span>
+                        </div>
+                        <div id="icon-search-results" class="grid grid-cols-8 sm:grid-cols-10 gap-1.5 max-h-44 overflow-y-auto"></div>
+                        <p class="text-[10px] text-slate-500 mt-2">Icon dari <span class="font-semibold text-slate-400">Iconify</span> (API terbuka). Ketik kata kunci lalu klik icon untuk memilih.</p>
+                    </div>
+                </form>
+
+                <p class="text-[11px] text-slate-500 mb-3"><i class="fa-solid fa-circle-info mr-1 text-indigo-400"></i> CCTV &amp; Access Reader sudah tersedia sebagai perangkat bawaan. Tambahkan perangkat lain di sini.</p>
+
+                <div id="devices-list" class="space-y-2"></div>
+                <div id="devices-empty" class="hidden text-center py-8 text-slate-500 text-xs"><i class="fa-solid fa-microchip text-2xl mb-2 block opacity-40"></i>Belum ada perangkat tambahan.</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Notification/Toast Overlay -->
     <div id="toast-container" class="fixed bottom-12 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         <!-- Dynmically generated notifications -->
@@ -1320,7 +1402,8 @@
             profile: null,     // baris tabel profiles {id,email,full_name,phone,division,role,status}
             companies: [],     // [{id,name}] perusahaan yang ditugaskan ke user ini
             buildings: [],     // [{id,company_id,name}] gedung per perusahaan (dropdown lokasi)
-            floors: []         // [{id,building_id,name}] lantai per gedung (dropdown lokasi)
+            floors: [],        // [{id,building_id,name}] lantai per gedung (dropdown lokasi)
+            perangkat: []      // [{id,name,code,icon,jenis}] katalog perangkat (dropdown titik)
         };
 
         const currentRole = () => (auth.profile && auth.profile.role) || null;
@@ -2157,7 +2240,28 @@
             openSelectorModal();
         });
 
+        // Isi dropdown perangkat katalog (dikelompokkan per jenis) & tampilkan
+        // bagian "perangkat lain" hanya bila katalog tidak kosong.
+        const populatePerangkatSelector = () => {
+            const sel = $('selector-perangkat');
+            const wrap = $('selector-custom-wrap');
+            const list = auth.perangkat || [];
+            if (!list.length) {
+                wrap.classList.add('hidden');
+                sel.innerHTML = '<option value="">-- Pilih perangkat --</option>';
+                return;
+            }
+            wrap.classList.remove('hidden');
+            const groups = {};
+            list.forEach(p => { const g = p.jenis || 'Lainnya'; (groups[g] = groups[g] || []).push(p); });
+            sel.innerHTML = '<option value="">-- Pilih perangkat --</option>' +
+                Object.keys(groups).map(g => `<optgroup label="${escapeHTML(g)}">` +
+                    groups[g].map(p => `<option value="${p.id}">${escapeHTML(p.name)}${p.code ? ` (${escapeHTML(p.code)})` : ''}</option>`).join('') +
+                    '</optgroup>').join('');
+        };
+
         const openSelectorModal = () => {
+            populatePerangkatSelector();
             dom.modalSelector.classList.remove('hidden');
         };
 
@@ -2211,6 +2315,35 @@
             closeSelectorModal();
             selectMarker(newId);
             showNotification(`${type === 'cctv' ? 'CCTV' : 'Access Reader'} berhasil dipasang.`);
+        };
+
+        // Pasang perangkat dari katalog (Kelola Perangkat) sebagai titik generik.
+        const selectCustomDevice = (perangkatId) => {
+            if (!requireEdit()) { closeSelectorModal(); return; }
+            const p = (auth.perangkat || []).find(x => x.id === perangkatId);
+            if (!p) { showNotification('Perangkat tidak ditemukan.', 'error'); return; }
+            const code = (p.code || 'DEV').toUpperCase();
+            const n = state.idCounter++;
+            const newMarker = {
+                id: `${code}-${String(n).padStart(3, '0')}`,
+                type: 'custom',
+                perangkatId: p.id,
+                kode: code,
+                icon: p.icon || '',
+                perangkat: p.name,
+                jenis: p.jenis || '',
+                x: state.pendingMarkerCoords.x,
+                y: state.pendingMarkerCoords.y,
+                name: `${p.name} ${n}`,
+                model: p.jenis || '',
+                condition: 'new',
+                scale: 1.0,
+                photo: null
+            };
+            state.markers.push(newMarker);
+            closeSelectorModal();
+            selectMarker(newMarker.id);
+            showNotification(`${p.name} berhasil dipasang.`);
         };
 
         /* Custom marker render loop */
@@ -2277,11 +2410,23 @@
                             </div>
                         </div>
                     `;
+                } else if (m.type === 'custom') {
+                    // Perangkat katalog (Kelola Perangkat) — pin ikon sederhana
+                    markerEl.innerHTML = `
+                        <div class="relative flex items-center justify-center w-full h-full select-none" style="transform: scale(${actualScale}); transform-origin: center;">
+                            <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50' : 'bg-green-500 border-2 border-slate-900 shadow-green-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                                ${deviceIconMarkup(m.icon, 11, '#020617', 'fa-solid fa-microchip')}
+                            </div>
+                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap">
+                                ${escapeHTML(m.id)}
+                            </div>
+                        </div>
+                    `;
                 } else {
                     // Access Control Reader Markup
                     markerEl.innerHTML = `
                         <div class="relative flex items-center justify-center w-full h-full select-none" style="transform: scale(${actualScale}); transform-origin: center;">
-                            
+
                             <!-- Pulse wave overlay for Reader -->
                             <div class="absolute inset-0 rounded-xl bg-emerald-500/20 animate-ping z-0"></div>
 
@@ -2577,6 +2722,11 @@
                     dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400";
                     dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-cyan-400";
                     dom.editorDeviceIcon.innerHTML = `<i class="fa-solid fa-video"></i>`;
+                } else if (marker.type === 'custom') {
+                    dom.editorDeviceTypeBadge.textContent = (marker.jenis || marker.perangkat || 'Perangkat').toUpperCase();
+                    dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-indigo-400/10 text-indigo-400";
+                    dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-indigo-400";
+                    dom.editorDeviceIcon.innerHTML = deviceIconMarkup(marker.icon, 22, '#020617', 'fa-solid fa-microchip');
                 } else {
                     dom.editorDeviceTypeBadge.textContent = "ACCESS READER";
                     dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-400/10 text-emerald-400";
@@ -2773,7 +2923,9 @@
 
                 const deviceIcon = m.type === 'cctv'
                     ? '<i class="fa-solid fa-video text-cyan-400"></i>'
-                    : '<i class="fa-solid fa-id-card text-emerald-400"></i>';
+                    : m.type === 'custom'
+                        ? deviceIconMarkup(m.icon, 16, '#818cf8', 'fa-solid fa-microchip')
+                        : '<i class="fa-solid fa-id-card text-emerald-400"></i>';
 
                 const hasPhotoIndicator = m.photo ? `<i class="fa-solid fa-image text-[10px] text-indigo-400" title="Memiliki foto lokasi"></i>` : '';
 
@@ -3017,6 +3169,22 @@
                 ctx.textBaseline = 'middle';
                 ctx.fillText('', cx, cy + 0.25 * s);
 
+            } else if (m.type === 'custom') {
+                // Perangkat katalog: kotak generik + inisial kode (icon Iconify tak
+                // digambar di canvas untuk menghindari taint cross-origin).
+                const sq = 20 * s;
+                drawRoundedRect(ctx, cx - sq / 2, cy - sq / 2, sq, sq, 4 * s);
+                ctx.fillStyle = m.condition === 'new' ? '#eab308' : '#22c55e';
+                ctx.fill();
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 1.5 * s;
+                ctx.stroke();
+                const initials = String(m.kode || m.id || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase();
+                ctx.fillStyle = '#020617';
+                ctx.font = `700 ${7 * s}px system-ui, -apple-system, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(initials, cx, cy + 0.25 * s);
             } else {
                 // 1. Lingkar pulsa emerald lembut (meniru animate-ping)
                 drawRoundedRect(ctx, cx - boxSize / 2, cy - boxSize / 2, boxSize, boxSize, 6 * s);
@@ -3106,6 +3274,7 @@
                     total_devices: allMarkers.length,
                     cctv_total: allMarkers.filter(m => m.type === 'cctv').length,
                     acs_total: allMarkers.filter(m => m.type === 'acs').length,
+                    custom_total: allMarkers.filter(m => m.type === 'custom').length,
                     app_version: "v1.6"
                 },
                 project_state: {
@@ -3230,6 +3399,22 @@
             '"': '&quot;',
             "'": '&#39;'
         }[char]));
+
+        /* ---- Icon dari Iconify (library icon dengan API terbuka) ----
+           icon disimpan sebagai id Iconify, mis. 'mdi:fire'. Di-render sebagai
+           <img> SVG dari api.iconify.design (mendukung recolor via ?color=). */
+        const iconifyUrl = (iconId, colorHex) => {
+            if (!iconId) return '';
+            const path = String(iconId).trim().replace(':', '/');
+            return `https://api.iconify.design/${path}.svg` + (colorHex ? `?color=${encodeURIComponent(colorHex)}` : '');
+        };
+        // Markup icon perangkat: <img> Iconify bila ada; jika kosong pakai FontAwesome fallback.
+        const deviceIconMarkup = (iconId, sizePx, colorHex, fallback = 'fa-solid fa-microchip') => {
+            if (iconId) {
+                return `<img src="${escapeHTML(iconifyUrl(iconId, colorHex))}" width="${sizePx}" height="${sizePx}" style="width:${sizePx}px;height:${sizePx}px;display:block;object-fit:contain" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
+            }
+            return `<i class="${fallback}"${colorHex ? ` style="color:${colorHex}"` : ''}></i>`;
+        };
 
         /* =========================================================
            SIMPAN OTOMATIS
@@ -3483,6 +3668,8 @@
             $('btn-open-admin').classList.toggle('flex', isAdmin());
             $('btn-open-companies').classList.toggle('hidden', !isAdmin());
             $('btn-open-companies').classList.toggle('flex', isAdmin());
+            $('btn-open-devices').classList.toggle('hidden', !isAdmin());
+            $('btn-open-devices').classList.toggle('flex', isAdmin());
             setEditorEnabled(!ro);
         };
 
@@ -3495,14 +3682,16 @@
                 const { data } = await sb.from('user_companies').select('company_id, companies(name)').eq('user_id', auth.user.id);
                 auth.companies = (data || []).map(r => ({ id: r.company_id, name: (r.companies && r.companies.name) || '' }));
             }
-            // Gedung & lantai bisa dibaca semua user login (RLS); dipakai untuk dropdown
-            // bertingkat pada form lokasi. Difilter per perusahaan di sisi klien.
-            const [bd, fl] = await Promise.all([
+            // Gedung, lantai & katalog perangkat bisa dibaca semua user login (RLS);
+            // dipakai untuk dropdown pada form lokasi & saat menitik perangkat.
+            const [bd, fl, pk] = await Promise.all([
                 sb.from('buildings').select('id,company_id,name').order('name'),
-                sb.from('floors').select('id,building_id,name').order('name')
+                sb.from('floors').select('id,building_id,name').order('name'),
+                sb.from('perangkat').select('id,name,code,icon,jenis').order('jenis').order('name')
             ]);
             auth.buildings = bd.data || [];
             auth.floors = fl.data || [];
+            auth.perangkat = pk.data || [];
         };
 
         /* ---- Profil: ambil (atau buat cadangan bila trigger belum jalan) ---- */
@@ -3610,7 +3799,7 @@
         /* =========================================================
            PANEL ADMIN — kelola user & perusahaan
         ========================================================= */
-        const admin = { profiles: [], companies: [], userCompanies: {}, buildings: [], floors: [], filter: 'all' };
+        const admin = { profiles: [], companies: [], userCompanies: {}, buildings: [], floors: [], perangkat: [], filter: 'all' };
 
         const openAdminModal = async () => {
             if (!isAdmin()) return;
@@ -3883,6 +4072,141 @@
             });
         };
 
+        /* =========================================================
+           PANEL KELOLA PERANGKAT — katalog jenis perangkat + icon
+           Menu admin. Data di sini menjadi sumber dropdown saat menitik,
+           sehingga tidak terbatas CCTV & ACS.
+        ========================================================= */
+        let pickedIcon = '';    // icon Iconify terpilih pada form tambah
+        let iconSearchSeq = 0;  // urutan pencarian icon (abaikan hasil basi)
+
+        const openDevicesModal = async () => {
+            if (!isAdmin()) return;
+            $('modal-devices').classList.remove('hidden');
+            await loadDevicesData();
+        };
+        const closeDevicesModal = () => {
+            $('modal-devices').classList.add('hidden');
+            $('icon-search-panel').classList.add('hidden');
+        };
+
+        const loadDevicesData = async () => {
+            const { data, error } = await sb.from('perangkat').select('*').order('jenis').order('name');
+            if (error) { showNotification('Gagal memuat perangkat: ' + error.message, 'error'); return; }
+            admin.perangkat = data || [];
+            // Segarkan katalog sisi aplikasi agar dropdown penitikan ikut terbarui.
+            auth.perangkat = admin.perangkat.map(p => ({ id: p.id, name: p.name, code: p.code, icon: p.icon, jenis: p.jenis }));
+            renderDevicesList();
+        };
+
+        const setPickedIcon = (iconId) => {
+            pickedIcon = iconId || '';
+            $('perangkat-icon-preview').innerHTML = pickedIcon
+                ? deviceIconMarkup(pickedIcon, 22, '#6366f1')
+                : '<i class="fa-solid fa-icons"></i>';
+        };
+
+        const renderDevicesList = () => {
+            const wrap = $('devices-list');
+            $('devices-empty').classList.toggle('hidden', admin.perangkat.length > 0);
+            wrap.innerHTML = admin.perangkat.map(p => `
+                <div class="flex items-center justify-between gap-3 bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2.5">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 shrink-0">
+                            ${deviceIconMarkup(p.icon, 18, '#6366f1')}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-100 truncate">${escapeHTML(p.name)}</p>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-[9px] font-mono text-slate-500">${escapeHTML(p.code)}</span>
+                                ${p.jenis ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-semibold">${escapeHTML(p.jenis)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="dev-del text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition shrink-0" data-id="${p.id}" title="Hapus perangkat"><i class="fa-solid fa-trash-can"></i></button>
+                </div>`).join('');
+            wrap.querySelectorAll('.dev-del').forEach(btn => btn.addEventListener('click', async () => {
+                if (!confirm('Hapus perangkat ini dari katalog? Titik yang sudah dipasang tidak ikut terhapus.')) return;
+                const { error } = await sb.from('perangkat').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
+                showNotification('Perangkat dihapus.', 'warning');
+                await loadDevicesData();
+            }));
+        };
+
+        // Pencarian icon via Iconify (API terbuka, mendukung CORS).
+        const searchIcons = async (query) => {
+            const seq = ++iconSearchSeq;
+            const results = $('icon-search-results');
+            const status = $('icon-search-status');
+            const q = (query || '').trim();
+            if (!q) { results.innerHTML = ''; status.textContent = ''; return; }
+            status.textContent = 'Mencari…';
+            try {
+                const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(q)}&limit=60`);
+                const data = await res.json();
+                if (seq !== iconSearchSeq) return; // hasil basi, abaikan
+                const icons = (data && data.icons) || [];
+                if (!icons.length) { results.innerHTML = ''; status.textContent = 'Tidak ada hasil'; return; }
+                status.textContent = `${icons.length} icon`;
+                results.innerHTML = icons.map(id => `
+                    <button type="button" class="icon-pick aspect-square rounded-lg bg-slate-900 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800 flex items-center justify-center p-1.5 transition" data-icon="${escapeHTML(id)}" title="${escapeHTML(id)}">
+                        ${deviceIconMarkup(id, 20, '#6366f1')}
+                    </button>`).join('');
+                results.querySelectorAll('.icon-pick').forEach(b => b.addEventListener('click', () => {
+                    setPickedIcon(b.dataset.icon);
+                    $('icon-search-panel').classList.add('hidden');
+                }));
+            } catch (e) {
+                if (seq !== iconSearchSeq) return;
+                console.error(e);
+                status.textContent = 'Gagal memuat (cek koneksi)';
+            }
+        };
+
+        const wireDevicesUI = () => {
+            $('btn-open-devices').addEventListener('click', openDevicesModal);
+            $('btn-close-devices').addEventListener('click', closeDevicesModal);
+            $('btn-devices-refresh').addEventListener('click', loadDevicesData);
+            $('modal-devices').addEventListener('click', (e) => { if (e.target === $('modal-devices')) closeDevicesModal(); });
+
+            // Buka/tutup panel pencarian icon.
+            $('perangkat-icon-btn').addEventListener('click', () => {
+                const panel = $('icon-search-panel');
+                panel.classList.toggle('hidden');
+                if (!panel.classList.contains('hidden')) $('icon-search-input').focus();
+            });
+            // Pencarian icon dengan debounce.
+            let iconTimer = null;
+            $('icon-search-input').addEventListener('input', (e) => {
+                clearTimeout(iconTimer);
+                const v = e.target.value;
+                iconTimer = setTimeout(() => searchIcons(v), 300);
+            });
+
+            // Tambah perangkat.
+            $('form-add-perangkat').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = $('new-perangkat-name').value.trim();
+                const code = $('new-perangkat-code').value.trim().toUpperCase();
+                const jenis = $('new-perangkat-jenis').value.trim();
+                if (!name) { showNotification('Nama perangkat wajib diisi.', 'error'); return; }
+                if (!code) { showNotification('Kode perangkat wajib diisi.', 'error'); return; }
+                const { error } = await sb.from('perangkat').insert({ name, code, icon: pickedIcon, jenis });
+                if (error) { showNotification('Gagal menambah: ' + error.message, 'error'); return; }
+                $('new-perangkat-name').value = '';
+                $('new-perangkat-code').value = '';
+                $('new-perangkat-jenis').value = '';
+                setPickedIcon('');
+                $('icon-search-results').innerHTML = '';
+                $('icon-search-input').value = '';
+                $('icon-search-status').textContent = '';
+                $('icon-search-panel').classList.add('hidden');
+                showNotification('Perangkat ditambahkan.');
+                await loadDevicesData();
+            });
+        };
+
         /* ---- Boot cloud ---- */
         const initCloudAuth = async () => {
             try {
@@ -3895,6 +4219,7 @@
             wireAuthUI();
             wireAdminUI();
             wireCompaniesUI();
+            wireDevicesUI();
             sb.auth.onAuthStateChange((event, session) => {
                 // Abaikan refresh token / update user agar workspace tidak ter-reload saat sedang bekerja.
                 if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return;
@@ -3996,6 +4321,13 @@
             dom.btnSelectCCTV.addEventListener('click', () => selectDeviceType('cctv'));
             dom.btnSelectACS.addEventListener('click', () => selectDeviceType('acs'));
             dom.btnModalCancel.addEventListener('click', closeSelectorModal);
+
+            // Titik perangkat dari katalog (Kelola Perangkat)
+            $('selector-add-custom').addEventListener('click', () => {
+                const id = $('selector-perangkat').value;
+                if (!id) { showNotification('Pilih perangkat dulu.', 'warning'); return; }
+                selectCustomDevice(id);
+            });
 
             // Mobile: tombol tambah perangkat (buka pemilih jenis perangkat).
             if (dom.btnMobileAddDevice) dom.btnMobileAddDevice.addEventListener('click', openMobileAddDevice);

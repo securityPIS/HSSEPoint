@@ -63,6 +63,18 @@ create table if not exists public.floors (
 create index if not exists buildings_company_idx on public.buildings(company_id);
 create index if not exists floors_building_idx    on public.floors(building_id);
 
+-- 4c) KATALOG PERANGKAT (device catalog) ----------------------------------
+--    Agar penitikan tidak terbatas CCTV & ACS. icon = Iconify id (mis. 'mdi:fire'),
+--    jenis = label kategori untuk pengelompokan dropdown saat menitik.
+create table if not exists public.perangkat (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null unique,
+  code       text not null,
+  icon       text not null default '',
+  jenis      text not null default '',
+  created_at timestamptz not null default now()
+);
+
 -- 5) HELPER (SECURITY DEFINER -> bypass RLS saat cek role, hindari rekursi)
 create or replace function public.is_admin()
 returns boolean language sql security definer stable set search_path = public as $$
@@ -129,6 +141,7 @@ alter table public.user_companies enable row level security;
 alter table public.locations      enable row level security;
 alter table public.buildings      enable row level security;
 alter table public.floors         enable row level security;
+alter table public.perangkat      enable row level security;
 
 -- 10) POLICIES -------------------------------------------------------------
 -- profiles: user lihat/insert dirinya (status 'new'); hanya admin yang meng-update.
@@ -168,6 +181,15 @@ create policy floors_select on public.floors for select
 
 drop policy if exists floors_admin_all on public.floors;
 create policy floors_admin_all on public.floors for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- perangkat: semua user login boleh baca; hanya admin yang mengubah.
+drop policy if exists perangkat_select on public.perangkat;
+create policy perangkat_select on public.perangkat for select
+  using (auth.uid() is not null);
+
+drop policy if exists perangkat_admin_all on public.perangkat;
+create policy perangkat_admin_all on public.perangkat for all
   using (public.is_admin()) with check (public.is_admin());
 
 -- user_companies: user lihat miliknya; hanya admin yang mengatur.
