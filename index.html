@@ -600,8 +600,12 @@
                     </div>
                     <div class="py-1">
                         <!-- Kelola User (khusus admin) -->
-                        <button id="btn-open-admin" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Kelola pengguna & perusahaan">
+                        <button id="btn-open-admin" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Setujui user, atur role & tetapkan perusahaan">
                             <i class="fa-solid fa-users-gear w-4 text-center text-slate-400"></i> Kelola User
+                        </button>
+                        <!-- Kelola Perusahaan (khusus admin) -->
+                        <button id="btn-open-companies" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Kelola perusahaan, gedung & lantai">
+                            <i class="fa-solid fa-building w-4 text-center text-slate-400"></i> Kelola Perusahaan
                         </button>
                         <!-- Ganti Tema (Gelap/Terang) -->
                         <button id="btn-theme-toggle" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Ganti Tema">
@@ -959,10 +963,13 @@
                     <input type="text" id="loc-perusahaan-other" class="hidden w-full mt-2 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Tulis nama perusahaan...">
                 </div>
 
-                <!-- 2. Nama Gedung -->
+                <!-- 2. Nama Gedung (dropdown dari Kelola Perusahaan) -->
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nama Gedung <span class="text-rose-400">*</span></label>
-                    <input type="text" id="loc-gedung" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: Gedung Utama / Menara A">
+                    <select id="loc-gedung" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                        <option value="">-- Pilih Gedung --</option>
+                    </select>
+                    <input type="text" id="loc-gedung-other" class="hidden w-full mt-2 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Tulis nama gedung...">
                 </div>
 
                 <!-- 3. Alamat -->
@@ -989,7 +996,10 @@
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Lantai <span class="text-rose-400">*</span></label>
-                        <input type="text" id="loc-lantai" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: 1 / GF / Basement">
+                        <select id="loc-lantai" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                            <option value="">-- Pilih Lantai --</option>
+                        </select>
+                        <input type="text" id="loc-lantai-other" class="hidden w-full mt-2 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Tulis lantai...">
                     </div>
                 </div>
 
@@ -1159,25 +1169,21 @@
         </div>
     </div>
 
-    <!-- ============ MODAL ADMIN: KELOLA USER & PERUSAHAAN ============ -->
+    <!-- ============ MODAL ADMIN: KELOLA USER ============ -->
     <div id="modal-admin" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[92vh]">
             <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
                 <div>
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-users-gear text-indigo-400"></i> Kelola User &amp; Perusahaan</h3>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-users-gear text-indigo-400"></i> Kelola User</h3>
                     <p class="text-xs text-slate-400 mt-0.5">Setujui user, atur role, dan tetapkan perusahaan.</p>
                 </div>
-                <button id="btn-close-admin" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex items-center gap-1">
+                    <button id="btn-admin-refresh" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
+                    <button id="btn-close-admin" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
-            <!-- Tabs -->
-            <div class="flex items-center gap-1 px-5 pt-4 shrink-0">
-                <button id="admin-tabbtn-users" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Pengguna</button>
-                <button id="admin-tabbtn-companies" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Perusahaan</button>
-                <button id="btn-admin-refresh" class="ml-auto px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
-            </div>
-
-            <!-- Tab: Pengguna -->
+            <!-- Daftar Pengguna -->
             <div id="admin-tab-users" class="p-5 overflow-y-auto flex-1">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="flex items-center gap-1.5">
@@ -1190,15 +1196,33 @@
                 <div id="admin-users-list" class="space-y-3"></div>
                 <div id="admin-users-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-users text-2xl mb-2 block opacity-40"></i>Tidak ada pengguna.</div>
             </div>
+        </div>
+    </div>
 
-            <!-- Tab: Perusahaan -->
-            <div id="admin-tab-companies" class="hidden p-5 overflow-y-auto flex-1">
-                <form id="form-add-company" class="flex items-center gap-2 mb-4">
+    <!-- ============ MODAL: KELOLA PERUSAHAAN (GEDUNG & LANTAI) ============ -->
+    <div id="modal-companies" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl relative flex flex-col max-h-[92vh]">
+            <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-building text-indigo-400"></i> Kelola Perusahaan</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Atur perusahaan, gedung &amp; lantai. Menjadi pilihan dropdown saat menambah lokasi.</p>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button id="btn-companies-refresh" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
+                    <button id="btn-close-companies" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1">
+                <!-- Tambah perusahaan -->
+                <form id="form-add-company" class="flex items-center gap-2 mb-5">
                     <input type="text" id="new-company-name" required placeholder="Nama perusahaan baru…" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
-                    <button type="submit" class="bg-indigo-600 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Tambah</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Perusahaan</button>
                 </form>
-                <div id="admin-companies-list" class="space-y-2"></div>
-                <div id="admin-companies-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-building text-2xl mb-2 block opacity-40"></i>Belum ada perusahaan.</div>
+
+                <!-- Pohon Perusahaan > Gedung > Lantai -->
+                <div id="companies-tree" class="space-y-3"></div>
+                <div id="companies-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-building text-2xl mb-2 block opacity-40"></i>Belum ada perusahaan. Tambahkan di atas.</div>
             </div>
         </div>
     </div>
@@ -1263,7 +1287,9 @@
         const auth = {
             user: null,        // objek user dari Supabase Auth
             profile: null,     // baris tabel profiles {id,email,full_name,phone,division,role,status}
-            companies: []      // [{id,name}] perusahaan yang ditugaskan ke user ini
+            companies: [],     // [{id,name}] perusahaan yang ditugaskan ke user ini
+            buildings: [],     // [{id,company_id,name}] gedung per perusahaan (dropdown lokasi)
+            floors: []         // [{id,building_id,name}] lantai per gedung (dropdown lokasi)
         };
 
         const currentRole = () => (auth.profile && auth.profile.role) || null;
@@ -1305,10 +1331,12 @@
             locPerusahaan: document.getElementById('loc-perusahaan'),
             locPerusahaanOther: document.getElementById('loc-perusahaan-other'),
             locGedung: document.getElementById('loc-gedung'),
+            locGedungOther: document.getElementById('loc-gedung-other'),
             locAlamat: document.getElementById('loc-alamat'),
             locGps: document.getElementById('loc-gps'),
             locArea: document.getElementById('loc-area'),
             locLantai: document.getElementById('loc-lantai'),
+            locLantaiOther: document.getElementById('loc-lantai-other'),
             locDenahDrop: document.getElementById('loc-denah-drop'),
             locDenahFile: document.getElementById('loc-denah-file'),
             locDenahInfo: document.getElementById('loc-denah-info'),
@@ -1700,10 +1728,65 @@
             dom.locDenahFile.value = '';
         };
 
+        /* ---- Dropdown bertingkat Gedung & Lantai (Perusahaan > Gedung > Lantai) ----
+           Nilai dropdown = nama gedung/lantai. Opsi "Lainnya" mengizinkan input bebas
+           agar lokasi tetap bisa dibuat meski admin belum mendaftarkan gedung/lantai. */
+        const currentGedungName = () =>
+            dom.locGedung.value === '__other__' ? dom.locGedungOther.value.trim() : dom.locGedung.value;
+        const currentLantaiName = () =>
+            dom.locLantai.value === '__other__' ? dom.locLantaiOther.value.trim() : dom.locLantai.value;
+
+        // Daftar nama gedung untuk perusahaan yang sedang dipilih (cloud: dari Kelola
+        // Perusahaan; lokal: saran dari gedung yang pernah dipakai).
+        const gedungNamesForSelected = () => {
+            if (cloudMode) {
+                const cid = dom.locPerusahaan.value;
+                return auth.buildings.filter(b => b.company_id === cid).map(b => b.name);
+            }
+            return [...new Set(state.locations.map(l => l.gedung).filter(Boolean))];
+        };
+        // Daftar nama lantai untuk gedung yang sedang dipilih.
+        const lantaiNamesForSelected = () => {
+            if (cloudMode) {
+                const cid = dom.locPerusahaan.value;
+                const gName = currentGedungName();
+                const bld = auth.buildings.find(b => b.company_id === cid && b.name === gName);
+                return bld ? auth.floors.filter(f => f.building_id === bld.id).map(f => f.name) : [];
+            }
+            return [...new Set(state.locations.map(l => l.lantai).filter(Boolean))];
+        };
+
+        // Isi <select> dengan daftar nama + opsi "Lainnya"; sinkronkan nilai terpilih.
+        const fillChoiceSelect = (sel, otherInput, placeholder, names, selectedName) => {
+            const known = !!selectedName && names.includes(selectedName);
+            sel.innerHTML = `<option value="">${placeholder}</option>`
+                + names.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('')
+                + '<option value="__other__">Lainnya (tulis sendiri)</option>';
+            if (selectedName && known) {
+                sel.value = selectedName;
+                otherInput.classList.add('hidden'); otherInput.value = '';
+            } else if (selectedName) {
+                sel.value = '__other__';
+                otherInput.classList.remove('hidden'); otherInput.value = selectedName;
+            } else {
+                sel.value = '';
+                otherInput.classList.add('hidden'); otherInput.value = '';
+            }
+        };
+
+        const populateGedungOptions = (selectedName = '') =>
+            fillChoiceSelect(dom.locGedung, dom.locGedungOther, '-- Pilih Gedung --', gedungNamesForSelected(), selectedName);
+        const populateLantaiOptions = (selectedName = '') =>
+            fillChoiceSelect(dom.locLantai, dom.locLantaiOther, '-- Pilih Lantai --', lantaiNamesForSelected(), selectedName);
+
         const resetLocationForm = () => {
             dom.formLocation.reset();
             dom.locPerusahaanOther.classList.add('hidden');
             dom.locPerusahaanOther.value = '';
+            dom.locGedungOther.classList.add('hidden');
+            dom.locGedungOther.value = '';
+            dom.locLantaiOther.classList.add('hidden');
+            dom.locLantaiOther.value = '';
             clearDenahInfo();
         };
 
@@ -1732,11 +1815,11 @@
                     dom.locPerusahaanOther.classList.remove('hidden');
                     dom.locPerusahaanOther.value = loc.perusahaan || '';
                 }
-                dom.locGedung.value = loc.gedung || '';
+                populateGedungOptions(loc.gedung || '');   // gedung bergantung pada perusahaan terpilih
+                populateLantaiOptions(loc.lantai || '');    // lantai bergantung pada gedung terpilih
                 dom.locAlamat.value = loc.alamat || '';
                 dom.locGps.value = loc.gps || '';
                 dom.locArea.value = loc.area || '';
-                dom.locLantai.value = loc.lantai || '';
                 if (loc.denahSrc) {
                     state.pendingDenah = { src: loc.denahSrc, name: loc.denahName || 'denah', type: loc.denahType || 'image', size: 'Tersimpan' };
                     showDenahInfo(state.pendingDenah);
@@ -1744,6 +1827,8 @@
             } else {
                 dom.modalLocationTitle.innerHTML = '<i class="fa-solid fa-location-dot text-indigo-400"></i> Tambah Lokasi';
                 dom.btnSubmitLocation.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Lokasi';
+                populateGedungOptions('');
+                populateLantaiOptions('');
             }
             dom.modalLocation.classList.remove('hidden');
         };
@@ -1768,13 +1853,13 @@
                 if (perusahaan === '__other__') perusahaan = dom.locPerusahaanOther.value.trim();
                 if (!perusahaan) { showNotification("Nama Perusahaan wajib diisi.", "error"); return; }
             }
-            const gedung = dom.locGedung.value.trim();
+            const gedung = currentGedungName();
             const area = dom.locArea.value;
-            const lantai = dom.locLantai.value.trim();
+            const lantai = currentLantaiName();
 
-            if (!gedung) { showNotification("Nama Gedung wajib diisi.", "error"); return; }
+            if (!gedung) { showNotification("Nama Gedung wajib dipilih/diisi.", "error"); return; }
             if (!area) { showNotification("Area wajib dipilih.", "error"); return; }
-            if (!lantai) { showNotification("Lantai wajib diisi.", "error"); return; }
+            if (!lantai) { showNotification("Lantai wajib dipilih/diisi.", "error"); return; }
 
             const data = {
                 perusahaan,
@@ -3365,10 +3450,12 @@
             $('readonly-badge').classList.toggle('flex', ro);
             $('btn-open-admin').classList.toggle('hidden', !isAdmin());
             $('btn-open-admin').classList.toggle('flex', isAdmin());
+            $('btn-open-companies').classList.toggle('hidden', !isAdmin());
+            $('btn-open-companies').classList.toggle('flex', isAdmin());
             setEditorEnabled(!ro);
         };
 
-        /* ---- Muat perusahaan milik user ---- */
+        /* ---- Muat perusahaan milik user + gedung & lantai (dropdown lokasi) ---- */
         const loadUserCompanies = async () => {
             if (isAdmin()) {
                 const { data } = await sb.from('companies').select('id,name').order('name');
@@ -3377,6 +3464,14 @@
                 const { data } = await sb.from('user_companies').select('company_id, companies(name)').eq('user_id', auth.user.id);
                 auth.companies = (data || []).map(r => ({ id: r.company_id, name: (r.companies && r.companies.name) || '' }));
             }
+            // Gedung & lantai bisa dibaca semua user login (RLS); dipakai untuk dropdown
+            // bertingkat pada form lokasi. Difilter per perusahaan di sisi klien.
+            const [bd, fl] = await Promise.all([
+                sb.from('buildings').select('id,company_id,name').order('name'),
+                sb.from('floors').select('id,building_id,name').order('name')
+            ]);
+            auth.buildings = bd.data || [];
+            auth.floors = fl.data || [];
         };
 
         /* ---- Profil: ambil (atau buat cadangan bila trigger belum jalan) ---- */
@@ -3484,7 +3579,7 @@
         /* =========================================================
            PANEL ADMIN — kelola user & perusahaan
         ========================================================= */
-        const admin = { profiles: [], companies: [], userCompanies: {}, filter: 'all', tab: 'users' };
+        const admin = { profiles: [], companies: [], userCompanies: {}, buildings: [], floors: [], filter: 'all' };
 
         const openAdminModal = async () => {
             if (!isAdmin()) return;
@@ -3508,7 +3603,6 @@
             admin.userCompanies = {};
             (uc.data || []).forEach(r => { (admin.userCompanies[r.user_id] = admin.userCompanies[r.user_id] || []).push(r.company_id); });
             renderAdminUsers();
-            renderAdminCompanies();
         };
 
         const statusPill = (s) => {
@@ -3607,39 +3701,11 @@
             await loadAdminData();
         };
 
-        const renderAdminCompanies = () => {
-            const wrap = $('admin-companies-list');
-            $('admin-companies-empty').classList.toggle('hidden', admin.companies.length > 0);
-            wrap.innerHTML = admin.companies.map(c => `
-                <div class="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2">
-                    <span class="text-sm font-semibold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-building text-indigo-400"></i> ${escapeHTML(c.name)}</span>
-                    <button class="admin-del-co text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${c.id}"><i class="fa-solid fa-trash-can"></i></button>
-                </div>`).join('');
-            wrap.querySelectorAll('.admin-del-co').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (!confirm('Hapus perusahaan ini? Lokasi yang terkait juga dapat terpengaruh.')) return;
-                    const { error } = await sb.from('companies').delete().eq('id', btn.getAttribute('data-id'));
-                    if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
-                    showNotification('Perusahaan dihapus.', 'warning');
-                    await loadAdminData();
-                });
-            });
-        };
-
         const wireAdminUI = () => {
             $('btn-open-admin').addEventListener('click', openAdminModal);
             $('btn-close-admin').addEventListener('click', closeAdminModal);
             $('btn-admin-refresh').addEventListener('click', loadAdminData);
             $('modal-admin').addEventListener('click', (e) => { if (e.target === $('modal-admin')) closeAdminModal(); });
-            const setTab = (tab) => {
-                admin.tab = tab;
-                $('admin-tab-users').classList.toggle('hidden', tab !== 'users');
-                $('admin-tab-companies').classList.toggle('hidden', tab !== 'companies');
-                $('admin-tabbtn-users').className = `px-3 py-1.5 text-xs font-semibold rounded-lg transition ${tab === 'users' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`;
-                $('admin-tabbtn-companies').className = `px-3 py-1.5 text-xs font-semibold rounded-lg transition ${tab === 'companies' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`;
-            };
-            $('admin-tabbtn-users').addEventListener('click', () => setTab('users'));
-            $('admin-tabbtn-companies').addEventListener('click', () => setTab('companies'));
             document.querySelectorAll('.admin-user-filter').forEach(btn => {
                 btn.addEventListener('click', () => {
                     admin.filter = btn.getAttribute('data-filter');
@@ -3650,6 +3716,130 @@
                     renderAdminUsers();
                 });
             });
+        };
+
+        /* =========================================================
+           PANEL KELOLA PERUSAHAAN — Perusahaan > Gedung > Lantai
+           Menu terpisah dari "Kelola User". Data di sini menjadi sumber
+           dropdown bertingkat pada form lokasi.
+        ========================================================= */
+        const openCompaniesModal = async () => {
+            if (!isAdmin()) return;
+            $('modal-companies').classList.remove('hidden');
+            await loadCompaniesData();
+        };
+        const closeCompaniesModal = () => $('modal-companies').classList.add('hidden');
+
+        const loadCompaniesData = async () => {
+            const [c, b, f] = await Promise.all([
+                sb.from('companies').select('*').order('name'),
+                sb.from('buildings').select('*').order('name'),
+                sb.from('floors').select('*').order('name')
+            ]);
+            if (c.error || b.error || f.error) {
+                showNotification('Gagal memuat data perusahaan: ' + ((c.error || b.error || f.error).message), 'error');
+                return;
+            }
+            admin.companies = c.data || [];
+            admin.buildings = b.data || [];
+            admin.floors = f.data || [];
+            // Segarkan struktur di sisi aplikasi agar dropdown form lokasi ikut terbarui.
+            if (isAdmin()) auth.companies = admin.companies.map(x => ({ id: x.id, name: x.name }));
+            auth.buildings = admin.buildings.map(x => ({ id: x.id, company_id: x.company_id, name: x.name }));
+            auth.floors = admin.floors.map(x => ({ id: x.id, building_id: x.building_id, name: x.name }));
+            renderCompaniesTree();
+        };
+
+        const renderCompaniesTree = () => {
+            const wrap = $('companies-tree');
+            $('companies-empty').classList.toggle('hidden', admin.companies.length > 0);
+            wrap.innerHTML = admin.companies.map(c => {
+                const blds = admin.buildings.filter(b => b.company_id === c.id);
+                const buildingsHtml = blds.map(b => {
+                    const fls = admin.floors.filter(f => f.building_id === b.id);
+                    const floorChips = fls.length ? fls.map(f => `
+                        <span class="inline-flex items-center gap-1 text-[11px] bg-slate-800 text-slate-200 rounded-lg pl-2 pr-1 py-0.5">
+                            ${escapeHTML(f.name)}
+                            <button class="co-del-floor w-4 h-4 flex items-center justify-center rounded text-slate-500 hover:text-rose-400 hover:bg-slate-700 transition" data-id="${f.id}" title="Hapus lantai"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                        </span>`).join('') : '<span class="text-[11px] text-slate-500">Belum ada lantai.</span>';
+                    return `
+                    <div class="bg-slate-950/40 border border-slate-800 rounded-lg p-3">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-warehouse text-indigo-400/80"></i> ${escapeHTML(b.name)}</span>
+                            <button class="co-del-building text-[11px] font-semibold px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${b.id}" title="Hapus gedung"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                            <span class="text-[10px] uppercase font-semibold text-slate-500 mr-0.5">Lantai</span>
+                            ${floorChips}
+                        </div>
+                        <form class="co-add-floor flex items-center gap-2" data-bid="${b.id}">
+                            <input type="text" required placeholder="Tambah lantai… (mis. 1 / GF / Basement)" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                            <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition shrink-0" title="Tambah lantai"><i class="fa-solid fa-plus"></i></button>
+                        </form>
+                    </div>`;
+                }).join('');
+                return `
+                <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-sm font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-building text-indigo-400"></i> ${escapeHTML(c.name)}</span>
+                        <button class="co-del-company text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${c.id}" title="Hapus perusahaan"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div class="space-y-2 pl-0.5">
+                        ${buildingsHtml || '<p class="text-[11px] text-slate-500">Belum ada gedung.</p>'}
+                        <form class="co-add-building flex items-center gap-2 pt-1" data-cid="${c.id}">
+                            <input type="text" required placeholder="Tambah gedung…" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] px-3 py-1.5 rounded-lg transition flex items-center gap-1 shrink-0"><i class="fa-solid fa-plus"></i> Gedung</button>
+                        </form>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Wiring: hapus perusahaan/gedung/lantai + tambah gedung/lantai.
+            wrap.querySelectorAll('.co-del-company').forEach(btn => btn.addEventListener('click', async () => {
+                if (!confirm('Hapus perusahaan ini beserta gedung, lantai, dan lokasi terkait?')) return;
+                const { error } = await sb.from('companies').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
+                showNotification('Perusahaan dihapus.', 'warning');
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-del-building').forEach(btn => btn.addEventListener('click', async () => {
+                if (!confirm('Hapus gedung ini beserta lantainya?')) return;
+                const { error } = await sb.from('buildings').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus gedung: ' + error.message, 'error'); return; }
+                showNotification('Gedung dihapus.', 'warning');
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-del-floor').forEach(btn => btn.addEventListener('click', async () => {
+                const { error } = await sb.from('floors').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus lantai: ' + error.message, 'error'); return; }
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-add-building').forEach(f => f.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = f.querySelector('input');
+                const name = input.value.trim();
+                if (!name) return;
+                const { error } = await sb.from('buildings').insert({ company_id: f.dataset.cid, name });
+                if (error) { showNotification('Gagal menambah gedung: ' + error.message, 'error'); return; }
+                showNotification('Gedung ditambahkan.');
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-add-floor').forEach(f => f.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = f.querySelector('input');
+                const name = input.value.trim();
+                if (!name) return;
+                const { error } = await sb.from('floors').insert({ building_id: f.dataset.bid, name });
+                if (error) { showNotification('Gagal menambah lantai: ' + error.message, 'error'); return; }
+                await loadCompaniesData();
+            }));
+        };
+
+        const wireCompaniesUI = () => {
+            $('btn-open-companies').addEventListener('click', openCompaniesModal);
+            $('btn-close-companies').addEventListener('click', closeCompaniesModal);
+            $('btn-companies-refresh').addEventListener('click', loadCompaniesData);
+            $('modal-companies').addEventListener('click', (e) => { if (e.target === $('modal-companies')) closeCompaniesModal(); });
             $('form-add-company').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = $('new-company-name').value.trim();
@@ -3658,7 +3848,7 @@
                 if (error) { showNotification('Gagal menambah: ' + error.message, 'error'); return; }
                 $('new-company-name').value = '';
                 showNotification('Perusahaan ditambahkan.');
-                await loadAdminData();
+                await loadCompaniesData();
             });
         };
 
@@ -3673,6 +3863,7 @@
             showGate('screen-loading');
             wireAuthUI();
             wireAdminUI();
+            wireCompaniesUI();
             sb.auth.onAuthStateChange((event, session) => {
                 // Abaikan refresh token / update user agar workspace tidak ter-reload saat sedang bekerja.
                 if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return;
@@ -3708,13 +3899,37 @@
                 if (e.target === dom.modalLocation) closeLocationModal();
             });
 
-            // Toggle input "Lainnya" pada dropdown perusahaan
+            // Perusahaan berubah -> tampil/sembunyikan input "Lainnya" & muat ulang
+            // dropdown gedung + lantai (Perusahaan > Gedung > Lantai).
             dom.locPerusahaan.addEventListener('change', () => {
                 if (dom.locPerusahaan.value === '__other__') {
                     dom.locPerusahaanOther.classList.remove('hidden');
                     dom.locPerusahaanOther.focus();
                 } else {
                     dom.locPerusahaanOther.classList.add('hidden');
+                }
+                populateGedungOptions('');
+                populateLantaiOptions('');
+            });
+
+            // Gedung berubah -> tampil/sembunyikan input "Lainnya" & muat ulang lantai.
+            dom.locGedung.addEventListener('change', () => {
+                if (dom.locGedung.value === '__other__') {
+                    dom.locGedungOther.classList.remove('hidden');
+                    dom.locGedungOther.focus();
+                } else {
+                    dom.locGedungOther.classList.add('hidden');
+                }
+                populateLantaiOptions('');
+            });
+
+            // Lantai berubah -> tampil/sembunyikan input "Lainnya".
+            dom.locLantai.addEventListener('change', () => {
+                if (dom.locLantai.value === '__other__') {
+                    dom.locLantaiOther.classList.remove('hidden');
+                    dom.locLantaiOther.focus();
+                } else {
+                    dom.locLantaiOther.classList.add('hidden');
                 }
             });
 
