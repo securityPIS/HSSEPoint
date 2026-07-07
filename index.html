@@ -2393,7 +2393,7 @@
                             </div>
 
                             <!-- Badge kode perangkat -->
-                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap">
+                            <div class="device-status-badge absolute left-1/2 -translate-x-1/2 top-full mt-1 px-1 py-px leading-none bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap pointer-events-none">
                                 ${escapeHTML(m.id)}
                             </div>
                         </div>
@@ -2405,7 +2405,7 @@
                             <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50' : 'bg-green-500 border-2 border-slate-900 shadow-green-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
                                 ${deviceIconMarkup(m.icon, 11, '#020617', 'fa-solid fa-microchip')}
                             </div>
-                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap">
+                            <div class="device-status-badge absolute left-1/2 -translate-x-1/2 top-full mt-1 px-1 py-px leading-none bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap pointer-events-none">
                                 ${escapeHTML(m.id)}
                             </div>
                         </div>
@@ -2424,7 +2424,7 @@
                             </div>
 
                             <!-- Badge kode perangkat -->
-                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap">
+                            <div class="device-status-badge absolute left-1/2 -translate-x-1/2 top-full mt-1 px-1 py-px leading-none bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap pointer-events-none">
                                 ${escapeHTML(m.id)}
                             </div>
                         </div>
@@ -3097,21 +3097,24 @@
             }
         };
 
-        // Badge kode perangkat di pojok kanan-atas marker (meniru DOM).
+        // Label kode perangkat DI BAWAH ikon, di-tengah (meniru DOM) — sengaja
+        // tidak ditempel di pojok agar tidak menimpa ikon walau kodenya panjang.
         const drawStatusBadge = (ctx, m, cx, cy, s) => {
             const label = m.id;
             const fontSize = 7 * s;
             ctx.font = `bold ${fontSize}px sans-serif`;
             const tw = ctx.measureText(label).width;
             const padX = 4 * s;
+            const padY = 2 * s;
             const w = tw + padX * 2;
-            const h = fontSize + 4 * s;
-            // DOM: -top-1.5 -right-1.5 dari kotak marker 20px (diskalakan ikon)
-            const rightX = cx + s * (10 * s + 6);
-            const topY = cy - s * (10 * s + 6);
+            const h = fontSize + padY * 2;
+            // Diletakkan tepat di bawah ikon (setengah tinggi ikon = 10px) + jarak kecil
+            const gap = 4 * s;
+            const boxX = cx - w / 2;
+            const boxY = cy + 10 * s + gap;
             const isLightTheme = state.theme === 'light';
 
-            drawRoundedRect(ctx, rightX - w, topY, w, h, 2 * s);
+            drawRoundedRect(ctx, boxX, boxY, w, h, 2 * s);
             ctx.fillStyle = isLightTheme ? '#ecfeff' : '#020617';
             ctx.fill();
             ctx.strokeStyle = isLightTheme ? '#22d3ee' : '#1e293b';
@@ -3121,7 +3124,7 @@
             ctx.fillStyle = isLightTheme ? '#0e7490' : '#ffffff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(label, rightX - w / 2, topY + h / 2);
+            ctx.fillText(label, cx, boxY + h / 2);
         };
 
         const drawMarkerOnCanvas = (ctx, m) => {
