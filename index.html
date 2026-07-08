@@ -870,13 +870,8 @@
 
             <!-- Placed Devices List Section (Tumbuh mengisi sisa tinggi sidebar) -->
             <div id="device-list-section" class="flex-1 flex flex-col p-5 min-h-[300px]">
-                <div class="flex items-center justify-between mb-3 shrink-0">
-                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Daftar Titik Terpasang (<span id="placed-count">0</span>)</h2>
-                    <div class="flex items-center gap-1.5">
-                        <button id="btn-filter-all" class="text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded font-medium">Semua <span id="count-all" class="opacity-80">0</span></button>
-                        <button id="btn-filter-cctv" class="text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium">CCTV <span id="count-cctv" class="opacity-80">0</span></button>
-                        <button id="btn-filter-acs" class="text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium">ACS <span id="count-acs" class="opacity-80">0</span></button>
-                    </div>
+                <div id="device-filter-bar" class="flex items-center flex-wrap gap-1.5 mb-3 shrink-0">
+                    <!-- Tombol filter dibuat dinamis di JS: 'Semua' + setiap jenis perangkat yang ada pada lantai ini -->
                 </div>
 
                 <!-- Empty List Placeholder -->
@@ -1344,7 +1339,7 @@
             imageWidth: 0,
             imageHeight: 0,
             pendingMarkerCoords: { x: 0, y: 0 },
-            activeFilter: 'all', // 'all', 'cctv', 'acs'
+            activeFilter: 'all', // 'all' | 'cctv' | 'acs' | 'custom:<perangkatId>' (dinamis per jenis perangkat)
             idCounter: 1,
             theme: 'light', // 'dark' or 'light' (default: light)
             mobileView: 'list' // 'list' | 'detail' (navigasi khusus mobile)
@@ -1500,13 +1495,7 @@
             deviceListEmpty: document.getElementById('device-list-empty'),
             deviceList: document.getElementById('device-list'),
             deviceListSection: document.getElementById('device-list-section'),
-            placedCount: document.getElementById('placed-count'),
-            btnFilterAll: document.getElementById('btn-filter-all'),
-            btnFilterCctv: document.getElementById('btn-filter-cctv'),
-            btnFilterAcs: document.getElementById('btn-filter-acs'),
-            countAll: document.getElementById('count-all'),
-            countCctv: document.getElementById('count-cctv'),
-            countAcs: document.getElementById('count-acs'),
+            deviceFilterBar: document.getElementById('device-filter-bar'),
 
             // Mini Stats
             statCctv: document.getElementById('stat-cctv-count'),
@@ -2335,6 +2324,68 @@
         };
 
         /* Custom marker render loop */
+        /* =========================================================
+           FILTER JENIS PERANGKAT (Daftar Titik)
+           Tab filter dibuat dinamis dari jenis perangkat yang benar-benar
+           ada pada lantai aktif — bukan hanya CCTV & ACS. Perangkat custom
+           dari katalog "Kelola Perangkat" ikut menjadi tab tersendiri.
+        ========================================================= */
+        // Kunci unik per jenis perangkat untuk pencocokan filter.
+        const markerFilterKey = (m) =>
+            m.type === 'custom'
+                ? `custom:${m.perangkatId || m.perangkat || m.kode || 'lainnya'}`
+                : m.type; // 'cctv' | 'acs'
+
+        // Label tombol filter untuk sebuah marker.
+        const markerFilterLabel = (m) =>
+            m.type === 'cctv' ? 'CCTV' :
+            m.type === 'acs'  ? 'ACS'  :
+            (m.perangkat || m.kode || 'Lainnya');
+
+        // Apakah marker cocok dengan filter yang sedang aktif.
+        const markerMatchesFilter = (m) =>
+            state.activeFilter === 'all' || markerFilterKey(m) === state.activeFilter;
+
+        // Warna tombol filter aktif (menjaga identitas warna CCTV/ACS).
+        const filterActiveClass = (key) =>
+            key === 'cctv' ? 'bg-cyan-600 text-white' :
+            key === 'acs'  ? 'bg-emerald-600 text-white' :
+                             'bg-indigo-600 text-white';
+
+        // Bangun ulang tombol filter dari jenis perangkat pada lantai aktif.
+        const renderDeviceFilters = () => {
+            const bar = dom.deviceFilterBar;
+            if (!bar) return;
+
+            // Kumpulkan jenis unik + jumlahnya (urut kemunculan: CCTV, ACS, lalu custom).
+            const groups = new Map(); // key -> {key,label,count}
+            state.markers.forEach(m => {
+                const key = markerFilterKey(m);
+                const g = groups.get(key) || { key, label: markerFilterLabel(m), count: 0 };
+                g.count++;
+                groups.set(key, g);
+            });
+
+            // Bila filter aktif tak lagi tersedia (jenis terakhirnya dihapus), balik ke 'Semua'.
+            if (state.activeFilter !== 'all' && !groups.has(state.activeFilter)) {
+                state.activeFilter = 'all';
+            }
+
+            const items = [{ key: 'all', label: 'Semua', count: state.markers.length }, ...groups.values()];
+            const baseCls = 'text-[10px] px-2 py-0.5 rounded font-medium transition';
+            const idleCls = 'text-slate-400 hover:text-white';
+
+            bar.innerHTML = '';
+            items.forEach(it => {
+                const btn = document.createElement('button');
+                const active = state.activeFilter === it.key;
+                btn.className = `${baseCls} ${active ? filterActiveClass(it.key) : idleCls}`;
+                btn.innerHTML = `${escapeHTML(it.label)} <span class="opacity-80">${it.count}</span>`;
+                btn.addEventListener('click', () => applyFilter(it.key));
+                bar.appendChild(btn);
+            });
+        };
+
         const renderMarkers = () => {
             const selectedId = state.selectedMarkerId;
 
@@ -2342,10 +2393,7 @@
             dom.markersOverlay.innerHTML = '';
 
             // Saring marker berdasarkan kategori aktif
-            const filteredMarkers = state.markers.filter(m => {
-                if (state.activeFilter === 'all') return true;
-                return m.type === state.activeFilter;
-            });
+            const filteredMarkers = state.markers.filter(markerMatchesFilter);
 
             filteredMarkers.forEach(m => {
                 const markerEl = document.createElement('div');
@@ -2913,10 +2961,7 @@
         const updateDevicePanelList = () => {
             dom.deviceList.innerHTML = '';
 
-            const filteredMarkers = state.markers.filter(m => {
-                if (state.activeFilter === 'all') return true;
-                return m.type === state.activeFilter;
-            });
+            const filteredMarkers = state.markers.filter(markerMatchesFilter);
 
             if (filteredMarkers.length === 0) {
                 dom.deviceList.classList.add('hidden');
@@ -3031,16 +3076,13 @@
             const acsCount = state.markers.filter(m => m.type === 'acs').length;
             const totalCount = state.markers.length;
 
-            dom.placedCount.textContent = totalCount;
             dom.statCctv.textContent = cctvCount;
             dom.statAcs.textContent = acsCount;
             dom.statTotal.textContent = totalCount;
             if (dom.rightCollapsedCount) dom.rightCollapsedCount.textContent = totalCount;
 
-            // Jumlah per tab filter pada Daftar Titik
-            if (dom.countAll) dom.countAll.textContent = totalCount;
-            if (dom.countCctv) dom.countCctv.textContent = cctvCount;
-            if (dom.countAcs) dom.countAcs.textContent = acsCount;
+            // Tombol filter Daftar Titik: dinamis (Semua + tiap jenis perangkat di lantai ini)
+            renderDeviceFilters();
         };
 
         const clearAllMarkers = () => {
@@ -3052,28 +3094,13 @@
             showNotification("Semua titik berhasil dibersihkan.", "warning");
         };
 
-        /* Side Panel Filters */
+        /* Side Panel Filters — set jenis aktif lalu render ulang
+           (renderMarkers memicu updateCounterStats -> renderDeviceFilters
+           sehingga sorotan tombol & daftar ikut menyesuaikan). */
         const applyFilter = (filterType) => {
             state.activeFilter = filterType;
-            
-            [dom.btnFilterAll, dom.btnFilterCctv, dom.btnFilterAcs].forEach(btn => {
-                btn.className = "text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium transition";
-            });
-
-            if (filterType === 'all') {
-                dom.btnFilterAll.className = "text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded font-medium";
-            } else if (filterType === 'cctv') {
-                dom.btnFilterCctv.className = "text-[10px] px-2 py-0.5 bg-cyan-600 text-white rounded font-medium";
-            } else {
-                dom.btnFilterAcs.className = "text-[10px] px-2 py-0.5 bg-emerald-600 text-white rounded font-medium";
-            }
-
             renderMarkers();
         };
-
-        dom.btnFilterAll.addEventListener('click', () => applyFilter('all'));
-        dom.btnFilterCctv.addEventListener('click', () => applyFilter('cctv'));
-        dom.btnFilterAcs.addEventListener('click', () => applyFilter('acs'));
 
 
         /* ==========================================================
@@ -3284,10 +3311,7 @@
                 ctx.drawImage(baseImg, 0, 0);
 
                 // Gambar marker sesuai filter yang sedang tampil (sama dengan layar)
-                const visibleMarkers = state.markers.filter(m => {
-                    if (state.activeFilter === 'all') return true;
-                    return m.type === state.activeFilter;
-                });
+                const visibleMarkers = state.markers.filter(markerMatchesFilter);
                 visibleMarkers.forEach(m => drawMarkerOnCanvas(ctx, m));
 
                 const link = document.createElement('a');
