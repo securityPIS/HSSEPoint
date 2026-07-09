@@ -3691,6 +3691,7 @@
         /* ---- Data cloud: muat & simpan lokasi (RLS memfilter per perusahaan) ---- */
         const cloudDirty = new Set();
         const cloudLoadProject = async () => {
+            const prevActiveId = state.activeLocationId;   // ingat lokasi yang sedang dibuka
             const { data, error } = await sb.from('locations').select('*').order('created_at', { ascending: true });
             if (error) { console.error(error); showNotification('Gagal memuat data cloud: ' + error.message, 'error'); return; }
             state.locations = (data || []).map(rowToLocation);
@@ -3698,7 +3699,12 @@
             dom.editorPanel.classList.add('hidden');
             renderLocationTree();
             if (state.locations.length) {
-                selectLocation(state.locations[0].id);
+                // Pertahankan lokasi yang tadi aktif bila masih ada; hanya fallback ke
+                // item teratas saat belum ada lokasi terpilih (mis. login pertama).
+                const keepId = (prevActiveId && state.locations.some(l => l.id === prevActiveId))
+                    ? prevActiveId
+                    : state.locations[0].id;
+                selectLocation(keepId);
             } else {
                 showEmptyWorkspace(); resetView(); renderMarkers(); renderActiveLocationBanner();
                 if (dom.noLocationHint) dom.noLocationHint.classList.remove('hidden');
@@ -4351,6 +4357,11 @@
             sb.auth.onAuthStateChange((event, session) => {
                 // Abaikan refresh token / update user agar workspace tidak ter-reload saat sedang bekerja.
                 if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return;
+                // Supabase mengirim ulang SIGNED_IN setiap tab/jendela kembali fokus. Bila kita
+                // sudah berada di aplikasi sebagai user yang sama, jangan muat ulang proyek —
+                // kalau tidak, lokasi yang sedang dibuka akan loncat sendiri ke paling atas.
+                if (event === 'SIGNED_IN' && appReady && auth.user && session && session.user
+                    && session.user.id === auth.user.id) return;
                 routeByAuth(session);
             });
             const { data: { session } } = await sb.auth.getSession();
