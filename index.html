@@ -1511,7 +1511,7 @@
             const loadingTask = pdfjsLib.getDocument({ data: pdfData });
             const pdf = await loadingTask.promise;
             const page = await pdf.getPage(1);
-            const viewport = page.getViewport({ scale: 1.5 }); // Scale up agar tajam
+            const viewport = page.getViewport({ scale: 3.0 }); // Render resolusi tinggi agar sangat tajam
             const canvas = dom.pdfCanvas;
             const context = canvas.getContext('2d');
             canvas.height = viewport.height;
@@ -3154,9 +3154,7 @@
             ctx.fillText(label, cx, boxY + h / 2);
         };
 
-        const drawMarkerOnCanvas = (ctx, m) => {
-            const W = ctx.canvas.width;
-            const H = ctx.canvas.height;
+        const drawMarkerOnCanvas = (ctx, m, W = ctx.canvas.width, H = ctx.canvas.height) => {
             const s = m.scale || 1.0;
             const boxSize = 20 * s; // ukuran elemen marker di layar
             // DOM menempatkan pojok kiri-atas marker pada x%/y%, kontennya di tengah kotak
@@ -3303,23 +3301,43 @@
             baseImg.crossOrigin = "anonymous";
 
             baseImg.onload = function() {
+                const baseW = baseImg.naturalWidth;
+                const baseH = baseImg.naturalHeight;
+
+                // Supersampling: unduhan dibuat pada resolusi jauh lebih besar dari
+                // denah asli agar hasil sangat tajam. PNG bersifat lossless sehingga
+                // gambar TIDAK dikompresi sama sekali. Faktor dibatasi oleh batas
+                // maksimum canvas browser (~16.000px per sisi) supaya tetap aman.
+                const MAX_CANVAS_DIM = 16000;
+                const TARGET_SCALE = 4; // perbesar 4x untuk resolusi ekstra besar
+                const scale = Math.max(1, Math.min(
+                    TARGET_SCALE,
+                    Math.floor(MAX_CANVAS_DIM / Math.max(baseW, baseH)) || 1
+                ));
+
                 const canvas = document.createElement('canvas');
-                canvas.width = baseImg.naturalWidth;
-                canvas.height = baseImg.naturalHeight;
+                canvas.width = baseW * scale;
+                canvas.height = baseH * scale;
                 const ctx = canvas.getContext('2d');
 
-                ctx.drawImage(baseImg, 0, 0);
+                // Skalakan sistem koordinat agar denah & marker digambar memakai
+                // dimensi asli, namun ter-render pada kanvas beresolusi tinggi.
+                ctx.scale(scale, scale);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(baseImg, 0, 0, baseW, baseH);
 
                 // Gambar marker sesuai filter yang sedang tampil (sama dengan layar)
                 const visibleMarkers = state.markers.filter(markerMatchesFilter);
-                visibleMarkers.forEach(m => drawMarkerOnCanvas(ctx, m));
+                visibleMarkers.forEach(m => drawMarkerOnCanvas(ctx, m, baseW, baseH));
 
                 const link = document.createElement('a');
                 link.download = buildExportFileName('png');
+                // image/png => lossless, tanpa kompresi kualitas (full quality)
                 link.href = canvas.toDataURL('image/png');
                 link.click();
 
-                showNotification("Gambar denah berhasil diunduh, identik dengan tampilan aplikasi!");
+                showNotification("Gambar denah berhasil diunduh dalam resolusi penuh tanpa kompresi!");
             };
 
             baseImg.onerror = function() {
