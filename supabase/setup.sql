@@ -42,6 +42,47 @@ create table if not exists public.locations (
   updated_at   timestamptz not null default now()
 );
 
+-- 4b) GEDUNG & LANTAI (Perusahaan > Gedung > Lantai) ----------------------
+--    Dipakai untuk dropdown bertingkat pada form lokasi.
+create table if not exists public.buildings (
+  id         uuid primary key default gen_random_uuid(),
+  company_id uuid not null references public.companies(id) on delete cascade,
+  name       text not null,
+  created_at timestamptz not null default now(),
+  unique (company_id, name)
+);
+
+create table if not exists public.floors (
+  id          uuid primary key default gen_random_uuid(),
+  building_id uuid not null references public.buildings(id) on delete cascade,
+  name        text not null,
+  created_at  timestamptz not null default now(),
+  unique (building_id, name)
+);
+
+create index if not exists buildings_company_idx on public.buildings(company_id);
+create index if not exists floors_building_idx    on public.floors(building_id);
+
+-- 4c) KATALOG PERANGKAT (device catalog) ----------------------------------
+--    Agar penitikan tidak terbatas CCTV & ACS. icon = Iconify id (mis. 'mdi:fire').
+create table if not exists public.perangkat (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null unique,
+  code       text not null,
+  icon       text not null default '',
+  created_at timestamptz not null default now()
+);
+
+-- Jenis perangkat bisa banyak per perangkat (mirip Lantai per Gedung).
+create table if not exists public.perangkat_jenis (
+  id           uuid primary key default gen_random_uuid(),
+  perangkat_id uuid not null references public.perangkat(id) on delete cascade,
+  name         text not null,
+  created_at   timestamptz not null default now(),
+  unique (perangkat_id, name)
+);
+create index if not exists perangkat_jenis_perangkat_idx on public.perangkat_jenis(perangkat_id);
+
 -- 5) HELPER (SECURITY DEFINER -> bypass RLS saat cek role, hindari rekursi)
 create or replace function public.is_admin()
 returns boolean language sql security definer stable set search_path = public as $$
@@ -106,6 +147,10 @@ alter table public.profiles       enable row level security;
 alter table public.companies      enable row level security;
 alter table public.user_companies enable row level security;
 alter table public.locations      enable row level security;
+alter table public.buildings      enable row level security;
+alter table public.floors         enable row level security;
+alter table public.perangkat      enable row level security;
+alter table public.perangkat_jenis enable row level security;
 
 -- 10) POLICIES -------------------------------------------------------------
 -- profiles: user lihat/insert dirinya (status 'new'); hanya admin yang meng-update.
@@ -128,6 +173,40 @@ create policy companies_select on public.companies for select
 
 drop policy if exists companies_admin_all on public.companies;
 create policy companies_admin_all on public.companies for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- buildings & floors: semua user login boleh baca; hanya admin yang mengubah.
+drop policy if exists buildings_select on public.buildings;
+create policy buildings_select on public.buildings for select
+  using (auth.uid() is not null);
+
+drop policy if exists buildings_admin_all on public.buildings;
+create policy buildings_admin_all on public.buildings for all
+  using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists floors_select on public.floors;
+create policy floors_select on public.floors for select
+  using (auth.uid() is not null);
+
+drop policy if exists floors_admin_all on public.floors;
+create policy floors_admin_all on public.floors for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- perangkat: semua user login boleh baca; hanya admin yang mengubah.
+drop policy if exists perangkat_select on public.perangkat;
+create policy perangkat_select on public.perangkat for select
+  using (auth.uid() is not null);
+
+drop policy if exists perangkat_admin_all on public.perangkat;
+create policy perangkat_admin_all on public.perangkat for all
+  using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists perangkat_jenis_select on public.perangkat_jenis;
+create policy perangkat_jenis_select on public.perangkat_jenis for select
+  using (auth.uid() is not null);
+
+drop policy if exists perangkat_jenis_admin_all on public.perangkat_jenis;
+create policy perangkat_jenis_admin_all on public.perangkat_jenis for all
   using (public.is_admin()) with check (public.is_admin());
 
 -- user_companies: user lihat miliknya; hanya admin yang mengatur.

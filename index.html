@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HSSE POINT — Pemetaan CCTV & Access Reader</title>
+    <!-- Favicon: logo HSSE POINT (perisai + pin lokasi) sebagai SVG inline -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNDAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InMiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxQTM2NUQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwRjc2NkUiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0icCIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzJERDRCRiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBEOTQ4OCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJsIiB4MT0iMCIgeTE9IjEiIHgyPSIxIiB5Mj0iMCI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMkRENEJGIiBzdG9wLW9wYWNpdHk9IjAuMSIvPjxzdG9wIG9mZnNldD0iMC41IiBzdG9wLWNvbG9yPSIjMkRENEJGIiBzdG9wLW9wYWNpdHk9IjAuOSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzJERDRCRiIgc3RvcC1vcGFjaXR5PSIwLjEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cGF0aCBkPSJNIDIwMCAxMjAgTCAzMjAgMTUwIEMgMzIwIDI1MCAyNjAgMzIwIDIwMCAzNjAgQyAxNDAgMzIwIDgwIDI1MCA4MCAxNTAgWiIgZmlsbD0idXJsKCNzKSIgc3Ryb2tlPSIjMkRENEJGIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTSAxMTAgMTY1IEMgMTUwIDI1MCAyNTAgMjUwIDI5MCAxNjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNsKSIgc3Ryb2tlLXdpZHRoPSIxMiIvPjxjaXJjbGUgY3g9IjE2MCIgY3k9IjIyMCIgcj0iOSIgZmlsbD0iIzJERDRCRiIvPjxjaXJjbGUgY3g9IjI0MCIgY3k9IjIyMCIgcj0iOSIgZmlsbD0iIzJERDRCRiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjI4MCIgcj0iOSIgZmlsbD0iIzJERDRCRiIvPjxwYXRoIGQ9Ik0gMjAwIDQwIEMgMTY1IDQwIDE0MCA2NSAxNDAgMTAwIEMgMTQwIDE0NSAyMDAgMjA1IDIwMCAyMDUgQyAyMDAgMjA1IDI2MCAxNDUgMjYwIDEwMCBDIDI2MCA2NSAyMzUgNDAgMjAwIDQwIFoiIGZpbGw9InVybCgjcCkiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxMCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9Ijk1IiByPSIyMCIgZmlsbD0iIzFBMzY1RCIvPjwvc3ZnPgo=">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter (tipografi modern & profesional) -->
@@ -128,13 +130,33 @@
             #left-sidebar.mobile-hide {
                 display: none !important;
             }
+            /* Mode detail mobile: DENAH di atas, DETAIL PERANGKAT di bawah.
+               Panel kanan tidak lagi menutupi layar penuh; ia menjadi panel
+               yang mengalir di bawah area denah. */
+            #app-shell.mobile-detail-active > main {
+                flex: 0 0 auto !important;
+                height: 46vh !important;
+                min-height: 0;
+            }
             #right-sidebar.mobile-detail {
-                position: fixed;
-                inset: 0;
+                position: relative;
+                inset: auto;
                 width: 100% !important;
                 max-width: 100%;
-                z-index: 45;
+                height: auto !important;
+                flex: 1 1 0% !important;
+                min-height: 0;
+                z-index: 20;
             }
+            #right-sidebar.mobile-detail > #right-full {
+                flex: 1 1 auto;
+                min-height: 0;
+            }
+        }
+        /* Area denah menangani gerakan sentuh sendiri (geser tahan + cubit zoom)
+           sehingga browser tidak ikut menggeser/zoom halaman. */
+        #workspace-container {
+            touch-action: none;
         }
 
         /* ===== Peningkatan UI modern (berlaku di kedua tema) ===== */
@@ -329,15 +351,15 @@
             border-color: #cbd5e1;
             color: #475569;
         }
-        body.light-theme #btn-cond-existing.border-yellow-500 {
-            color: #d97706;
-            border-color: #fbbf24;
-            background-color: #fef3c7;
+        body.light-theme #btn-cond-existing.border-green-500 {
+            color: #15803d;
+            border-color: #22c55e;
+            background-color: #dcfce7;
         }
-        body.light-theme #btn-cond-new.border-cyan-500 {
-            color: #0891b2;
-            border-color: #22d3ee;
-            background-color: #ecfeff;
+        body.light-theme #btn-cond-new.border-yellow-500 {
+            color: #a16207;
+            border-color: #eab308;
+            background-color: #fef9c3;
         }
         body.light-theme #editor-panel {
             background-color: #f1f5f9;
@@ -356,14 +378,46 @@
             background-color: #e2e8f0;
             border-color: #cbd5e1;
         }
-        body.light-theme #btn-theme-toggle {
-            background-color: #f1f5f9;
-            border-color: #cbd5e1;
-            color: #475569;
+        /* Light mode: kartu dropdown avatar & nama lantai agar terbaca */
+        body.light-theme #avatar-dropdown {
+            background-color: #ffffff;
+            border-color: #e5e9f0;
         }
-        body.light-theme #btn-theme-toggle:hover {
-            background-color: #e2e8f0;
+        body.light-theme .loc-lantai-name {
             color: #0f172a;
+        }
+        /* ===== Kelola Perusahaan & Kelola User (light mode) =====
+           Panel berjenjang yang bersih & modern (bukan abu-abu suram),
+           dengan aksen teal sesuai brand. */
+        body.light-theme #modal-companies > .bg-slate-900,
+        body.light-theme #modal-admin > .bg-slate-900,
+        body.light-theme #modal-devices > .bg-slate-900 {
+            background-color: #ffffff;
+            border-color: #e5e9f0;
+            box-shadow: 0 40px 80px -24px rgb(15 23 42 / 0.32), 0 12px 28px -14px rgb(15 23 42 / 0.16);
+        }
+        /* Kartu perusahaan / pengguna / perangkat (level luar) — putih terangkat */
+        body.light-theme #modal-companies .bg-slate-950\/50,
+        body.light-theme #modal-admin .admin-user-card,
+        body.light-theme #modal-devices .bg-slate-950\/50 {
+            background-color: #ffffff;
+            border-color: #e3e8f0;
+            box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 10px 24px -16px rgb(15 23 42 / 0.16);
+        }
+        /* Kartu gedung (level dalam) — tint teal lembut untuk kedalaman */
+        body.light-theme #modal-companies .bg-slate-950\/40 {
+            background-color: #f1f8f6;
+            border-color: #d5e8e2;
+        }
+        /* Chip lantai — pil teal modern, bukan kotak abu-abu */
+        body.light-theme #modal-companies span.bg-slate-800 {
+            background-color: #e4f6ef;
+            border-color: #c2e8db;
+            color: #0f766e;
+        }
+        body.light-theme #modal-companies span.bg-slate-800 .co-del-floor:hover {
+            color: #e11d48;
+            background-color: #ffffff;
         }
         /* 1 & 2. PERBAIKAN LIGHT MODE UNTUK HUD ZOOM & KOTAK SERET BERKAS */
         body.light-theme #zoom-hud {
@@ -487,7 +541,7 @@
 <body class="light-theme bg-slate-950 text-slate-100 font-sans h-screen flex flex-col no-select overflow-hidden">
 
     <!-- Header / Navbar (Terkunci / Fixed di bagian atas) -->
-    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10 shadow-md shrink-0">
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4 relative z-40 shadow-md shrink-0">
         <div class="flex items-center gap-3">
             <div class="w-11 h-11 flex items-center justify-center shrink-0 brand-logo">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%" role="img" aria-label="HSSE POINT">
@@ -526,7 +580,6 @@
                     HSSE POINT
                     <span class="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-medium">v1.6</span>
                 </h1>
-                <p class="text-xs text-slate-400">Penitikan CCTV & Access Control Reader pada Denah</p>
             </div>
         </div>
 
@@ -564,28 +617,46 @@
                 <i class="fa-solid fa-eye"></i> Hanya Baca
             </span>
 
-            <!-- Tombol Kelola User (khusus admin) -->
-            <button id="btn-open-admin" class="hidden items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition" title="Kelola pengguna & perusahaan">
-                <i class="fa-solid fa-users-gear"></i> <span class="hidden sm:inline">Kelola User</span>
-            </button>
-
-            <!-- Menu pengguna (nama + keluar) -->
-            <div id="user-menu" class="hidden items-center gap-2 pl-1">
-                <div class="hidden md:flex flex-col items-end leading-tight">
-                    <span id="user-name" class="text-xs font-semibold text-slate-200 max-w-[140px] truncate">—</span>
-                    <span id="user-role" class="text-[10px] text-slate-400">—</span>
-                </div>
-                <img id="user-avatar" alt="" class="w-8 h-8 rounded-full border border-slate-700 object-cover bg-slate-800" />
-                <button id="btn-signout" class="p-2.5 bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-500 rounded-xl border border-slate-700 transition" title="Keluar">
-                    <i class="fa-solid fa-right-from-bracket"></i>
+            <!-- Menu pengguna: avatar di pojok kanan atas + dropdown menu
+                 (Kelola User, Tema, Keluar) yang tampil saat avatar diklik. -->
+            <div id="user-menu" class="hidden items-center relative">
+                <button id="btn-avatar-menu" class="relative w-9 h-9 rounded-full border border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-500/40 transition" title="Menu akun">
+                    <i class="fa-solid fa-user text-slate-400 text-sm"></i>
+                    <img id="user-avatar" alt="" class="hidden absolute inset-0 w-full h-full rounded-full object-cover" />
                 </button>
-            </div>
 
-            <!-- Theme Toggle Button (posisi paling kanan) -->
-            <button id="btn-theme-toggle" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition" title="Ganti Tema">
-                <i class="fa-solid fa-sun text-amber-500" id="theme-icon-sun"></i>
-                <i class="fa-solid fa-moon text-indigo-400 hidden" id="theme-icon-moon"></i>
-            </button>
+                <!-- Dropdown -->
+                <div id="avatar-dropdown" class="hidden absolute right-0 top-full mt-2 w-60 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-800">
+                        <p id="user-name" class="text-sm font-semibold text-slate-100 truncate">—</p>
+                        <p id="user-role" class="text-[11px] text-slate-400 mt-0.5">—</p>
+                    </div>
+                    <div class="py-1">
+                        <!-- Kelola User (khusus admin) -->
+                        <button id="btn-open-admin" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Setujui user, atur role & tetapkan perusahaan">
+                            <i class="fa-solid fa-users-gear w-4 text-center text-slate-400"></i> Kelola User
+                        </button>
+                        <!-- Kelola Perusahaan (khusus admin) -->
+                        <button id="btn-open-companies" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Kelola perusahaan, gedung & lantai">
+                            <i class="fa-solid fa-building w-4 text-center text-slate-400"></i> Kelola Perusahaan
+                        </button>
+                        <!-- Kelola Perangkat (khusus admin) -->
+                        <button id="btn-open-devices" class="hidden w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Kelola jenis perangkat & icon">
+                            <i class="fa-solid fa-microchip w-4 text-center text-slate-400"></i> Kelola Perangkat
+                        </button>
+                        <!-- Ganti Tema (Gelap/Terang) -->
+                        <button id="btn-theme-toggle" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition" title="Ganti Tema">
+                            <i class="fa-solid fa-sun text-amber-500 w-4 text-center" id="theme-icon-sun"></i>
+                            <i class="fa-solid fa-moon text-indigo-400 w-4 text-center hidden" id="theme-icon-moon"></i>
+                            <span id="theme-toggle-label">Mode Gelap</span>
+                        </button>
+                        <!-- Keluar -->
+                        <button id="btn-signout" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition" title="Keluar">
+                            <i class="fa-solid fa-right-from-bracket w-4 text-center"></i> Keluar
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -597,8 +668,9 @@
 
             <!-- Konten penuh panel lokasi -->
             <div id="left-full" class="flex flex-col h-full min-h-0">
-                <!-- Header panel -->
-                <div class="p-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+                <!-- Header panel (disembunyikan di mobile: chevron ciutkan tidak
+                     relevan di layar kecil) -->
+                <div class="p-4 border-b border-slate-800 hidden md:flex items-center justify-between shrink-0">
                     <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-location-dot text-indigo-400"></i> Daftar Lokasi
                     </h2>
@@ -712,9 +784,17 @@
                         <input type="text" id="input-dev-name" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: CCTV Area Lobby">
                     </div>
 
-                    <!-- Input: Jenis Perangkat -->
+                    <!-- Dropdown: Jenis Perangkat (khusus perangkat katalog) -->
+                    <div id="editor-jenis-wrap" class="hidden">
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Jenis Perangkat</label>
+                        <select id="input-dev-jenis" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                            <option value="">-- Pilih jenis --</option>
+                        </select>
+                    </div>
+
+                    <!-- Input: Model Perangkat -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Jenis/Model Perangkat</label>
+                        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Model Perangkat</label>
                         <input type="text" id="input-dev-model" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: IP Dome 4MP / RFID Reader">
                     </div>
 
@@ -756,10 +836,22 @@
                                 </button>
                             </div>
                             <div id="photo-upload-placeholder" class="border border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950 p-4 rounded-xl cursor-pointer text-center flex flex-col items-center justify-center transition hover:bg-slate-900/50">
+                                <!-- Galeri: pilih dari berkas/galeri -->
                                 <input type="file" id="input-dev-photo" accept="image/*" class="hidden" />
+                                <!-- Kamera native HP: capture memicu kamera belakang -->
+                                <input type="file" id="input-dev-photo-camera" accept="image/*" capture="environment" class="hidden" />
                                 <i class="fa-solid fa-camera text-slate-500 text-xl mb-1.5"></i>
                                 <span class="text-xs font-semibold text-slate-300">Unggah Foto Aktual</span>
-                                <span class="text-[9px] text-slate-500 mt-1">Mendukung format PNG/JPG</span>
+                                <span class="text-[9px] text-slate-500 mt-1">Kamera HP atau galeri • PNG/JPG</span>
+                                <!-- Mobile: pilihan Kamera / Galeri -->
+                                <div class="flex gap-2 mt-3 w-full md:hidden">
+                                    <button type="button" id="btn-photo-camera" class="flex-1 py-2 px-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition">
+                                        <i class="fa-solid fa-camera"></i> Kamera
+                                    </button>
+                                    <button type="button" id="btn-photo-gallery" class="flex-1 py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 transition border border-slate-700">
+                                        <i class="fa-solid fa-images"></i> Galeri
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -778,13 +870,8 @@
 
             <!-- Placed Devices List Section (Tumbuh mengisi sisa tinggi sidebar) -->
             <div id="device-list-section" class="flex-1 flex flex-col p-5 min-h-[300px]">
-                <div class="flex items-center justify-between mb-3 shrink-0">
-                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Daftar Titik Terpasang (<span id="placed-count">0</span>)</h2>
-                    <div class="flex items-center gap-1.5">
-                        <button id="btn-filter-all" class="text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded font-medium">Semua <span id="count-all" class="opacity-80">0</span></button>
-                        <button id="btn-filter-cctv" class="text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium">CCTV <span id="count-cctv" class="opacity-80">0</span></button>
-                        <button id="btn-filter-acs" class="text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium">ACS <span id="count-acs" class="opacity-80">0</span></button>
-                    </div>
+                <div id="device-filter-bar" class="flex items-center flex-wrap gap-1.5 mb-3 shrink-0">
+                    <!-- Tombol filter dibuat dinamis di JS: 'Semua' + setiap jenis perangkat yang ada pada lantai ini -->
                 </div>
 
                 <!-- Empty List Placeholder -->
@@ -808,7 +895,8 @@
             
             <!-- Tool Control Overlay HUD -->
             <!-- 1. KOTAK ZOOM DIBERI ID AGAR SINKRON WARNANYA DI MODE LIGHT -->
-            <div id="zoom-hud" class="absolute top-4 left-4 z-10 flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-1.5 rounded-xl shadow-xl">
+            <!-- HUD zoom disembunyikan di mobile (zoom cukup lewat cubit dua jari) -->
+            <div id="zoom-hud" class="absolute top-4 left-4 z-10 hidden md:flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-1.5 rounded-xl shadow-xl">
                 <button id="btn-zoom-in" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition" title="Perbesar (Zoom In)">
                     <i class="fa-solid fa-plus text-sm"></i>
                 </button>
@@ -824,10 +912,17 @@
 
             <!-- Clear & Helper HUD -->
             <div class="absolute top-4 right-4 z-10 flex items-center gap-1.5">
-                <button id="btn-clear-canvas" class="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 text-xs font-semibold rounded-xl transition border border-rose-500/20 flex items-center gap-1.5 shadow-lg">
-                    <i class="fa-solid fa-trash-arrow-up"></i> Bersihkan Semua
+                <button id="btn-clear-canvas" class="w-10 h-10 flex items-center justify-center bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 rounded-full transition border border-rose-500/20 shadow-lg" title="Bersihkan Semua">
+                    <i class="fa-solid fa-trash-can"></i>
                 </button>
             </div>
+
+            <!-- Tombol Tambah Perangkat (KHUSUS MOBILE) -->
+            <!-- Di layar sentuh, ketuk denah dipakai untuk geser/zoom sehingga
+                 penambahan titik dilakukan lewat tombol khusus ini. -->
+            <button id="btn-mobile-add-device" class="md:hidden absolute bottom-6 right-4 z-20 w-14 h-14 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xl rounded-full shadow-xl shadow-indigo-600/40 transition" title="Tambah Perangkat">
+                <i class="fa-solid fa-plus"></i>
+            </button>
 
             <!-- Dynamic Workspace Wrapper -->
             <div id="workspace-container" class="flex-1 overflow-hidden relative cursor-default workspace-grid flex items-center justify-center">
@@ -865,8 +960,8 @@
                 </div>
             </div>
 
-            <!-- Workspace Status / Bottom Instructions -->
-            <div class="bg-slate-900 border-t border-slate-800 px-6 py-2 flex justify-between items-center text-[10px] text-slate-500 shrink-0">
+            <!-- Workspace Status / Bottom Instructions (disembunyikan di mobile) -->
+            <div class="bg-slate-900 border-t border-slate-800 px-6 py-2 hidden md:flex justify-between items-center text-[10px] text-slate-500 shrink-0">
                 <div class="flex items-center gap-3">
                     <span class="flex items-center gap-1"><i class="fa-solid fa-mouse"></i> Klik Kanan + Geser: Navigasi Map</span>
                     <span class="flex items-center gap-1"><i class="fa-solid fa-mouse-pointer"></i> Klik Kiri Titik: Edit Detail / Taruh Titik Baru</span>
@@ -908,10 +1003,13 @@
                     <input type="text" id="loc-perusahaan-other" class="hidden w-full mt-2 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Tulis nama perusahaan...">
                 </div>
 
-                <!-- 2. Nama Gedung -->
+                <!-- 2. Nama Gedung (dropdown dari Kelola Perusahaan) -->
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nama Gedung <span class="text-rose-400">*</span></label>
-                    <input type="text" id="loc-gedung" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: Gedung Utama / Menara A">
+                    <select id="loc-gedung" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                        <option value="">-- Pilih Gedung --</option>
+                    </select>
+                    <input type="text" id="loc-gedung-other" class="hidden w-full mt-2 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Tulis nama gedung...">
                 </div>
 
                 <!-- 3. Alamat -->
@@ -938,7 +1036,10 @@
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Lantai <span class="text-rose-400">*</span></label>
-                        <input type="text" id="loc-lantai" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Contoh: 1 / GF / Basement">
+                        <select id="loc-lantai" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none transition">
+                            <option value="">-- Pilih Lantai --</option>
+                        </select>
+                        <input type="text" id="loc-lantai-other" class="hidden w-full mt-2 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition" placeholder="Tulis lantai...">
                     </div>
                 </div>
 
@@ -981,25 +1082,8 @@
             <h3 class="text-sm font-bold text-white mb-1">Tambah Perangkat Baru</h3>
             <p class="text-xs text-slate-400 mb-5">Pilih jenis perangkat yang ingin dititik di lokasi ini.</p>
             
-            <div class="grid grid-cols-2 gap-3 mb-5">
-                <!-- CCTV Option Button -->
-                <button id="modal-select-cctv" class="flex flex-col items-center justify-center p-4 rounded-xl border border-cyan-500/20 hover:border-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-300 transition group">
-                    <div class="w-12 h-12 rounded-lg bg-cyan-400/10 flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
-                        <i class="fa-solid fa-video"></i>
-                    </div>
-                    <span class="text-xs font-bold">CCTV</span>
-                    <span class="text-[9px] text-slate-500 mt-0.5 text-center leading-none">Kamera & Area Pandang</span>
-                </button>
-                
-                <!-- Access Reader Option Button -->
-                <button id="modal-select-acs" class="flex flex-col items-center justify-center p-4 rounded-xl border border-emerald-500/20 hover:border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition group">
-                    <div class="w-12 h-12 rounded-lg bg-emerald-400/10 flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
-                        <i class="fa-solid fa-id-card"></i>
-                    </div>
-                    <span class="text-xs font-bold">Access Reader</span>
-                    <span class="text-[9px] text-slate-500 mt-0.5 text-center leading-none">Kartu / Biometrik</span>
-                </button>
-            </div>
+            <!-- Grid semua perangkat (CCTV & ACS bawaan + katalog Kelola Perangkat) -->
+            <div id="selector-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 max-h-[52vh] overflow-y-auto pr-0.5"></div>
 
             <div class="flex justify-end">
                 <button id="modal-cancel" class="text-xs text-slate-400 hover:text-slate-200 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition">
@@ -1108,25 +1192,21 @@
         </div>
     </div>
 
-    <!-- ============ MODAL ADMIN: KELOLA USER & PERUSAHAAN ============ -->
+    <!-- ============ MODAL ADMIN: KELOLA USER ============ -->
     <div id="modal-admin" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[92vh]">
             <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
                 <div>
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-users-gear text-indigo-400"></i> Kelola User &amp; Perusahaan</h3>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-users-gear text-indigo-400"></i> Kelola User</h3>
                     <p class="text-xs text-slate-400 mt-0.5">Setujui user, atur role, dan tetapkan perusahaan.</p>
                 </div>
-                <button id="btn-close-admin" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex items-center gap-1">
+                    <button id="btn-admin-refresh" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
+                    <button id="btn-close-admin" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
-            <!-- Tabs -->
-            <div class="flex items-center gap-1 px-5 pt-4 shrink-0">
-                <button id="admin-tabbtn-users" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Pengguna</button>
-                <button id="admin-tabbtn-companies" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Perusahaan</button>
-                <button id="btn-admin-refresh" class="ml-auto px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
-            </div>
-
-            <!-- Tab: Pengguna -->
+            <!-- Daftar Pengguna -->
             <div id="admin-tab-users" class="p-5 overflow-y-auto flex-1">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="flex items-center gap-1.5">
@@ -1139,15 +1219,91 @@
                 <div id="admin-users-list" class="space-y-3"></div>
                 <div id="admin-users-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-users text-2xl mb-2 block opacity-40"></i>Tidak ada pengguna.</div>
             </div>
+        </div>
+    </div>
 
-            <!-- Tab: Perusahaan -->
-            <div id="admin-tab-companies" class="hidden p-5 overflow-y-auto flex-1">
-                <form id="form-add-company" class="flex items-center gap-2 mb-4">
+    <!-- ============ MODAL: KELOLA PERUSAHAAN (GEDUNG & LANTAI) ============ -->
+    <div id="modal-companies" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl relative flex flex-col max-h-[92vh]">
+            <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-building text-indigo-400"></i> Kelola Perusahaan</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Atur perusahaan, gedung &amp; lantai. Menjadi pilihan dropdown saat menambah lokasi.</p>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button id="btn-companies-refresh" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
+                    <button id="btn-close-companies" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1">
+                <!-- Tambah perusahaan -->
+                <form id="form-add-company" class="flex items-center gap-2 mb-5">
                     <input type="text" id="new-company-name" required placeholder="Nama perusahaan baru…" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
-                    <button type="submit" class="bg-indigo-600 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Tambah</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Perusahaan</button>
                 </form>
-                <div id="admin-companies-list" class="space-y-2"></div>
-                <div id="admin-companies-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-building text-2xl mb-2 block opacity-40"></i>Belum ada perusahaan.</div>
+
+                <!-- Pohon Perusahaan > Gedung > Lantai -->
+                <div id="companies-tree" class="space-y-3"></div>
+                <div id="companies-empty" class="hidden text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-building text-2xl mb-2 block opacity-40"></i>Belum ada perusahaan. Tambahkan di atas.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL: KELOLA PERANGKAT (jenis perangkat + icon) ============ -->
+    <div id="modal-devices" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl relative flex flex-col max-h-[92vh]">
+            <div class="flex items-center justify-between p-5 border-b border-slate-800 shrink-0">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-microchip text-indigo-400"></i> Kelola Perangkat</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Tambahkan jenis perangkat sendiri (nama, kode, icon). Muncul di dropdown saat menitik.</p>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button id="btn-devices-refresh" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Muat ulang"><i class="fa-solid fa-rotate"></i></button>
+                    <button id="btn-close-devices" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1">
+                <!-- Tambah perangkat -->
+                <form id="form-add-perangkat" class="mb-4">
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Icon</label>
+                            <button type="button" id="perangkat-icon-btn" class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-800 hover:border-indigo-500 flex items-center justify-center text-slate-500 text-lg transition shrink-0" title="Pilih / cari icon">
+                                <span id="perangkat-icon-preview"><i class="fa-solid fa-icons"></i></span>
+                            </button>
+                        </div>
+                        <div class="flex-1 min-w-[150px]">
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Perangkat <span class="text-rose-400">*</span></label>
+                            <input type="text" id="new-perangkat-name" required placeholder="Nama perangkat (mis. Fire Alarm)" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                        </div>
+                        <div class="w-24">
+                            <label class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Kode <span class="text-rose-400">*</span></label>
+                            <input type="text" id="new-perangkat-code" required placeholder="FA" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition uppercase">
+                        </div>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-4 rounded-lg transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-plus"></i> Tambah</button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2">Setelah menambah perangkat, isi <span class="font-semibold text-slate-400">jenis</span>-nya (boleh lebih dari satu) pada kartu perangkat di bawah.</p>
+
+                    <!-- Panel pencarian icon (Iconify open API) -->
+                    <div id="icon-search-panel" class="hidden mt-3 bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                <input type="text" id="icon-search-input" placeholder="Cari icon… (mis. fire, camera, door, sensor)" class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                            </div>
+                            <span id="icon-search-status" class="text-[10px] text-slate-500 shrink-0"></span>
+                        </div>
+                        <div id="icon-search-results" class="grid grid-cols-8 sm:grid-cols-10 gap-1.5 max-h-44 overflow-y-auto"></div>
+                        <p class="text-[10px] text-slate-500 mt-2">Icon dari <span class="font-semibold text-slate-400">Iconify</span> (API terbuka). Ketik kata kunci lalu klik icon untuk memilih.</p>
+                    </div>
+                </form>
+
+                <p class="text-[11px] text-slate-500 mb-3"><i class="fa-solid fa-circle-info mr-1 text-indigo-400"></i> CCTV &amp; Access Reader sudah tersedia sebagai perangkat bawaan. Tambahkan perangkat lain di sini.</p>
+
+                <div id="devices-list" class="space-y-2"></div>
+                <div id="devices-empty" class="hidden text-center py-8 text-slate-500 text-xs"><i class="fa-solid fa-microchip text-2xl mb-2 block opacity-40"></i>Belum ada perangkat tambahan.</div>
             </div>
         </div>
     </div>
@@ -1183,7 +1339,7 @@
             imageWidth: 0,
             imageHeight: 0,
             pendingMarkerCoords: { x: 0, y: 0 },
-            activeFilter: 'all', // 'all', 'cctv', 'acs'
+            activeFilter: 'all', // 'all' | 'cctv' | 'acs' | 'custom:<perangkatId>' (dinamis per jenis perangkat)
             idCounter: 1,
             theme: 'light', // 'dark' or 'light' (default: light)
             mobileView: 'list' // 'list' | 'detail' (navigasi khusus mobile)
@@ -1212,7 +1368,10 @@
         const auth = {
             user: null,        // objek user dari Supabase Auth
             profile: null,     // baris tabel profiles {id,email,full_name,phone,division,role,status}
-            companies: []      // [{id,name}] perusahaan yang ditugaskan ke user ini
+            companies: [],     // [{id,name}] perusahaan yang ditugaskan ke user ini
+            buildings: [],     // [{id,company_id,name}] gedung per perusahaan (dropdown lokasi)
+            floors: [],        // [{id,building_id,name}] lantai per gedung (dropdown lokasi)
+            perangkat: []      // [{id,name,code,icon,jenis}] katalog perangkat (dropdown titik)
         };
 
         const currentRole = () => (auth.profile && auth.profile.role) || null;
@@ -1222,6 +1381,7 @@
 
         // Cache DOM elements
         const dom = {
+            appShell: document.getElementById('app-shell'),
             // Panel Lokasi (kiri) + toggle collapse
             leftSidebar: document.getElementById('left-sidebar'),
             leftFull: document.getElementById('left-full'),
@@ -1253,10 +1413,12 @@
             locPerusahaan: document.getElementById('loc-perusahaan'),
             locPerusahaanOther: document.getElementById('loc-perusahaan-other'),
             locGedung: document.getElementById('loc-gedung'),
+            locGedungOther: document.getElementById('loc-gedung-other'),
             locAlamat: document.getElementById('loc-alamat'),
             locGps: document.getElementById('loc-gps'),
             locArea: document.getElementById('loc-area'),
             locLantai: document.getElementById('loc-lantai'),
+            locLantaiOther: document.getElementById('loc-lantai-other'),
             locDenahDrop: document.getElementById('loc-denah-drop'),
             locDenahFile: document.getElementById('loc-denah-file'),
             locDenahInfo: document.getElementById('loc-denah-info'),
@@ -1280,11 +1442,10 @@
             btnZoomReset: document.getElementById('btn-zoom-reset'),
             labelZoomPercent: document.getElementById('label-zoom-percent'),
             btnClearCanvas: document.getElementById('btn-clear-canvas'),
+            btnMobileAddDevice: document.getElementById('btn-mobile-add-device'),
 
             // Modals
             modalSelector: document.getElementById('modal-selector'),
-            btnSelectCCTV: document.getElementById('modal-select-cctv'),
-            btnSelectACS: document.getElementById('modal-select-acs'),
             btnModalCancel: document.getElementById('modal-cancel'),
 
             // Editor Panel
@@ -1295,12 +1456,17 @@
             btnDeleteDevice: document.getElementById('btn-delete-device'),
             inputDevName: document.getElementById('input-dev-name'),
             inputDevModel: document.getElementById('input-dev-model'),
+            inputDevJenis: document.getElementById('input-dev-jenis'),
+            editorJenisWrap: document.getElementById('editor-jenis-wrap'),
             btnCondExisting: document.getElementById('btn-cond-existing'),
             btnCondNew: document.getElementById('btn-cond-new'),
             btnCloseEditor: document.getElementById('btn-close-editor'),
 
             // Input tambahan (Foto)
             inputDevPhoto: document.getElementById('input-dev-photo'),
+            inputDevPhotoCamera: document.getElementById('input-dev-photo-camera'),
+            btnPhotoCamera: document.getElementById('btn-photo-camera'),
+            btnPhotoGallery: document.getElementById('btn-photo-gallery'),
             photoPreviewContainer: document.getElementById('photo-preview-container'),
             photoPreviewImg: document.getElementById('photo-preview-img'),
             photoUploadPlaceholder: document.getElementById('photo-upload-placeholder'),
@@ -1313,6 +1479,11 @@
             btnThemeToggle: document.getElementById('btn-theme-toggle'),
             themeIconSun: document.getElementById('theme-icon-sun'),
             themeIconMoon: document.getElementById('theme-icon-moon'),
+            themeToggleLabel: document.getElementById('theme-toggle-label'),
+
+            // Menu avatar (dropdown akun)
+            btnAvatarMenu: document.getElementById('btn-avatar-menu'),
+            avatarDropdown: document.getElementById('avatar-dropdown'),
 
             // Indikator simpan otomatis
             autosaveText: document.getElementById('autosave-text'),
@@ -1324,13 +1495,7 @@
             deviceListEmpty: document.getElementById('device-list-empty'),
             deviceList: document.getElementById('device-list'),
             deviceListSection: document.getElementById('device-list-section'),
-            placedCount: document.getElementById('placed-count'),
-            btnFilterAll: document.getElementById('btn-filter-all'),
-            btnFilterCctv: document.getElementById('btn-filter-cctv'),
-            btnFilterAcs: document.getElementById('btn-filter-acs'),
-            countAll: document.getElementById('count-all'),
-            countCctv: document.getElementById('count-cctv'),
-            countAcs: document.getElementById('count-acs'),
+            deviceFilterBar: document.getElementById('device-filter-bar'),
 
             // Mini Stats
             statCctv: document.getElementById('stat-cctv-count'),
@@ -1346,7 +1511,7 @@
             const loadingTask = pdfjsLib.getDocument({ data: pdfData });
             const pdf = await loadingTask.promise;
             const page = await pdf.getPage(1);
-            const viewport = page.getViewport({ scale: 1.5 }); // Scale up agar tajam
+            const viewport = page.getViewport({ scale: 3.0 }); // Render resolusi tinggi agar sangat tajam
             const canvas = dom.pdfCanvas;
             const context = canvas.getContext('2d');
             canvas.height = viewport.height;
@@ -1563,7 +1728,7 @@
                                 leaf.innerHTML = `
                                     <i class="fa-solid fa-layer-group text-[11px] ${isActive ? 'text-indigo-300' : 'text-slate-500'}"></i>
                                     <div class="flex-1 overflow-hidden">
-                                        <p class="text-[11px] font-semibold ${isActive ? 'text-white' : 'text-slate-300'} truncate">Lantai ${escapeHTML(loc.lantai)}</p>
+                                        <p class="loc-lantai-name text-[11px] font-semibold ${isActive ? 'text-white' : 'text-slate-300'} truncate">Lantai ${escapeHTML(loc.lantai)}</p>
                                         <div class="flex items-center gap-2 mt-0.5">
                                             <span class="text-[8px] uppercase font-bold ${loc.area === 'outdoor' ? 'text-amber-400' : 'text-sky-400'}">${AREA_LABEL[loc.area] || loc.area || ''}</span>
                                             <span class="text-[8px] text-slate-500 flex items-center gap-0.5"><i class="fa-solid fa-microchip"></i> ${devCount}</span>
@@ -1639,10 +1804,65 @@
             dom.locDenahFile.value = '';
         };
 
+        /* ---- Dropdown bertingkat Gedung & Lantai (Perusahaan > Gedung > Lantai) ----
+           Nilai dropdown = nama gedung/lantai. Opsi "Lainnya" mengizinkan input bebas
+           agar lokasi tetap bisa dibuat meski admin belum mendaftarkan gedung/lantai. */
+        const currentGedungName = () =>
+            dom.locGedung.value === '__other__' ? dom.locGedungOther.value.trim() : dom.locGedung.value;
+        const currentLantaiName = () =>
+            dom.locLantai.value === '__other__' ? dom.locLantaiOther.value.trim() : dom.locLantai.value;
+
+        // Daftar nama gedung untuk perusahaan yang sedang dipilih (cloud: dari Kelola
+        // Perusahaan; lokal: saran dari gedung yang pernah dipakai).
+        const gedungNamesForSelected = () => {
+            if (cloudMode) {
+                const cid = dom.locPerusahaan.value;
+                return auth.buildings.filter(b => b.company_id === cid).map(b => b.name);
+            }
+            return [...new Set(state.locations.map(l => l.gedung).filter(Boolean))];
+        };
+        // Daftar nama lantai untuk gedung yang sedang dipilih.
+        const lantaiNamesForSelected = () => {
+            if (cloudMode) {
+                const cid = dom.locPerusahaan.value;
+                const gName = currentGedungName();
+                const bld = auth.buildings.find(b => b.company_id === cid && b.name === gName);
+                return bld ? auth.floors.filter(f => f.building_id === bld.id).map(f => f.name) : [];
+            }
+            return [...new Set(state.locations.map(l => l.lantai).filter(Boolean))];
+        };
+
+        // Isi <select> dengan daftar nama + opsi "Lainnya"; sinkronkan nilai terpilih.
+        const fillChoiceSelect = (sel, otherInput, placeholder, names, selectedName) => {
+            const known = !!selectedName && names.includes(selectedName);
+            sel.innerHTML = `<option value="">${placeholder}</option>`
+                + names.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('')
+                + '<option value="__other__">Lainnya (tulis sendiri)</option>';
+            if (selectedName && known) {
+                sel.value = selectedName;
+                otherInput.classList.add('hidden'); otherInput.value = '';
+            } else if (selectedName) {
+                sel.value = '__other__';
+                otherInput.classList.remove('hidden'); otherInput.value = selectedName;
+            } else {
+                sel.value = '';
+                otherInput.classList.add('hidden'); otherInput.value = '';
+            }
+        };
+
+        const populateGedungOptions = (selectedName = '') =>
+            fillChoiceSelect(dom.locGedung, dom.locGedungOther, '-- Pilih Gedung --', gedungNamesForSelected(), selectedName);
+        const populateLantaiOptions = (selectedName = '') =>
+            fillChoiceSelect(dom.locLantai, dom.locLantaiOther, '-- Pilih Lantai --', lantaiNamesForSelected(), selectedName);
+
         const resetLocationForm = () => {
             dom.formLocation.reset();
             dom.locPerusahaanOther.classList.add('hidden');
             dom.locPerusahaanOther.value = '';
+            dom.locGedungOther.classList.add('hidden');
+            dom.locGedungOther.value = '';
+            dom.locLantaiOther.classList.add('hidden');
+            dom.locLantaiOther.value = '';
             clearDenahInfo();
         };
 
@@ -1671,11 +1891,11 @@
                     dom.locPerusahaanOther.classList.remove('hidden');
                     dom.locPerusahaanOther.value = loc.perusahaan || '';
                 }
-                dom.locGedung.value = loc.gedung || '';
+                populateGedungOptions(loc.gedung || '');   // gedung bergantung pada perusahaan terpilih
+                populateLantaiOptions(loc.lantai || '');    // lantai bergantung pada gedung terpilih
                 dom.locAlamat.value = loc.alamat || '';
                 dom.locGps.value = loc.gps || '';
                 dom.locArea.value = loc.area || '';
-                dom.locLantai.value = loc.lantai || '';
                 if (loc.denahSrc) {
                     state.pendingDenah = { src: loc.denahSrc, name: loc.denahName || 'denah', type: loc.denahType || 'image', size: 'Tersimpan' };
                     showDenahInfo(state.pendingDenah);
@@ -1683,6 +1903,8 @@
             } else {
                 dom.modalLocationTitle.innerHTML = '<i class="fa-solid fa-location-dot text-indigo-400"></i> Tambah Lokasi';
                 dom.btnSubmitLocation.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Lokasi';
+                populateGedungOptions('');
+                populateLantaiOptions('');
             }
             dom.modalLocation.classList.remove('hidden');
         };
@@ -1707,13 +1929,13 @@
                 if (perusahaan === '__other__') perusahaan = dom.locPerusahaanOther.value.trim();
                 if (!perusahaan) { showNotification("Nama Perusahaan wajib diisi.", "error"); return; }
             }
-            const gedung = dom.locGedung.value.trim();
+            const gedung = currentGedungName();
             const area = dom.locArea.value;
-            const lantai = dom.locLantai.value.trim();
+            const lantai = currentLantaiName();
 
-            if (!gedung) { showNotification("Nama Gedung wajib diisi.", "error"); return; }
+            if (!gedung) { showNotification("Nama Gedung wajib dipilih/diisi.", "error"); return; }
             if (!area) { showNotification("Area wajib dipilih.", "error"); return; }
-            if (!lantai) { showNotification("Lantai wajib diisi.", "error"); return; }
+            if (!lantai) { showNotification("Lantai wajib dipilih/diisi.", "error"); return; }
 
             const data = {
                 perusahaan,
@@ -1804,18 +2026,23 @@
         /* ---------- Navigasi Mobile (daftar lokasi <-> detail perangkat) ---------- */
         const isMobile = () => window.innerWidth < 768;
 
-        // Mobile: buka panel kanan sebagai halaman penuh & sembunyikan daftar lokasi.
+        // Mobile: tampilkan denah di atas + detail perangkat di bawah,
+        // sembunyikan daftar lokasi.
         const enterMobileDetail = () => {
             dom.leftSidebar.classList.add('mobile-hide');
             dom.rightSidebar.classList.add('mobile-detail');
+            dom.appShell.classList.add('mobile-detail-active');
             setRightCollapsed(false);
             state.mobileView = 'detail';
+            // Denah baru saja mendapat area tampil; pas-kan ulang setelah layout stabil.
+            requestAnimationFrame(() => { resetView(); renderMarkers(); });
         };
 
         // Mobile: kembali ke daftar lokasi.
         const exitMobileDetail = () => {
             deselectMarker();
             dom.rightSidebar.classList.remove('mobile-detail');
+            dom.appShell.classList.remove('mobile-detail-active');
             dom.leftSidebar.classList.remove('mobile-hide');
             setRightCollapsed(true);
             state.mobileView = 'list';
@@ -1880,8 +2107,29 @@
             }
         });
 
-        // Dukungan Sentuhan (Mobile/Tablet) tetap dipertahankan dengan sentuhan satu jari
+        // ===== Gestur Sentuh (Mobile) =====
+        // GESER denah  : geser satu jari (langsung, tanpa perlu tahan).
+        // ZOOM denah    : cubit (pinch) dua jari.
+        let isPinching = false;
+        let pinchStartDist = 0;
+        let pinchStartZoom = 1;
+
+        const touchDist = (t0, t1) => {
+            const dx = t0.clientX - t1.clientX;
+            const dy = t0.clientY - t1.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
         dom.workspaceContainer.addEventListener('touchstart', (e) => {
+            // Dua jari -> mulai cubit untuk zoom
+            if (e.touches.length === 2) {
+                state.isPanning = false;
+                isPinching = true;
+                pinchStartDist = touchDist(e.touches[0], e.touches[1]);
+                pinchStartZoom = state.zoom;
+                return;
+            }
+            // Satu jari pada area kosong denah -> langsung geser
             if (e.touches.length === 1 && !e.target.closest('.device-marker')) {
                 state.isPanning = true;
                 state.startPanX = e.touches[0].clientX - state.panX;
@@ -1890,6 +2138,18 @@
         }, { passive: true });
 
         document.addEventListener('touchmove', (e) => {
+            // Cubit -> zoom
+            if (isPinching && e.touches.length === 2) {
+                const dist = touchDist(e.touches[0], e.touches[1]);
+                if (pinchStartDist > 0) {
+                    let newZoom = pinchStartZoom * (dist / pinchStartDist);
+                    newZoom = Math.max(0.25, Math.min(6, newZoom));
+                    state.zoom = Math.round(newZoom * 100) / 100;
+                    updateTransform();
+                }
+                return;
+            }
+            // Geser denah (satu jari)
             if (state.isPanning && e.touches.length === 1) {
                 state.panX = e.touches[0].clientX - state.startPanX;
                 state.panY = e.touches[0].clientY - state.startPanY;
@@ -1897,8 +2157,9 @@
             }
         }, { passive: true });
 
-        document.addEventListener('touchend', () => {
-            state.isPanning = false;
+        document.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) isPinching = false;
+            if (e.touches.length === 0) state.isPanning = false;
         });
 
         // Scroll Wheel Zoom
@@ -1941,7 +2202,43 @@
             openSelectorModal();
         });
 
+        // Kartu pilihan perangkat (icon + nama). skema: cyan/emerald/indigo.
+        const selectorCard = (pick, name, iconHtml, scheme) => {
+            const s = {
+                cyan:    { border: 'border-cyan-500/20 hover:border-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10',       ibg: 'bg-cyan-400/10',    txt: 'text-cyan-400' },
+                emerald: { border: 'border-emerald-500/20 hover:border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10', ibg: 'bg-emerald-400/10', txt: 'text-emerald-400' },
+                indigo:  { border: 'border-indigo-500/20 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/10',   ibg: 'bg-indigo-400/10',  txt: 'text-indigo-400' }
+            }[scheme];
+            return `
+                <button type="button" data-pick="${escapeHTML(pick)}" class="flex flex-col items-center justify-center p-4 rounded-xl border ${s.border} ${s.txt} transition group">
+                    <div class="w-12 h-12 rounded-lg ${s.ibg} flex items-center justify-center text-xl mb-2.5 shadow-lg group-hover:scale-110 transition duration-150">
+                        ${iconHtml}
+                    </div>
+                    <span class="text-xs font-bold text-center leading-tight">${escapeHTML(name)}</span>
+                </button>`;
+        };
+
+        // Render grid semua perangkat: CCTV & ACS bawaan + seluruh katalog (icon + nama).
+        const renderSelectorGrid = () => {
+            const grid = $('selector-grid');
+            const cards = [
+                selectorCard('cctv', 'CCTV', '<i class="fa-solid fa-video"></i>', 'cyan'),
+                selectorCard('acs', 'Access Reader', '<i class="fa-solid fa-id-card"></i>', 'emerald')
+            ];
+            (auth.perangkat || []).forEach(p => {
+                cards.push(selectorCard('custom:' + p.id, p.name, deviceIconMarkup(p.icon, 26, '#6366f1'), 'indigo'));
+            });
+            grid.innerHTML = cards.join('');
+            grid.querySelectorAll('[data-pick]').forEach(btn => btn.addEventListener('click', () => {
+                const v = btn.dataset.pick;
+                if (v === 'cctv') selectDeviceType('cctv');
+                else if (v === 'acs') selectDeviceType('acs');
+                else if (v.startsWith('custom:')) selectCustomDevice(v.slice(7));
+            }));
+        };
+
         const openSelectorModal = () => {
+            renderSelectorGrid();
             dom.modalSelector.classList.remove('hidden');
         };
 
@@ -1949,10 +2246,31 @@
             dom.modalSelector.classList.add('hidden');
         };
 
+        // Mobile: tambah perangkat lewat tombol. Titik ditaruh di tengah area
+        // denah yang sedang terlihat, lalu pengguna memilih jenis perangkatnya.
+        const openMobileAddDevice = () => {
+            if (!canEdit()) { denyReadOnly(); return; }
+            if (!state.activeLocationId) {
+                showNotification("Pilih atau tambah lokasi terlebih dahulu.", "warning");
+                return;
+            }
+            let posX = 50, posY = 50;
+            const orect = dom.markersOverlay.getBoundingClientRect();
+            if (orect.width > 0 && orect.height > 0) {
+                const wrect = dom.workspaceContainer.getBoundingClientRect();
+                const cx = wrect.left + wrect.width / 2;
+                const cy = wrect.top + wrect.height / 2;
+                posX = Math.max(2, Math.min(98, ((cx - orect.left) / orect.width) * 100));
+                posY = Math.max(2, Math.min(98, ((cy - orect.top) / orect.height) * 100));
+            }
+            state.pendingMarkerCoords = { x: posX, y: posY };
+            openSelectorModal();
+        };
+
         // Choose Device & Generate Pin Info
         const selectDeviceType = (type) => {
             if (!requireEdit()) { closeSelectorModal(); return; }
-            const newId = `${type === 'cctv' ? 'CTV' : 'ACS'}-${String(state.idCounter++).padStart(3, '0')}`;
+            const newId = `${type === 'cctv' ? 'CCTV' : 'ACS'}-${String(state.idCounter++).padStart(3, '0')}`;
             const defaultName = type === 'cctv' ? `CCTV Titik ${state.idCounter - 1}` : `Access Reader ${state.idCounter - 1}`;
             
             const newMarker = {
@@ -1976,7 +2294,98 @@
             showNotification(`${type === 'cctv' ? 'CCTV' : 'Access Reader'} berhasil dipasang.`);
         };
 
+        // Pasang perangkat dari katalog (Kelola Perangkat) sebagai titik generik.
+        const selectCustomDevice = (perangkatId) => {
+            if (!requireEdit()) { closeSelectorModal(); return; }
+            const p = (auth.perangkat || []).find(x => x.id === perangkatId);
+            if (!p) { showNotification('Perangkat tidak ditemukan.', 'error'); return; }
+            const code = (p.code || 'DEV').toUpperCase();
+            const n = state.idCounter++;
+            const newMarker = {
+                id: `${code}-${String(n).padStart(3, '0')}`,
+                type: 'custom',
+                perangkatId: p.id,
+                kode: code,
+                icon: p.icon || '',
+                perangkat: p.name,
+                jenis: (p.jenis && p.jenis[0]) || '',   // default jenis pertama; bisa diubah di detail
+                x: state.pendingMarkerCoords.x,
+                y: state.pendingMarkerCoords.y,
+                name: `${p.name} ${n}`,
+                model: '',
+                condition: 'new',
+                scale: 1.0,
+                photo: null
+            };
+            state.markers.push(newMarker);
+            closeSelectorModal();
+            selectMarker(newMarker.id);
+            showNotification(`${p.name} berhasil dipasang.`);
+        };
+
         /* Custom marker render loop */
+        /* =========================================================
+           FILTER JENIS PERANGKAT (Daftar Titik)
+           Tab filter dibuat dinamis dari jenis perangkat yang benar-benar
+           ada pada lantai aktif — bukan hanya CCTV & ACS. Perangkat custom
+           dari katalog "Kelola Perangkat" ikut menjadi tab tersendiri.
+        ========================================================= */
+        // Kunci unik per jenis perangkat untuk pencocokan filter.
+        const markerFilterKey = (m) =>
+            m.type === 'custom'
+                ? `custom:${m.perangkatId || m.perangkat || m.kode || 'lainnya'}`
+                : m.type; // 'cctv' | 'acs'
+
+        // Label tombol filter untuk sebuah marker.
+        const markerFilterLabel = (m) =>
+            m.type === 'cctv' ? 'CCTV' :
+            m.type === 'acs'  ? 'ACS'  :
+            (m.perangkat || m.kode || 'Lainnya');
+
+        // Apakah marker cocok dengan filter yang sedang aktif.
+        const markerMatchesFilter = (m) =>
+            state.activeFilter === 'all' || markerFilterKey(m) === state.activeFilter;
+
+        // Warna tombol filter aktif (menjaga identitas warna CCTV/ACS).
+        const filterActiveClass = (key) =>
+            key === 'cctv' ? 'bg-cyan-600 text-white' :
+            key === 'acs'  ? 'bg-emerald-600 text-white' :
+                             'bg-indigo-600 text-white';
+
+        // Bangun ulang tombol filter dari jenis perangkat pada lantai aktif.
+        const renderDeviceFilters = () => {
+            const bar = dom.deviceFilterBar;
+            if (!bar) return;
+
+            // Kumpulkan jenis unik + jumlahnya (urut kemunculan: CCTV, ACS, lalu custom).
+            const groups = new Map(); // key -> {key,label,count}
+            state.markers.forEach(m => {
+                const key = markerFilterKey(m);
+                const g = groups.get(key) || { key, label: markerFilterLabel(m), count: 0 };
+                g.count++;
+                groups.set(key, g);
+            });
+
+            // Bila filter aktif tak lagi tersedia (jenis terakhirnya dihapus), balik ke 'Semua'.
+            if (state.activeFilter !== 'all' && !groups.has(state.activeFilter)) {
+                state.activeFilter = 'all';
+            }
+
+            const items = [{ key: 'all', label: 'Semua', count: state.markers.length }, ...groups.values()];
+            const baseCls = 'text-[10px] px-2 py-0.5 rounded font-medium transition';
+            const idleCls = 'text-slate-400 hover:text-white';
+
+            bar.innerHTML = '';
+            items.forEach(it => {
+                const btn = document.createElement('button');
+                const active = state.activeFilter === it.key;
+                btn.className = `${baseCls} ${active ? filterActiveClass(it.key) : idleCls}`;
+                btn.innerHTML = `${escapeHTML(it.label)} <span class="opacity-80">${it.count}</span>`;
+                btn.addEventListener('click', () => applyFilter(it.key));
+                bar.appendChild(btn);
+            });
+        };
+
         const renderMarkers = () => {
             const selectedId = state.selectedMarkerId;
 
@@ -1984,10 +2393,7 @@
             dom.markersOverlay.innerHTML = '';
 
             // Saring marker berdasarkan kategori aktif
-            const filteredMarkers = state.markers.filter(m => {
-                if (state.activeFilter === 'all') return true;
-                return m.type === state.activeFilter;
-            });
+            const filteredMarkers = state.markers.filter(markerMatchesFilter);
 
             filteredMarkers.forEach(m => {
                 const markerEl = document.createElement('div');
@@ -2007,8 +2413,8 @@
 
                 // Tambahkan markup HTML marker berdasarkan jenis alat
                 if (m.type === 'cctv') {
-                    const colorClass = m.condition === 'new' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(234, 179, 8, 0.35)'; // Cyan atau Kuning
-                    const strokeColor = m.condition === 'new' ? '#22d3ee' : '#eab308';
+                    const colorClass = m.condition === 'new' ? 'rgba(234, 179, 8, 0.35)' : 'rgba(34, 197, 94, 0.35)'; // Kuning (plan) / Hijau (existing)
+                    const strokeColor = m.condition === 'new' ? '#eab308' : '#22c55e';
                     const fovRange = m.fovRange || 1.0; // panjang/jangkauan cone (1.0 = standar)
 
                     markerEl.innerHTML = `
@@ -2030,13 +2436,25 @@
                             </div>
                             
                             <!-- Camera Icon Circle -->
-                            <div class="device-icon-container w-full h-full rounded-full ${m.condition === 'new' ? 'bg-cyan-500 border-2 border-slate-900 shadow-cyan-500/50' : 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                            <div class="device-icon-container w-full h-full rounded-full ${m.condition === 'new' ? 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50' : 'bg-green-500 border-2 border-slate-900 shadow-green-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
                                 <i class="fa-solid fa-video text-slate-950 text-[10px]"></i>
                             </div>
 
-                            <!-- Small Badge for status -->
-                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20">
-                                ${m.condition === 'new' ? 'NEW' : 'EXST'}
+                            <!-- Badge kode perangkat -->
+                            <div class="device-status-badge absolute left-1/2 -translate-x-1/2 top-full mt-1 px-1 py-px leading-none bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap pointer-events-none">
+                                ${escapeHTML(m.id)}
+                            </div>
+                        </div>
+                    `;
+                } else if (m.type === 'custom') {
+                    // Perangkat katalog (Kelola Perangkat) — pin ikon sederhana
+                    markerEl.innerHTML = `
+                        <div class="relative flex items-center justify-center w-full h-full select-none" style="transform: scale(${actualScale}); transform-origin: center;">
+                            <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50' : 'bg-green-500 border-2 border-slate-900 shadow-green-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                                ${deviceIconMarkup(m.icon, 11, '#020617', 'fa-solid fa-microchip')}
+                            </div>
+                            <div class="device-status-badge absolute left-1/2 -translate-x-1/2 top-full mt-1 px-1 py-px leading-none bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap pointer-events-none">
+                                ${escapeHTML(m.id)}
                             </div>
                         </div>
                     `;
@@ -2044,18 +2462,18 @@
                     // Access Control Reader Markup
                     markerEl.innerHTML = `
                         <div class="relative flex items-center justify-center w-full h-full select-none" style="transform: scale(${actualScale}); transform-origin: center;">
-                            
+
                             <!-- Pulse wave overlay for Reader -->
                             <div class="absolute inset-0 rounded-xl bg-emerald-500/20 animate-ping z-0"></div>
 
                             <!-- ACS Reader Icon Box -->
-                            <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-emerald-500 border-2 border-slate-900 shadow-emerald-500/50' : 'bg-amber-500 border-2 border-slate-900 shadow-amber-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
+                            <div class="device-icon-container w-full h-full rounded-lg ${m.condition === 'new' ? 'bg-yellow-500 border-2 border-slate-900 shadow-yellow-500/50' : 'bg-green-500 border-2 border-slate-900 shadow-green-500/50'} flex items-center justify-center shadow-lg transform hover:scale-110 active:scale-95 transition z-10">
                                 <i class="fa-solid fa-id-card text-slate-950 text-[10px]"></i>
                             </div>
 
-                            <!-- Small Badge for status -->
-                            <div class="device-status-badge absolute -top-1.5 -right-1.5 px-1 bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20">
-                                ${m.condition === 'new' ? 'NEW' : 'EXST'}
+                            <!-- Badge kode perangkat -->
+                            <div class="device-status-badge absolute left-1/2 -translate-x-1/2 top-full mt-1 px-1 py-px leading-none bg-slate-950 text-white rounded text-[7px] font-bold border border-slate-800 z-20 whitespace-nowrap pointer-events-none">
+                                ${escapeHTML(m.id)}
                             </div>
                         </div>
                     `;
@@ -2168,15 +2586,28 @@
                 }
             });
 
-            // Touch Dragging (Mobile)
+            // Touch Dragging (Mobile) — geser perangkat hanya setelah SENTUH-TAHAN.
+            let markerHoldTimer = null;
+            let markerTouchStartX = 0, markerTouchStartY = 0;
+            const clearMarkerHold = () => {
+                if (markerHoldTimer) { clearTimeout(markerHoldTimer); markerHoldTimer = null; }
+            };
+
             markerEl.addEventListener('touchstart', (e) => {
                 if (e.target.closest('.rotate-handle') || e.target.closest('.marker-toolbar')) return;
                 if (!canEdit()) return;     // management: hanya baca
+                if (e.touches.length !== 1) return;
                 e.stopPropagation();
-                isDragging = true;
-                if (state.selectedMarkerId !== markerData.id) {
-                    selectMarker(markerData.id);
-                }
+                markerTouchStartX = e.touches[0].clientX;
+                markerTouchStartY = e.touches[0].clientY;
+                clearMarkerHold();
+                markerHoldTimer = setTimeout(() => {
+                    isDragging = true;
+                    if (state.selectedMarkerId !== markerData.id) {
+                        selectMarker(markerData.id);
+                    }
+                    if (navigator.vibrate) navigator.vibrate(20);
+                }, 220);
             }, { passive: true });
 
             document.addEventListener('touchmove', (e) => {
@@ -2190,10 +2621,18 @@
 
                     markerEl.style.left = `${markerData.x}%`;
                     markerEl.style.top = `${markerData.y}%`;
+                    return;
+                }
+                // Jari bergeser sebelum tahan aktif -> batalkan (biarkan ketuk memilih titik).
+                if (markerHoldTimer && e.touches.length === 1) {
+                    const dx = e.touches[0].clientX - markerTouchStartX;
+                    const dy = e.touches[0].clientY - markerTouchStartY;
+                    if (Math.sqrt(dx * dx + dy * dy) > 12) clearMarkerHold();
                 }
             }, { passive: true });
 
             document.addEventListener('touchend', () => {
+                clearMarkerHold();
                 if (isDragging) {
                     isDragging = false;
                     renderMarkers();
@@ -2319,11 +2758,30 @@
                     dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-cyan-400/10 text-cyan-400";
                     dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-cyan-400";
                     dom.editorDeviceIcon.innerHTML = `<i class="fa-solid fa-video"></i>`;
+                } else if (marker.type === 'custom') {
+                    dom.editorDeviceTypeBadge.textContent = (marker.jenis || marker.perangkat || 'Perangkat').toUpperCase();
+                    dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-indigo-400/10 text-indigo-400";
+                    dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-indigo-400";
+                    dom.editorDeviceIcon.innerHTML = deviceIconMarkup(marker.icon, 22, '#020617', 'fa-solid fa-microchip');
                 } else {
                     dom.editorDeviceTypeBadge.textContent = "ACCESS READER";
                     dom.editorDeviceTypeBadge.className = "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-400/10 text-emerald-400";
                     dom.editorDeviceIcon.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg text-slate-950 bg-emerald-400";
                     dom.editorDeviceIcon.innerHTML = `<i class="fa-solid fa-id-card"></i>`;
+                }
+
+                // Dropdown Jenis Perangkat: hanya untuk perangkat katalog (custom).
+                if (marker.type === 'custom') {
+                    const p = (auth.perangkat || []).find(x => x.id === marker.perangkatId);
+                    const list = ((p && p.jenis) || []).slice();
+                    // sertakan jenis marker walau tak lagi ada di katalog agar tak hilang
+                    if (marker.jenis && !list.includes(marker.jenis)) list.unshift(marker.jenis);
+                    dom.inputDevJenis.innerHTML = '<option value="">-- Pilih jenis --</option>' +
+                        list.map(j => `<option value="${escapeHTML(j)}">${escapeHTML(j)}</option>`).join('');
+                    dom.inputDevJenis.value = marker.jenis || '';
+                    dom.editorJenisWrap.classList.remove('hidden');
+                } else {
+                    dom.editorJenisWrap.classList.add('hidden');
                 }
             }
 
@@ -2338,11 +2796,11 @@
 
         const updateConditionBadges = (condition) => {
             if (condition === 'existing') {
-                dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-yellow-500/10 border-2 border-yellow-500 text-yellow-500 flex items-center justify-center gap-1.5 transition";
+                dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-green-500/10 border-2 border-green-500 text-green-500 flex items-center justify-center gap-1.5 transition";
                 dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-400 flex items-center justify-center gap-1.5 transition";
             } else {
                 dom.btnCondExisting.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-400 flex items-center justify-center gap-1.5 transition";
-                dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-cyan-500/10 border-2 border-cyan-500 text-cyan-400 flex items-center justify-center gap-1.5 transition";
+                dom.btnCondNew.className = "py-2 px-3 text-xs font-semibold rounded-lg bg-yellow-500/10 border-2 border-yellow-500 text-yellow-500 flex items-center justify-center gap-1.5 transition";
             }
         };
 
@@ -2365,6 +2823,20 @@
                 const marker = state.markers.find(m => m.id === activeId);
                 if (marker) {
                     marker.model = e.target.value;
+                    updateDevicePanelList();
+                    scheduleAutoSave();
+                }
+            }
+        });
+
+        dom.inputDevJenis.addEventListener('change', (e) => {
+            const activeId = state.selectedMarkerId;
+            if (activeId) {
+                const marker = state.markers.find(m => m.id === activeId);
+                if (marker) {
+                    marker.jenis = e.target.value;
+                    // Segarkan badge tipe agar mencerminkan jenis terpilih.
+                    dom.editorDeviceTypeBadge.textContent = (marker.jenis || marker.perangkat || 'Perangkat').toUpperCase();
                     updateDevicePanelList();
                     scheduleAutoSave();
                 }
@@ -2395,33 +2867,53 @@
             }
         });
 
-        // Event listener untuk unggah foto
-        dom.photoUploadPlaceholder.addEventListener('click', () => {
+        // Proses berkas foto (dipakai bersama oleh input kamera & galeri)
+        const applyPhotoFile = (file) => {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showNotification("Format berkas harus berupa gambar!", "error");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const activeId = state.selectedMarkerId;
+                if (activeId) {
+                    const marker = state.markers.find(m => m.id === activeId);
+                    if (marker) {
+                        marker.photo = evt.target.result;
+                        showPhotoPreview(marker.photo);
+                        scheduleAutoSave();
+                        showNotification("Foto lokasi berhasil diunggah.");
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // Desktop: klik area unggah -> pilih dari galeri/berkas.
+        dom.photoUploadPlaceholder.addEventListener('click', (e) => {
+            // Abaikan bila berasal dari tombol Kamera/Galeri, ATAU dari input file
+            // itu sendiri — klik programatik pada input akan menggelembung ke sini
+            // dan (dulu) ikut membuka galeri saat tombol Kamera ditekan.
+            if (e.target.closest('#btn-photo-camera') || e.target.closest('#btn-photo-gallery') || e.target.closest('input')) return;
+            dom.inputDevPhoto.click();
+        });
+
+        // Mobile: tombol Kamera (kamera native HP) & Galeri.
+        if (dom.btnPhotoCamera) dom.btnPhotoCamera.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dom.inputDevPhotoCamera.click();
+        });
+        if (dom.btnPhotoGallery) dom.btnPhotoGallery.addEventListener('click', (e) => {
+            e.stopPropagation();
             dom.inputDevPhoto.click();
         });
 
         dom.inputDevPhoto.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(evt) {
-                        const activeId = state.selectedMarkerId;
-                        if (activeId) {
-                            const marker = state.markers.find(m => m.id === activeId);
-                            if (marker) {
-                                marker.photo = evt.target.result;
-                                showPhotoPreview(marker.photo);
-                                scheduleAutoSave();
-                                showNotification("Foto lokasi berhasil diunggah.");
-                            }
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    showNotification("Format berkas harus berupa gambar!", "error");
-                }
-            }
+            if (e.target.files.length > 0) applyPhotoFile(e.target.files[0]);
+        });
+        if (dom.inputDevPhotoCamera) dom.inputDevPhotoCamera.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) applyPhotoFile(e.target.files[0]);
         });
 
         dom.btnRemovePhoto.addEventListener('click', (e) => {
@@ -2449,6 +2941,7 @@
             dom.photoPreviewContainer.classList.add('hidden');
             dom.photoUploadPlaceholder.classList.remove('hidden');
             dom.inputDevPhoto.value = '';
+            if (dom.inputDevPhotoCamera) dom.inputDevPhotoCamera.value = '';
         };
 
         // Delete Device Action
@@ -2468,10 +2961,7 @@
         const updateDevicePanelList = () => {
             dom.deviceList.innerHTML = '';
 
-            const filteredMarkers = state.markers.filter(m => {
-                if (state.activeFilter === 'all') return true;
-                return m.type === state.activeFilter;
-            });
+            const filteredMarkers = state.markers.filter(markerMatchesFilter);
 
             if (filteredMarkers.length === 0) {
                 dom.deviceList.classList.add('hidden');
@@ -2488,13 +2978,15 @@
 
                 item.className = `p-3 rounded-xl border transition cursor-pointer flex items-center justify-between group ${isSelected ? 'bg-indigo-600/10 border-indigo-500/50' : 'bg-slate-950/50 border-slate-800/80 hover:border-slate-750'}`;
                 
-                const badgeColor = m.condition === 'new' 
-                    ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
-                    : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                const badgeColor = m.condition === 'new'
+                    ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                    : 'bg-green-500/10 text-green-500 border-green-500/20';
 
                 const deviceIcon = m.type === 'cctv'
                     ? '<i class="fa-solid fa-video text-cyan-400"></i>'
-                    : '<i class="fa-solid fa-id-card text-emerald-400"></i>';
+                    : m.type === 'custom'
+                        ? deviceIconMarkup(m.icon, 16, '#818cf8', 'fa-solid fa-microchip')
+                        : '<i class="fa-solid fa-id-card text-emerald-400"></i>';
 
                 const hasPhotoIndicator = m.photo ? `<i class="fa-solid fa-image text-[10px] text-indigo-400" title="Memiliki foto lokasi"></i>` : '';
 
@@ -2515,14 +3007,26 @@
                             </div>
                         </div>
                     </div>
-                    <button class="opacity-0 group-hover:opacity-100 p-1 bg-slate-800 hover:bg-rose-500/10 rounded text-slate-400 hover:text-rose-400 transition delete-btn-list" data-id="${m.id}" title="Hapus">
-                        <i class="fa-solid fa-trash-can text-[10px]"></i>
-                    </button>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button class="opacity-0 group-hover:opacity-100 p-1 bg-slate-800 hover:bg-rose-500/10 rounded text-slate-400 hover:text-rose-400 transition delete-btn-list" data-id="${m.id}" title="Hapus">
+                            <i class="fa-solid fa-trash-can text-[10px]"></i>
+                        </button>
+                        <button class="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition open-detail-list" data-id="${m.id}" title="Buka detail perangkat">
+                            <i class="fa-solid fa-chevron-right text-[12px]"></i>
+                        </button>
+                    </div>
                 `;
 
-                // Focus marker
+                // Klik baris = cukup tampilkan posisi titik di denah (tanpa buka editor).
                 item.addEventListener('click', (e) => {
-                    if (e.target.closest('.delete-btn-list')) return;
+                    if (e.target.closest('.delete-btn-list') || e.target.closest('.open-detail-list')) return;
+                    focusMarkerOnMap(m.id);
+                });
+
+                // Klik chevron = buka detail perangkat.
+                const openBtn = item.querySelector('.open-detail-list');
+                openBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     selectMarker(m.id);
                     centerViewOnMarker(m);
                 });
@@ -2543,15 +3047,28 @@
         };
 
         const centerViewOnMarker = (marker) => {
-            const containerW = dom.workspaceContainer.clientWidth;
-            const containerH = dom.workspaceContainer.clientHeight;
-            const rect = dom.blueprintWrapper.getBoundingClientRect();
-            
+            // Dimensi denah TANPA skala (offsetWidth tidak terpengaruh transform).
+            const W0 = dom.blueprintWrapper.offsetWidth;
+            const H0 = dom.blueprintWrapper.offsetHeight;
+            if (!W0 || !H0) return;
+
+            // transform-layer terpusat di frame (flex center) dengan origin tengah.
+            // Agar titik (x%,y%) tepat di tengah frame:
+            //   pan = -zoom * (persen - 0.5) * dimensiTanpaSkala
             state.zoom = 1.25;
-            state.panX = (containerW / 2) - ((marker.x / 100) * rect.width * state.zoom);
-            state.panY = (containerH / 2) - ((marker.y / 100) * rect.height * state.zoom);
-            
+            state.panX = -state.zoom * ((marker.x / 100) - 0.5) * W0;
+            state.panY = -state.zoom * ((marker.y / 100) - 0.5) * H0;
+
             updateTransform();
+        };
+
+        // Klik baris daftar: sorot titik di denah & pusatkan, tanpa membuka editor.
+        const focusMarkerOnMap = (id) => {
+            const marker = state.markers.find(m => m.id === id);
+            if (!marker) return;
+            state.selectedMarkerId = id;
+            renderMarkers();            // cincin seleksi + highlight baris daftar
+            centerViewOnMarker(marker);
         };
 
         const updateCounterStats = () => {
@@ -2559,16 +3076,13 @@
             const acsCount = state.markers.filter(m => m.type === 'acs').length;
             const totalCount = state.markers.length;
 
-            dom.placedCount.textContent = totalCount;
             dom.statCctv.textContent = cctvCount;
             dom.statAcs.textContent = acsCount;
             dom.statTotal.textContent = totalCount;
             if (dom.rightCollapsedCount) dom.rightCollapsedCount.textContent = totalCount;
 
-            // Jumlah per tab filter pada Daftar Titik
-            if (dom.countAll) dom.countAll.textContent = totalCount;
-            if (dom.countCctv) dom.countCctv.textContent = cctvCount;
-            if (dom.countAcs) dom.countAcs.textContent = acsCount;
+            // Tombol filter Daftar Titik: dinamis (Semua + tiap jenis perangkat di lantai ini)
+            renderDeviceFilters();
         };
 
         const clearAllMarkers = () => {
@@ -2580,28 +3094,13 @@
             showNotification("Semua titik berhasil dibersihkan.", "warning");
         };
 
-        /* Side Panel Filters */
+        /* Side Panel Filters — set jenis aktif lalu render ulang
+           (renderMarkers memicu updateCounterStats -> renderDeviceFilters
+           sehingga sorotan tombol & daftar ikut menyesuaikan). */
         const applyFilter = (filterType) => {
             state.activeFilter = filterType;
-            
-            [dom.btnFilterAll, dom.btnFilterCctv, dom.btnFilterAcs].forEach(btn => {
-                btn.className = "text-[10px] px-2 py-0.5 text-slate-400 hover:text-white rounded font-medium transition";
-            });
-
-            if (filterType === 'all') {
-                dom.btnFilterAll.className = "text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded font-medium";
-            } else if (filterType === 'cctv') {
-                dom.btnFilterCctv.className = "text-[10px] px-2 py-0.5 bg-cyan-600 text-white rounded font-medium";
-            } else {
-                dom.btnFilterAcs.className = "text-[10px] px-2 py-0.5 bg-emerald-600 text-white rounded font-medium";
-            }
-
             renderMarkers();
         };
-
-        dom.btnFilterAll.addEventListener('click', () => applyFilter('all'));
-        dom.btnFilterCctv.addEventListener('click', () => applyFilter('cctv'));
-        dom.btnFilterAcs.addEventListener('click', () => applyFilter('acs'));
 
 
         /* ==========================================================
@@ -2625,21 +3124,24 @@
             }
         };
 
-        // Badge kecil NEW/EXST di pojok kanan-atas marker (meniru DOM).
+        // Label kode perangkat DI BAWAH ikon, di-tengah (meniru DOM) — sengaja
+        // tidak ditempel di pojok agar tidak menimpa ikon walau kodenya panjang.
         const drawStatusBadge = (ctx, m, cx, cy, s) => {
-            const label = m.condition === 'new' ? 'NEW' : 'EXST';
+            const label = m.id;
             const fontSize = 7 * s;
             ctx.font = `bold ${fontSize}px sans-serif`;
             const tw = ctx.measureText(label).width;
             const padX = 4 * s;
+            const padY = 2 * s;
             const w = tw + padX * 2;
-            const h = fontSize + 4 * s;
-            // DOM: -top-1.5 -right-1.5 dari kotak marker 20px (diskalakan ikon)
-            const rightX = cx + s * (10 * s + 6);
-            const topY = cy - s * (10 * s + 6);
+            const h = fontSize + padY * 2;
+            // Diletakkan tepat di bawah ikon (setengah tinggi ikon = 10px) + jarak kecil
+            const gap = 4 * s;
+            const boxX = cx - w / 2;
+            const boxY = cy + 10 * s + gap;
             const isLightTheme = state.theme === 'light';
 
-            drawRoundedRect(ctx, rightX - w, topY, w, h, 2 * s);
+            drawRoundedRect(ctx, boxX, boxY, w, h, 2 * s);
             ctx.fillStyle = isLightTheme ? '#ecfeff' : '#020617';
             ctx.fill();
             ctx.strokeStyle = isLightTheme ? '#22d3ee' : '#1e293b';
@@ -2649,12 +3151,10 @@
             ctx.fillStyle = isLightTheme ? '#0e7490' : '#ffffff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(label, rightX - w / 2, topY + h / 2);
+            ctx.fillText(label, cx, boxY + h / 2);
         };
 
-        const drawMarkerOnCanvas = (ctx, m) => {
-            const W = ctx.canvas.width;
-            const H = ctx.canvas.height;
+        const drawMarkerOnCanvas = (ctx, m, W = ctx.canvas.width, H = ctx.canvas.height) => {
             const s = m.scale || 1.0;
             const boxSize = 20 * s; // ukuran elemen marker di layar
             // DOM menempatkan pojok kiri-atas marker pada x%/y%, kontennya di tengah kotak
@@ -2663,8 +3163,8 @@
             const rot = ((m.rotation || 0) * Math.PI) / 180;
 
             if (m.type === 'cctv') {
-                const coneFill = m.condition === 'new' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(234, 179, 8, 0.35)';
-                const coneStroke = m.condition === 'new' ? '#22d3ee' : '#eab308';
+                const coneFill = m.condition === 'new' ? 'rgba(234, 179, 8, 0.35)' : 'rgba(34, 197, 94, 0.35)';
+                const coneStroke = m.condition === 'new' ? '#eab308' : '#22c55e';
 
                 // 1. FOV cone — di layar: SVG 80px, r = 75/100*80 = 60px, dikali jangkauan (fovRange) & skala ikon
                 const R = 60 * s * (m.fovRange || 1.0);
@@ -2700,7 +3200,7 @@
                 // 3. Lingkaran kamera (w-full = 20px) + border slate-900
                 ctx.beginPath();
                 ctx.arc(cx, cy, 10 * s, 0, Math.PI * 2);
-                ctx.fillStyle = m.condition === 'new' ? '#06b6d4' : '#eab308'; // cyan-500 / yellow-500
+                ctx.fillStyle = m.condition === 'new' ? '#eab308' : '#22c55e'; // yellow-500 (plan) / green-500 (existing)
                 ctx.fill();
                 ctx.strokeStyle = '#0f172a'; // slate-900
                 ctx.lineWidth = 1.5 * s;
@@ -2713,6 +3213,22 @@
                 ctx.textBaseline = 'middle';
                 ctx.fillText('', cx, cy + 0.25 * s);
 
+            } else if (m.type === 'custom') {
+                // Perangkat katalog: kotak generik + inisial kode (icon Iconify tak
+                // digambar di canvas untuk menghindari taint cross-origin).
+                const sq = 20 * s;
+                drawRoundedRect(ctx, cx - sq / 2, cy - sq / 2, sq, sq, 4 * s);
+                ctx.fillStyle = m.condition === 'new' ? '#eab308' : '#22c55e';
+                ctx.fill();
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 1.5 * s;
+                ctx.stroke();
+                const initials = String(m.kode || m.id || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase();
+                ctx.fillStyle = '#020617';
+                ctx.font = `700 ${7 * s}px system-ui, -apple-system, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(initials, cx, cy + 0.25 * s);
             } else {
                 // 1. Lingkar pulsa emerald lembut (meniru animate-ping)
                 drawRoundedRect(ctx, cx - boxSize / 2, cy - boxSize / 2, boxSize, boxSize, 6 * s);
@@ -2722,7 +3238,7 @@
                 // 2. Kotak reader (w-full = 20px, rounded-lg) + border slate-900
                 const sq = 20 * s;
                 drawRoundedRect(ctx, cx - sq / 2, cy - sq / 2, sq, sq, 4 * s);
-                ctx.fillStyle = m.condition === 'new' ? '#10b981' : '#f59e0b'; // emerald-500 / amber-500
+                ctx.fillStyle = m.condition === 'new' ? '#eab308' : '#22c55e'; // yellow-500 (plan) / green-500 (existing)
                 ctx.fill();
                 ctx.strokeStyle = '#0f172a';
                 ctx.lineWidth = 1.5 * s;
@@ -2738,6 +3254,33 @@
 
             // Badge status NEW/EXST
             drawStatusBadge(ctx, m, cx, cy, s);
+        };
+
+        /* Membersihkan satu bagian nama file: buang karakter ilegal & rapikan spasi. */
+        const sanitizeFileNamePart = (value) => {
+            const cleaned = String(value == null ? '' : value)
+                .replace(/[\\/:*?"<>|]+/g, ' ')  // karakter terlarang di nama file
+                .replace(/\s+/g, ' ')            // rapatkan spasi berlebih
+                .trim();
+            return cleaned || '-';
+        };
+
+        /* Bangun nama unduhan sesuai konvensi:
+           [nama perusahaan]_[Nama gedung]_[lantai]_[datetime].ext
+           datetime memakai waktu lokal: YYYY-MM-DD_HHmmss. */
+        const buildExportFileName = (ext) => {
+            const loc = getActiveLocation() || {};
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const datetime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}` +
+                `_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            const parts = [
+                sanitizeFileNamePart(loc.perusahaan),
+                sanitizeFileNamePart(loc.gedung),
+                sanitizeFileNamePart(loc.lantai),
+                datetime
+            ];
+            return `${parts.join('_')}.${ext}`;
         };
 
         const generateCompositeMapImage = async () => {
@@ -2758,26 +3301,43 @@
             baseImg.crossOrigin = "anonymous";
 
             baseImg.onload = function() {
+                const baseW = baseImg.naturalWidth;
+                const baseH = baseImg.naturalHeight;
+
+                // Supersampling: unduhan dibuat pada resolusi jauh lebih besar dari
+                // denah asli agar hasil sangat tajam. PNG bersifat lossless sehingga
+                // gambar TIDAK dikompresi sama sekali. Faktor dibatasi oleh batas
+                // maksimum canvas browser (~16.000px per sisi) supaya tetap aman.
+                const MAX_CANVAS_DIM = 16000;
+                const TARGET_SCALE = 4; // perbesar 4x untuk resolusi ekstra besar
+                const scale = Math.max(1, Math.min(
+                    TARGET_SCALE,
+                    Math.floor(MAX_CANVAS_DIM / Math.max(baseW, baseH)) || 1
+                ));
+
                 const canvas = document.createElement('canvas');
-                canvas.width = baseImg.naturalWidth;
-                canvas.height = baseImg.naturalHeight;
+                canvas.width = baseW * scale;
+                canvas.height = baseH * scale;
                 const ctx = canvas.getContext('2d');
 
-                ctx.drawImage(baseImg, 0, 0);
+                // Skalakan sistem koordinat agar denah & marker digambar memakai
+                // dimensi asli, namun ter-render pada kanvas beresolusi tinggi.
+                ctx.scale(scale, scale);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(baseImg, 0, 0, baseW, baseH);
 
                 // Gambar marker sesuai filter yang sedang tampil (sama dengan layar)
-                const visibleMarkers = state.markers.filter(m => {
-                    if (state.activeFilter === 'all') return true;
-                    return m.type === state.activeFilter;
-                });
-                visibleMarkers.forEach(m => drawMarkerOnCanvas(ctx, m));
+                const visibleMarkers = state.markers.filter(markerMatchesFilter);
+                visibleMarkers.forEach(m => drawMarkerOnCanvas(ctx, m, baseW, baseH));
 
                 const link = document.createElement('a');
-                link.download = `Mapping_CCTV_ACS_${new Date().toISOString().slice(0,10)}.png`;
+                link.download = buildExportFileName('png');
+                // image/png => lossless, tanpa kompresi kualitas (full quality)
                 link.href = canvas.toDataURL('image/png');
                 link.click();
 
-                showNotification("Gambar denah berhasil diunduh, identik dengan tampilan aplikasi!");
+                showNotification("Gambar denah berhasil diunduh dalam resolusi penuh tanpa kompresi!");
             };
 
             baseImg.onerror = function() {
@@ -2802,6 +3362,7 @@
                     total_devices: allMarkers.length,
                     cctv_total: allMarkers.filter(m => m.type === 'cctv').length,
                     acs_total: allMarkers.filter(m => m.type === 'acs').length,
+                    custom_total: allMarkers.filter(m => m.type === 'custom').length,
                     app_version: "v1.6"
                 },
                 project_state: {
@@ -2927,6 +3488,22 @@
             "'": '&#39;'
         }[char]));
 
+        /* ---- Icon dari Iconify (library icon dengan API terbuka) ----
+           icon disimpan sebagai id Iconify, mis. 'mdi:fire'. Di-render sebagai
+           <img> SVG dari api.iconify.design (mendukung recolor via ?color=). */
+        const iconifyUrl = (iconId, colorHex) => {
+            if (!iconId) return '';
+            const path = String(iconId).trim().replace(':', '/');
+            return `https://api.iconify.design/${path}.svg` + (colorHex ? `?color=${encodeURIComponent(colorHex)}` : '');
+        };
+        // Markup icon perangkat: <img> Iconify bila ada; jika kosong pakai FontAwesome fallback.
+        const deviceIconMarkup = (iconId, sizePx, colorHex, fallback = 'fa-solid fa-microchip') => {
+            if (iconId) {
+                return `<img src="${escapeHTML(iconifyUrl(iconId, colorHex))}" width="${sizePx}" height="${sizePx}" style="width:${sizePx}px;height:${sizePx}px;display:block;object-fit:contain" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
+            }
+            return `<i class="${fallback}"${colorHex ? ` style="color:${colorHex}"` : ''}></i>`;
+        };
+
         /* =========================================================
            SIMPAN OTOMATIS
            Tidak ada tombol SAVE / SAVE AS. Setiap perubahan (lokasi, denah,
@@ -3000,10 +3577,12 @@
                 document.body.classList.add('light-theme');
                 dom.themeIconSun.classList.remove('hidden');
                 dom.themeIconMoon.classList.add('hidden');
+                if (dom.themeToggleLabel) dom.themeToggleLabel.textContent = 'Mode Terang';
             } else {
                 document.body.classList.remove('light-theme');
                 dom.themeIconSun.classList.add('hidden');
                 dom.themeIconMoon.classList.remove('hidden');
+                if (dom.themeToggleLabel) dom.themeToggleLabel.textContent = 'Mode Gelap';
             }
         };
 
@@ -3159,7 +3738,7 @@
 
         /* ---- Aktifkan/nonaktifkan editor sesuai role ---- */
         const setEditorEnabled = (enabled) => {
-            ['input-dev-name', 'input-dev-model', 'btn-cond-existing', 'btn-cond-new', 'btn-scale-dec', 'btn-scale-inc', 'input-dev-photo', 'btn-remove-photo', 'btn-delete-device'].forEach(id => {
+            ['input-dev-name', 'input-dev-model', 'input-dev-jenis', 'btn-cond-existing', 'btn-cond-new', 'btn-scale-dec', 'btn-scale-inc', 'input-dev-photo', 'input-dev-photo-camera', 'btn-photo-camera', 'btn-photo-gallery', 'btn-remove-photo', 'btn-delete-device', 'btn-mobile-add-device'].forEach(id => {
                 const el = $(id); if (!el) return;
                 el.disabled = !enabled;
                 el.classList.toggle('opacity-50', !enabled);
@@ -3175,10 +3754,21 @@
             $('readonly-badge').classList.toggle('flex', ro);
             $('btn-open-admin').classList.toggle('hidden', !isAdmin());
             $('btn-open-admin').classList.toggle('flex', isAdmin());
+            $('btn-open-companies').classList.toggle('hidden', !isAdmin());
+            $('btn-open-companies').classList.toggle('flex', isAdmin());
+            $('btn-open-devices').classList.toggle('hidden', !isAdmin());
+            $('btn-open-devices').classList.toggle('flex', isAdmin());
             setEditorEnabled(!ro);
         };
 
-        /* ---- Muat perusahaan milik user ---- */
+        // Gabungkan daftar jenis (banyak) ke tiap perangkat: {id,name,code,icon,jenis:[...]}.
+        const attachJenis = (perangkatRows, jenisRows) =>
+            (perangkatRows || []).map(p => ({
+                id: p.id, name: p.name, code: p.code, icon: p.icon,
+                jenis: (jenisRows || []).filter(j => j.perangkat_id === p.id).map(j => j.name)
+            }));
+
+        /* ---- Muat perusahaan milik user + gedung & lantai (dropdown lokasi) ---- */
         const loadUserCompanies = async () => {
             if (isAdmin()) {
                 const { data } = await sb.from('companies').select('id,name').order('name');
@@ -3187,6 +3777,17 @@
                 const { data } = await sb.from('user_companies').select('company_id, companies(name)').eq('user_id', auth.user.id);
                 auth.companies = (data || []).map(r => ({ id: r.company_id, name: (r.companies && r.companies.name) || '' }));
             }
+            // Gedung, lantai & katalog perangkat bisa dibaca semua user login (RLS);
+            // dipakai untuk dropdown pada form lokasi & saat menitik perangkat.
+            const [bd, fl, pk, pj] = await Promise.all([
+                sb.from('buildings').select('id,company_id,name').order('name'),
+                sb.from('floors').select('id,building_id,name').order('name'),
+                sb.from('perangkat').select('id,name,code,icon').order('name'),
+                sb.from('perangkat_jenis').select('perangkat_id,name').order('name')
+            ]);
+            auth.buildings = bd.data || [];
+            auth.floors = fl.data || [];
+            auth.perangkat = attachJenis(pk.data, pj.data);
         };
 
         /* ---- Profil: ambil (atau buat cadangan bila trigger belum jalan) ---- */
@@ -3294,7 +3895,7 @@
         /* =========================================================
            PANEL ADMIN — kelola user & perusahaan
         ========================================================= */
-        const admin = { profiles: [], companies: [], userCompanies: {}, filter: 'all', tab: 'users' };
+        const admin = { profiles: [], companies: [], userCompanies: {}, buildings: [], floors: [], perangkat: [], filter: 'all' };
 
         const openAdminModal = async () => {
             if (!isAdmin()) return;
@@ -3318,7 +3919,6 @@
             admin.userCompanies = {};
             (uc.data || []).forEach(r => { (admin.userCompanies[r.user_id] = admin.userCompanies[r.user_id] || []).push(r.company_id); });
             renderAdminUsers();
-            renderAdminCompanies();
         };
 
         const statusPill = (s) => {
@@ -3417,39 +4017,11 @@
             await loadAdminData();
         };
 
-        const renderAdminCompanies = () => {
-            const wrap = $('admin-companies-list');
-            $('admin-companies-empty').classList.toggle('hidden', admin.companies.length > 0);
-            wrap.innerHTML = admin.companies.map(c => `
-                <div class="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2">
-                    <span class="text-sm font-semibold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-building text-indigo-400"></i> ${escapeHTML(c.name)}</span>
-                    <button class="admin-del-co text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${c.id}"><i class="fa-solid fa-trash-can"></i></button>
-                </div>`).join('');
-            wrap.querySelectorAll('.admin-del-co').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (!confirm('Hapus perusahaan ini? Lokasi yang terkait juga dapat terpengaruh.')) return;
-                    const { error } = await sb.from('companies').delete().eq('id', btn.getAttribute('data-id'));
-                    if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
-                    showNotification('Perusahaan dihapus.', 'warning');
-                    await loadAdminData();
-                });
-            });
-        };
-
         const wireAdminUI = () => {
             $('btn-open-admin').addEventListener('click', openAdminModal);
             $('btn-close-admin').addEventListener('click', closeAdminModal);
             $('btn-admin-refresh').addEventListener('click', loadAdminData);
             $('modal-admin').addEventListener('click', (e) => { if (e.target === $('modal-admin')) closeAdminModal(); });
-            const setTab = (tab) => {
-                admin.tab = tab;
-                $('admin-tab-users').classList.toggle('hidden', tab !== 'users');
-                $('admin-tab-companies').classList.toggle('hidden', tab !== 'companies');
-                $('admin-tabbtn-users').className = `px-3 py-1.5 text-xs font-semibold rounded-lg transition ${tab === 'users' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`;
-                $('admin-tabbtn-companies').className = `px-3 py-1.5 text-xs font-semibold rounded-lg transition ${tab === 'companies' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`;
-            };
-            $('admin-tabbtn-users').addEventListener('click', () => setTab('users'));
-            $('admin-tabbtn-companies').addEventListener('click', () => setTab('companies'));
             document.querySelectorAll('.admin-user-filter').forEach(btn => {
                 btn.addEventListener('click', () => {
                     admin.filter = btn.getAttribute('data-filter');
@@ -3460,6 +4032,130 @@
                     renderAdminUsers();
                 });
             });
+        };
+
+        /* =========================================================
+           PANEL KELOLA PERUSAHAAN — Perusahaan > Gedung > Lantai
+           Menu terpisah dari "Kelola User". Data di sini menjadi sumber
+           dropdown bertingkat pada form lokasi.
+        ========================================================= */
+        const openCompaniesModal = async () => {
+            if (!isAdmin()) return;
+            $('modal-companies').classList.remove('hidden');
+            await loadCompaniesData();
+        };
+        const closeCompaniesModal = () => $('modal-companies').classList.add('hidden');
+
+        const loadCompaniesData = async () => {
+            const [c, b, f] = await Promise.all([
+                sb.from('companies').select('*').order('name'),
+                sb.from('buildings').select('*').order('name'),
+                sb.from('floors').select('*').order('name')
+            ]);
+            if (c.error || b.error || f.error) {
+                showNotification('Gagal memuat data perusahaan: ' + ((c.error || b.error || f.error).message), 'error');
+                return;
+            }
+            admin.companies = c.data || [];
+            admin.buildings = b.data || [];
+            admin.floors = f.data || [];
+            // Segarkan struktur di sisi aplikasi agar dropdown form lokasi ikut terbarui.
+            if (isAdmin()) auth.companies = admin.companies.map(x => ({ id: x.id, name: x.name }));
+            auth.buildings = admin.buildings.map(x => ({ id: x.id, company_id: x.company_id, name: x.name }));
+            auth.floors = admin.floors.map(x => ({ id: x.id, building_id: x.building_id, name: x.name }));
+            renderCompaniesTree();
+        };
+
+        const renderCompaniesTree = () => {
+            const wrap = $('companies-tree');
+            $('companies-empty').classList.toggle('hidden', admin.companies.length > 0);
+            wrap.innerHTML = admin.companies.map(c => {
+                const blds = admin.buildings.filter(b => b.company_id === c.id);
+                const buildingsHtml = blds.map(b => {
+                    const fls = admin.floors.filter(f => f.building_id === b.id);
+                    const floorChips = fls.length ? fls.map(f => `
+                        <span class="inline-flex items-center gap-1 text-[11px] bg-slate-800 text-slate-200 rounded-lg pl-2 pr-1 py-0.5">
+                            ${escapeHTML(f.name)}
+                            <button class="co-del-floor w-4 h-4 flex items-center justify-center rounded text-slate-500 hover:text-rose-400 hover:bg-slate-700 transition" data-id="${f.id}" title="Hapus lantai"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                        </span>`).join('') : '<span class="text-[11px] text-slate-500">Belum ada lantai.</span>';
+                    return `
+                    <div class="bg-slate-950/40 border border-slate-800 rounded-lg p-3">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-warehouse text-indigo-400"></i> ${escapeHTML(b.name)}</span>
+                            <button class="co-del-building text-[11px] font-semibold px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${b.id}" title="Hapus gedung"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                            <span class="text-[10px] uppercase font-semibold text-slate-500 mr-0.5">Lantai</span>
+                            ${floorChips}
+                        </div>
+                        <form class="co-add-floor flex items-center gap-2" data-bid="${b.id}">
+                            <input type="text" required placeholder="Tambah lantai… (mis. 1 / GF / Basement)" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                            <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition shrink-0" title="Tambah lantai"><i class="fa-solid fa-plus"></i></button>
+                        </form>
+                    </div>`;
+                }).join('');
+                return `
+                <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-sm font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-building text-indigo-400"></i> ${escapeHTML(c.name)}</span>
+                        <button class="co-del-company text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition" data-id="${c.id}" title="Hapus perusahaan"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div class="space-y-2 pl-0.5">
+                        ${buildingsHtml || '<p class="text-[11px] text-slate-500">Belum ada gedung.</p>'}
+                        <form class="co-add-building flex items-center gap-2 pt-1" data-cid="${c.id}">
+                            <input type="text" required placeholder="Tambah gedung…" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] px-3 py-1.5 rounded-lg transition flex items-center gap-1 shrink-0"><i class="fa-solid fa-plus"></i> Gedung</button>
+                        </form>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Wiring: hapus perusahaan/gedung/lantai + tambah gedung/lantai.
+            wrap.querySelectorAll('.co-del-company').forEach(btn => btn.addEventListener('click', async () => {
+                if (!confirm('Hapus perusahaan ini beserta gedung, lantai, dan lokasi terkait?')) return;
+                const { error } = await sb.from('companies').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
+                showNotification('Perusahaan dihapus.', 'warning');
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-del-building').forEach(btn => btn.addEventListener('click', async () => {
+                if (!confirm('Hapus gedung ini beserta lantainya?')) return;
+                const { error } = await sb.from('buildings').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus gedung: ' + error.message, 'error'); return; }
+                showNotification('Gedung dihapus.', 'warning');
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-del-floor').forEach(btn => btn.addEventListener('click', async () => {
+                const { error } = await sb.from('floors').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus lantai: ' + error.message, 'error'); return; }
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-add-building').forEach(f => f.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = f.querySelector('input');
+                const name = input.value.trim();
+                if (!name) return;
+                const { error } = await sb.from('buildings').insert({ company_id: f.dataset.cid, name });
+                if (error) { showNotification('Gagal menambah gedung: ' + error.message, 'error'); return; }
+                showNotification('Gedung ditambahkan.');
+                await loadCompaniesData();
+            }));
+            wrap.querySelectorAll('.co-add-floor').forEach(f => f.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = f.querySelector('input');
+                const name = input.value.trim();
+                if (!name) return;
+                const { error } = await sb.from('floors').insert({ building_id: f.dataset.bid, name });
+                if (error) { showNotification('Gagal menambah lantai: ' + error.message, 'error'); return; }
+                await loadCompaniesData();
+            }));
+        };
+
+        const wireCompaniesUI = () => {
+            $('btn-open-companies').addEventListener('click', openCompaniesModal);
+            $('btn-close-companies').addEventListener('click', closeCompaniesModal);
+            $('btn-companies-refresh').addEventListener('click', loadCompaniesData);
+            $('modal-companies').addEventListener('click', (e) => { if (e.target === $('modal-companies')) closeCompaniesModal(); });
             $('form-add-company').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = $('new-company-name').value.trim();
@@ -3468,7 +4164,174 @@
                 if (error) { showNotification('Gagal menambah: ' + error.message, 'error'); return; }
                 $('new-company-name').value = '';
                 showNotification('Perusahaan ditambahkan.');
-                await loadAdminData();
+                await loadCompaniesData();
+            });
+        };
+
+        /* =========================================================
+           PANEL KELOLA PERANGKAT — katalog jenis perangkat + icon
+           Menu admin. Data di sini menjadi sumber dropdown saat menitik,
+           sehingga tidak terbatas CCTV & ACS.
+        ========================================================= */
+        let pickedIcon = '';    // icon Iconify terpilih pada form tambah
+        let iconSearchSeq = 0;  // urutan pencarian icon (abaikan hasil basi)
+
+        const openDevicesModal = async () => {
+            if (!isAdmin()) return;
+            $('modal-devices').classList.remove('hidden');
+            await loadDevicesData();
+        };
+        const closeDevicesModal = () => {
+            $('modal-devices').classList.add('hidden');
+            $('icon-search-panel').classList.add('hidden');
+        };
+
+        const loadDevicesData = async () => {
+            const [pk, pj] = await Promise.all([
+                sb.from('perangkat').select('id,name,code,icon').order('name'),
+                sb.from('perangkat_jenis').select('id,perangkat_id,name').order('name')
+            ]);
+            if (pk.error || pj.error) { showNotification('Gagal memuat perangkat: ' + ((pk.error || pj.error).message), 'error'); return; }
+            // admin menyimpan jenis sebagai {id,name} agar bisa dihapus per-id.
+            admin.perangkat = (pk.data || []).map(p => ({
+                id: p.id, name: p.name, code: p.code, icon: p.icon,
+                jenis: (pj.data || []).filter(j => j.perangkat_id === p.id).map(j => ({ id: j.id, name: j.name }))
+            }));
+            // Segarkan katalog sisi aplikasi (jenis cukup daftar nama) agar dropdown ikut terbarui.
+            auth.perangkat = admin.perangkat.map(p => ({ id: p.id, name: p.name, code: p.code, icon: p.icon, jenis: p.jenis.map(j => j.name) }));
+            renderDevicesList();
+        };
+
+        const setPickedIcon = (iconId) => {
+            pickedIcon = iconId || '';
+            $('perangkat-icon-preview').innerHTML = pickedIcon
+                ? deviceIconMarkup(pickedIcon, 22, '#6366f1')
+                : '<i class="fa-solid fa-icons"></i>';
+        };
+
+        const renderDevicesList = () => {
+            const wrap = $('devices-list');
+            $('devices-empty').classList.toggle('hidden', admin.perangkat.length > 0);
+            wrap.innerHTML = admin.perangkat.map(p => {
+                const chips = p.jenis.length ? p.jenis.map(j => `
+                    <span class="inline-flex items-center gap-1 text-[11px] bg-slate-800 text-slate-200 rounded-lg pl-2 pr-1 py-0.5">
+                        ${escapeHTML(j.name)}
+                        <button class="jenis-del w-4 h-4 flex items-center justify-center rounded text-slate-500 hover:text-rose-400 hover:bg-slate-700 transition" data-id="${j.id}" title="Hapus jenis"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </span>`).join('') : '<span class="text-[11px] text-slate-500">Belum ada jenis.</span>';
+                return `
+                <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-3.5">
+                    <div class="flex items-center justify-between gap-3 mb-2.5">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">${deviceIconMarkup(p.icon, 18, '#6366f1')}</div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-100 truncate">${escapeHTML(p.name)}</p>
+                                <span class="text-[9px] font-mono text-slate-500">${escapeHTML(p.code)}</span>
+                            </div>
+                        </div>
+                        <button class="dev-del text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition shrink-0" data-id="${p.id}" title="Hapus perangkat"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                        <span class="text-[10px] uppercase font-semibold text-slate-500 mr-0.5">Jenis</span>
+                        ${chips}
+                    </div>
+                    <form class="jenis-add flex items-center gap-2" data-pid="${p.id}">
+                        <input type="text" required placeholder="Tambah jenis… (mis. Dome / Bullet / PTZ)" class="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none transition">
+                        <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition shrink-0" title="Tambah jenis"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                </div>`;
+            }).join('');
+
+            wrap.querySelectorAll('.dev-del').forEach(btn => btn.addEventListener('click', async () => {
+                if (!confirm('Hapus perangkat ini dari katalog? Titik yang sudah dipasang tidak ikut terhapus.')) return;
+                const { error } = await sb.from('perangkat').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus: ' + error.message, 'error'); return; }
+                showNotification('Perangkat dihapus.', 'warning');
+                await loadDevicesData();
+            }));
+            wrap.querySelectorAll('.jenis-del').forEach(btn => btn.addEventListener('click', async () => {
+                const { error } = await sb.from('perangkat_jenis').delete().eq('id', btn.dataset.id);
+                if (error) { showNotification('Gagal menghapus jenis: ' + error.message, 'error'); return; }
+                await loadDevicesData();
+            }));
+            wrap.querySelectorAll('.jenis-add').forEach(f => f.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = f.querySelector('input');
+                const name = input.value.trim();
+                if (!name) return;
+                const { error } = await sb.from('perangkat_jenis').insert({ perangkat_id: f.dataset.pid, name });
+                if (error) { showNotification('Gagal menambah jenis: ' + error.message, 'error'); return; }
+                await loadDevicesData();
+            }));
+        };
+
+        // Pencarian icon via Iconify (API terbuka, mendukung CORS).
+        const searchIcons = async (query) => {
+            const seq = ++iconSearchSeq;
+            const results = $('icon-search-results');
+            const status = $('icon-search-status');
+            const q = (query || '').trim();
+            if (!q) { results.innerHTML = ''; status.textContent = ''; return; }
+            status.textContent = 'Mencari…';
+            try {
+                const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(q)}&limit=60`);
+                const data = await res.json();
+                if (seq !== iconSearchSeq) return; // hasil basi, abaikan
+                const icons = (data && data.icons) || [];
+                if (!icons.length) { results.innerHTML = ''; status.textContent = 'Tidak ada hasil'; return; }
+                status.textContent = `${icons.length} icon`;
+                results.innerHTML = icons.map(id => `
+                    <button type="button" class="icon-pick aspect-square rounded-lg bg-slate-900 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800 flex items-center justify-center p-1.5 transition" data-icon="${escapeHTML(id)}" title="${escapeHTML(id)}">
+                        ${deviceIconMarkup(id, 20, '#6366f1')}
+                    </button>`).join('');
+                results.querySelectorAll('.icon-pick').forEach(b => b.addEventListener('click', () => {
+                    setPickedIcon(b.dataset.icon);
+                    $('icon-search-panel').classList.add('hidden');
+                }));
+            } catch (e) {
+                if (seq !== iconSearchSeq) return;
+                console.error(e);
+                status.textContent = 'Gagal memuat (cek koneksi)';
+            }
+        };
+
+        const wireDevicesUI = () => {
+            $('btn-open-devices').addEventListener('click', openDevicesModal);
+            $('btn-close-devices').addEventListener('click', closeDevicesModal);
+            $('btn-devices-refresh').addEventListener('click', loadDevicesData);
+            $('modal-devices').addEventListener('click', (e) => { if (e.target === $('modal-devices')) closeDevicesModal(); });
+
+            // Buka/tutup panel pencarian icon.
+            $('perangkat-icon-btn').addEventListener('click', () => {
+                const panel = $('icon-search-panel');
+                panel.classList.toggle('hidden');
+                if (!panel.classList.contains('hidden')) $('icon-search-input').focus();
+            });
+            // Pencarian icon dengan debounce.
+            let iconTimer = null;
+            $('icon-search-input').addEventListener('input', (e) => {
+                clearTimeout(iconTimer);
+                const v = e.target.value;
+                iconTimer = setTimeout(() => searchIcons(v), 300);
+            });
+
+            // Tambah perangkat.
+            $('form-add-perangkat').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = $('new-perangkat-name').value.trim();
+                const code = $('new-perangkat-code').value.trim().toUpperCase();
+                if (!name) { showNotification('Nama perangkat wajib diisi.', 'error'); return; }
+                if (!code) { showNotification('Kode perangkat wajib diisi.', 'error'); return; }
+                const { error } = await sb.from('perangkat').insert({ name, code, icon: pickedIcon });
+                if (error) { showNotification('Gagal menambah: ' + error.message, 'error'); return; }
+                $('new-perangkat-name').value = '';
+                $('new-perangkat-code').value = '';
+                setPickedIcon('');
+                $('icon-search-results').innerHTML = '';
+                $('icon-search-input').value = '';
+                $('icon-search-status').textContent = '';
+                $('icon-search-panel').classList.add('hidden');
+                showNotification('Perangkat ditambahkan.');
+                await loadDevicesData();
             });
         };
 
@@ -3483,6 +4346,8 @@
             showGate('screen-loading');
             wireAuthUI();
             wireAdminUI();
+            wireCompaniesUI();
+            wireDevicesUI();
             sb.auth.onAuthStateChange((event, session) => {
                 // Abaikan refresh token / update user agar workspace tidak ter-reload saat sedang bekerja.
                 if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return;
@@ -3518,13 +4383,37 @@
                 if (e.target === dom.modalLocation) closeLocationModal();
             });
 
-            // Toggle input "Lainnya" pada dropdown perusahaan
+            // Perusahaan berubah -> tampil/sembunyikan input "Lainnya" & muat ulang
+            // dropdown gedung + lantai (Perusahaan > Gedung > Lantai).
             dom.locPerusahaan.addEventListener('change', () => {
                 if (dom.locPerusahaan.value === '__other__') {
                     dom.locPerusahaanOther.classList.remove('hidden');
                     dom.locPerusahaanOther.focus();
                 } else {
                     dom.locPerusahaanOther.classList.add('hidden');
+                }
+                populateGedungOptions('');
+                populateLantaiOptions('');
+            });
+
+            // Gedung berubah -> tampil/sembunyikan input "Lainnya" & muat ulang lantai.
+            dom.locGedung.addEventListener('change', () => {
+                if (dom.locGedung.value === '__other__') {
+                    dom.locGedungOther.classList.remove('hidden');
+                    dom.locGedungOther.focus();
+                } else {
+                    dom.locGedungOther.classList.add('hidden');
+                }
+                populateLantaiOptions('');
+            });
+
+            // Lantai berubah -> tampil/sembunyikan input "Lainnya".
+            dom.locLantai.addEventListener('change', () => {
+                if (dom.locLantai.value === '__other__') {
+                    dom.locLantaiOther.classList.remove('hidden');
+                    dom.locLantaiOther.focus();
+                } else {
+                    dom.locLantaiOther.classList.add('hidden');
                 }
             });
 
@@ -3556,10 +4445,12 @@
             dom.btnZoomOut.addEventListener('click', zoomOut);
             dom.btnZoomReset.addEventListener('click', resetView);
 
-            // Selection Modals click
-            dom.btnSelectCCTV.addEventListener('click', () => selectDeviceType('cctv'));
-            dom.btnSelectACS.addEventListener('click', () => selectDeviceType('acs'));
+            // Batal pada modal pemilih perangkat. (Kartu perangkat di-wire dinamis
+            // di renderSelectorGrid saat modal dibuka.)
             dom.btnModalCancel.addEventListener('click', closeSelectorModal);
+
+            // Mobile: tombol tambah perangkat (buka pemilih jenis perangkat).
+            if (dom.btnMobileAddDevice) dom.btnMobileAddDevice.addEventListener('click', openMobileAddDevice);
 
             // Mobile: tombol kembali dari detail perangkat ke daftar lokasi.
             if (dom.btnMobileBack) dom.btnMobileBack.addEventListener('click', exitMobileDetail);
@@ -3575,6 +4466,24 @@
 
             // Setup Theme Toggle
             setupThemeToggle();
+
+            // Menu avatar: buka/tutup dropdown (Kelola User, Tema, Keluar).
+            if (dom.btnAvatarMenu && dom.avatarDropdown) {
+                dom.btnAvatarMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dom.avatarDropdown.classList.toggle('hidden');
+                });
+                // Tutup menu setelah memilih salah satu aksi.
+                dom.avatarDropdown.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) dom.avatarDropdown.classList.add('hidden');
+                });
+                // Tutup menu saat klik di luar.
+                document.addEventListener('click', (e) => {
+                    if (!dom.avatarDropdown.contains(e.target) && !dom.btnAvatarMenu.contains(e.target)) {
+                        dom.avatarDropdown.classList.add('hidden');
+                    }
+                });
+            }
 
             // Sizing controls in sidebar
             dom.btnScaleDec.addEventListener('click', () => {
@@ -3606,6 +4515,7 @@
                 if (!isMobile()) {
                     dom.leftSidebar.classList.remove('mobile-hide');
                     dom.rightSidebar.classList.remove('mobile-detail');
+                    dom.appShell.classList.remove('mobile-detail-active');
                     state.mobileView = 'list';
                 }
             });
